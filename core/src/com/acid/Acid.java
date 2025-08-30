@@ -440,8 +440,7 @@ public class Acid implements ApplicationListener {
 //                                KnobData.sequences.clear();
 //                                DrumData.sequences.clear();
                                 Statics.output.getSequencer().randomizeRhythm();
-                                Statics.output.getSequencer().bass.randomize();
-                                Statics.output.getSequencer().randomizeSequence();
+                                Statics.output.getSequencer().randomizeAllSynths();
                                 maxSongPosition = 0;
                                 minSongPosition = 0;
                                 songPosition = 0;
@@ -1284,8 +1283,9 @@ public class Acid implements ApplicationListener {
                 }
 
                 @Override
-                public void longPress(Actor actor, float x, float y) {
+                public boolean longPress(Actor actor, float x, float y) {
                     Output.muteState[trackIndex] = !Output.muteState[trackIndex];
+                    return true;
                 }
             });
         }

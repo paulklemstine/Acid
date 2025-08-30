@@ -26,16 +26,14 @@ public class AcidSequencer {
         this.basslines = new BasslinePattern[4];
 
         randomizeRhythm();
-        for (int i = 0; i < 4; i++) {
-            randomizeSequence(i);
-        }
+        randomizeAllSynths();
     }
 
     public void randomizeRhythm() {
         this.rhythm = createRhythm(this.patternLength);
     }
 
-    public void randomizeSequence(int index) {
+    public void randomizeSequence(int index, int[] scale) {
 //        if (!Statics.drumsSelected) {
         double[] basicCoeffs = {0.5D, 0.5D, 0.5D, 0.5D};
         double[] bassCoeffs = new double[16];
@@ -57,12 +55,8 @@ public class AcidSequencer {
             }
         }
 
-        Markov markov = new Markov(null, 0.0D);
-        markov.addKid(new Markov(Harmony.SCALE_MELODIC_MINOR, 2.0D));
-        markov.addKid(new Markov(Harmony.SCALE_MAJOR, 1.0D));
-        markov.addKid(new Markov(Harmony.SCALE_HUNGARIAN_MINOR, 0.5D));
         this.basslines[index] = createBassline(this.patternLength,
-                (int[]) (int[]) markov.getKid().getContent(), bassCoeffs);
+                scale, bassCoeffs);
 //			this.bass.randomize();
 //        } else {
 
@@ -160,9 +154,31 @@ public class AcidSequencer {
     }
 
     public void randomizeAllSynths() {
-        for (int i = 0; i < 4; i++) {
-            randomizeSequence(i);
+        int[] scale = Harmony.SCALE_ALL[(int) (Math.random() * Harmony.SCALE_ALL.length)];
+        randomizeSequence(0, scale);
+
+        Harmony harmony = new Harmony();
+        int[] progression = {0, 4, 5, 3}; // I-V-vi-IV
+
+        for (int i = 1; i < 4; i++) {
+            int[] chordProgression = new int[16];
+            for(int step=0; step<16; step++){
+                int degree = progression[step/4];
+                int[] chord = harmony.getNotesInChord(0, scale, degree, 3, 0);
+                chordProgression[step] = chord[i-1];
+            }
+            this.basslines[i] = createHarmonyLine(this.patternLength, chordProgression);
         }
+    }
+
+    public BasslinePattern createHarmonyLine(int length, int[] notes) {
+        BasslinePattern pattern = new BasslinePattern(length);
+        pattern.clear();
+        for (int i = 0; i < length; i++) {
+            pattern.note[i] = (byte) notes[i];
+            pattern.pause[i] = false;
+        }
+        return pattern;
     }
 
     public BasslinePattern createBassline(int length, int[] scale,
