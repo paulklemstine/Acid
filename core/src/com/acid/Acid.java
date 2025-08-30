@@ -60,7 +60,7 @@ public class Acid implements ApplicationListener {
     private static float rainbowFadeDir = .005f;
     ArrayList<SequencerData> sequencerDataArrayList = new ArrayList<SequencerData>();
     ArrayList<DrumData> drumDataArrayList = new ArrayList<DrumData>();
-    ArrayList<KnobData> knobsArrayList = new ArrayList<KnobData>();
+    ArrayList<ArrayList<KnobData>> knobsArrayList = new ArrayList<ArrayList<KnobData>>();
     int songPosition = 0;
     int maxSongPosition = 0;
     int minSongPosition = 0;
@@ -75,6 +75,7 @@ public class Acid implements ApplicationListener {
     private int sequencerView = 0; // 0-3 for synths, 4 for drums
     private float drumsSynthScale = 1.0f;
     private int prevStep = -1;
+    private KnobActor[][] mya;
     private Label maxSongLengthLabel;
     private Label songLengthLabel;
     private Label minSongLengthLabel;
@@ -257,6 +258,9 @@ public class Acid implements ApplicationListener {
         for (int i = 0; i < 4; i++) {
             Statics.synths[i] = (BasslineSynthesizer) Statics.output.getTrack(i);
         }
+        for (int i = 0; i < 4; i++) {
+            knobsArrayList.add(new ArrayList<KnobData>());
+        }
         Statics.drums = Statics.output.getTrack(4);
         Statics.output.getSequencer().drums.randomize();
         Table table = new Table(skin);
@@ -433,7 +437,9 @@ public class Acid implements ApplicationListener {
                             } else {
                                 sequencerDataArrayList.clear();
                                 drumDataArrayList.clear();
-                                knobsArrayList.clear();
+                                for (int i = 0; i < 4; i++) {
+                                    knobsArrayList.get(i).clear();
+                                }
 //                                SequencerData.sequences.clear();
 //                                KnobData.sequences.clear();
 //                                DrumData.sequences.clear();
@@ -851,16 +857,16 @@ public class Acid implements ApplicationListener {
 
             @Override
             public void drag(InputEvent event, float x, float y, int pointer) {
-                if (KnobData.sequences.size() > 1) {
+                if (KnobData.sequences[sequencerView].size() > 1) {
                     currentKnobsActor.moveBy(x - currentKnobsActor.getWidth() / 2, 0);
 
                     if (currentKnobsActor.getX() < xs - currentKnobsActor.getWidth() / 4f) {
-                        shiftStackLeft(KnobData.sequences);
+                        shiftStackLeft(KnobData.sequences[sequencerView]);
                         currentKnobsActor.setPosition(xs, currentKnobsActor.getY());
                         cancel();
                     }
                     if (currentKnobsActor.getX() > xs + currentKnobsActor.getWidth() / 4f) {
-                        shiftStackRight(KnobData.sequences);
+                        shiftStackRight(KnobData.sequences[sequencerView]);
                         currentKnobsActor.setPosition(xs, currentKnobsActor.getY());
                         cancel();
                     }
@@ -971,51 +977,53 @@ public class Acid implements ApplicationListener {
 //        ((OrthographicCamera)stage.getCamera()).setToOrtho(false,Gdx.graphics.getHeight(),Gdx.graphics.getWidth());
 
 
-        KnobActor[] mya = new KnobActor[10];
-        mya[0] = new KnobActor("Tune", 0);
-        table.addActor(mya[0]);
-        mya[1] = new KnobActor("Cut", 1);
-        table.addActor(mya[1]);
-        mya[2] = new KnobActor("Res", 2);
-        table.addActor(mya[2]);
-        mya[3] = new KnobActor("Env", 3);
-        table.addActor(mya[3]);
-        mya[4] = new KnobActor("Dec", 4);
-        table.addActor(mya[4]);
-        mya[5] = new KnobActor("Acc", 5);
-        table.addActor(mya[5]);
-        mya[6] = new KnobActor("bpm", 6);
-        table.addActor(mya[6]);
-        mya[7] = new KnobActor("Vol", 7);
-        table.addActor(mya[7]);
-        mya[8] = new KnobActor("Delay", 8);
-        table.addActor(mya[8]);
-        mya[9] = new KnobActor("Fack", 9);
-        table.addActor(mya[9]);
+        mya = new KnobActor[4][10];
+        for (int i = 0; i < 4; i++) {
+            mya[i][0] = new KnobActor("Tune", 0, i);
+            table.addActor(mya[i][0]);
+            mya[i][1] = new KnobActor("Cut", 1, i);
+            table.addActor(mya[i][1]);
+            mya[i][2] = new KnobActor("Res", 2, i);
+            table.addActor(mya[i][2]);
+            mya[i][3] = new KnobActor("Env", 3, i);
+            table.addActor(mya[i][3]);
+            mya[i][4] = new KnobActor("Dec", 4, i);
+            table.addActor(mya[i][4]);
+            mya[i][5] = new KnobActor("Acc", 5, i);
+            table.addActor(mya[i][5]);
+            mya[i][6] = new KnobActor("bpm", 6, i);
+            table.addActor(mya[i][6]);
+            mya[i][7] = new KnobActor("Vol", 7, i);
+            table.addActor(mya[i][7]);
+            mya[i][8] = new KnobActor("Delay", 8, i);
+            table.addActor(mya[i][8]);
+            mya[i][9] = new KnobActor("Fack", 9, i);
+            table.addActor(mya[i][9]);
 
 
-        //bottom row of knobs
-        int hj = 130;
-        int gh = 125;
-        mya[0].setPosition(hj, gh);
+            //bottom row of knobs
+            int hj = 130;
+            int gh = 125;
+            mya[i][0].setPosition(hj, gh);
 
-        mya[1].setPosition(hj += 56, gh);
+            mya[i][1].setPosition(hj += 56, gh);
 
-        mya[2].setPosition(hj += 56, gh);
+            mya[i][2].setPosition(hj += 56, gh);
 
-        mya[3].setPosition(hj += 56, gh);
+            mya[i][3].setPosition(hj += 56, gh);
 
-        mya[4].setPosition(hj += 56, gh);
+            mya[i][4].setPosition(hj += 56, gh);
 
-        mya[5].setPosition(hj += 56, gh);
+            mya[i][5].setPosition(hj += 56, gh);
 
-        mya[6].setPosition(40, 454);
+            mya[i][6].setPosition(40, 454);
 
-        mya[7].setPosition(85, 454);
+            mya[i][7].setPosition(85, 454);
 
-        mya[8].setPosition(40, 398);
+            mya[i][8].setPosition(40, 398);
 
-        mya[9].setPosition(85, 398);
+            mya[i][9].setPosition(85, 398);
+        }
 
 
         drumMatrix = new DrumActor(4, new String[]{"BD", "SD", "CH", "OH"}, font);
@@ -1387,16 +1395,6 @@ public class Acid implements ApplicationListener {
 //            }
 //        });
 
-        TextButton githubButton = new TextButton("Luv", skin);
-        table.addActor(githubButton);
-        githubButton.setPosition(515, 465);
-        githubButton.addListener(new InputListener() {
-            public boolean touchDown(InputEvent event, float x, float y,
-                                     int pointer, int button) {
-                Gdx.net.openURI("https://github.com/raver1975/Acid");
-                return true;
-            }
-        });
 
         SequencerData.pushStack(new
 
@@ -1540,25 +1538,37 @@ public class Acid implements ApplicationListener {
     }
 
     void swapPattern(int curr, int next) {
+        for (int i = 0; i < 4; i++) {
+            while (next >= knobsArrayList.get(i).size()) {
+                knobsArrayList.get(i).add(KnobData.currentSequences[i]);
+            }
+        }
         while (next >= sequencerDataArrayList.size()) {
             sequencerDataArrayList.add(new SequencerData());
             drumDataArrayList.add(new DrumData());
-            knobsArrayList.add(KnobData.currentSequence);
         }
         if (Statics.recording) {
-            if (sequencerDataArrayList.size() > curr) sequencerDataArrayList.remove(curr);
-            if (drumDataArrayList.size() > curr) drumDataArrayList.remove(curr);
-            if (knobsArrayList.size() > curr) knobsArrayList.remove(curr);
+            if (sequencerDataArrayList.size() > curr)
+                sequencerDataArrayList.remove(curr);
+            if (drumDataArrayList.size() > curr)
+                drumDataArrayList.remove(curr);
+            for (int i = 0; i < 4; i++) {
+                if (knobsArrayList.get(i).size() > curr)
+                    knobsArrayList.get(i).remove(curr);
+            }
             sequencerDataArrayList.add(curr, new SequencerData());
             drumDataArrayList.add(curr, new DrumData());
-            knobsArrayList.add(curr, KnobData.factory());
+            for (int i = 0; i < 4; i++) {
+                knobsArrayList.get(i).add(curr, KnobData.factory(i));
+            }
         }
         if (!Statics.free) {
             sequencerDataArrayList.get(next).refresh();
             drumDataArrayList.get(next).refresh();
             if (!KnobImpl.isTouched()) {
-                KnobData.setcurrentSequence(knobsArrayList.get(next));
-                KnobData.currentSequence.refresh();
+                for (int i = 0; i < 4; i++) {
+                    KnobData.setCurrentSequence(knobsArrayList.get(i).get(next), i);
+                }
             }
 
         }
@@ -1575,18 +1585,18 @@ public class Acid implements ApplicationListener {
         if (newZoom > ((OrthographicCamera) stage.getCamera()).zoom)
             ((OrthographicCamera) stage.getCamera()).zoom += .005f;
         stage.draw();
-        if (KnobImpl.getControl(Statics.output.getSequencer().step) != null)
+        if (sequencerView < 4 && KnobImpl.getControl(sequencerView, Statics.output.getSequencer().step) != null)
             for (int i = 0; i < 6; i++) {
                 if (!KnobImpl.touched[i]) {
                     if (Statics.free) {
 
                     } else {
-                        KnobImpl.setControls(KnobImpl.getControl(Statics.output.getSequencer().step)[i], i);
+                        KnobImpl.setControls(sequencerView, KnobImpl.getControl(sequencerView, Statics.output.getSequencer().step)[i], i);
                     }
                 } else {
-                    KnobData.factory();
+                    KnobData.factory(sequencerView);
                     if (Statics.recording) {
-                        KnobImpl.setControl(Statics.output.getSequencer().step, i);
+                        KnobImpl.setControl(sequencerView, Statics.output.getSequencer().step, i);
                     }
                 }
 
@@ -1632,7 +1642,7 @@ public class Acid implements ApplicationListener {
         drumDataArrayListLabel.setText(DrumData.sequences.size() + "");
 
         knobDataArrayListLabel.setColor(ColorHelper.rainbowLight());
-        knobDataArrayListLabel.setText(KnobData.sequences.size() + "");
+        knobDataArrayListLabel.setText(KnobData.sequences[sequencerView].size() + "");
 
         BpmLabel.setText((int) Statics.output.getSequencer().bpm + "");
 
@@ -1686,6 +1696,14 @@ public class Acid implements ApplicationListener {
                 button.setColor(Color.RED);
             } else {
                 button.setColor(Color.WHITE);
+            }
+        }
+
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 10; j++) {
+                if (mya[i][j] != null) {
+                    mya[i][j].setVisible(i == sequencerView);
+                }
             }
         }
     }

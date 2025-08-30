@@ -11,11 +11,13 @@ import java.util.Arrays;
  * Created by Paul on 1/8/2017.
  */
 public class KnobImpl {
-    static double[][] knobs = new double[16][10];
+    static double[][][] knobs = new double[4][16][10];
 
     static {
-        for (int i = 0; i < 16; i++) {
-            knobs[i] = getControls();
+        for (int j = 0; j < 4; j++) {
+            for (int i = 0; i < 16; i++) {
+                knobs[j][i] = getControls(j);
+            }
         }
     }
 
@@ -73,37 +75,37 @@ public class KnobImpl {
     }
 
 
-    public static float getRotation(int id) {
+    public static float getRotation(int synthIndex, int id) {
         float rotation = 0f;
         switch (id) {
             case 0:
-                rotation = (int) (((((BasslineSynthesizer) Statics.synths[Statics.currentSynth])
+                rotation = (int) (((((BasslineSynthesizer) Statics.synths[synthIndex])
                         .tune - .5f) * 400.0) / 1.5f);
 
                 break;
             case 1:
-                rotation = (float) ((((BasslineSynthesizer) Statics.synths[Statics.currentSynth]).cutoff
+                rotation = (float) ((((BasslineSynthesizer) Statics.synths[synthIndex]).cutoff
                         .getValue() - 1200) * 5.0f) / 50f;
                 break;
 
             case 2:
-                rotation = (float) (((BasslineSynthesizer) Statics.synths[Statics.currentSynth]).resonance
+                rotation = (float) (((BasslineSynthesizer) Statics.synths[synthIndex]).resonance
                         .getValue() * 500f) - 100f;
                 break;
 
             case 3:
-                rotation = (int) ((((BasslineSynthesizer) Statics.synths[Statics.currentSynth])
+                rotation = (int) ((((BasslineSynthesizer) Statics.synths[synthIndex])
                         .envMod * 500) - 100);
                 break;
 
             case 4:
-                rotation = (float) ((((20 - ((BasslineSynthesizer) Statics.synths[Statics.currentSynth])
+                rotation = (float) ((((20 - ((BasslineSynthesizer) Statics.synths[synthIndex])
                         .decay)) * 640) / 20.0f) - 100f;
                 break;
 
             case 5:
                 //accent
-                rotation = (float) ((BasslineSynthesizer) Statics.synths[Statics.currentSynth]).accent * 360f;
+                rotation = (float) ((BasslineSynthesizer) Statics.synths[synthIndex]).accent * 360f;
                 break;
             case 6:
 
@@ -123,38 +125,42 @@ public class KnobImpl {
         return rotation;
     }
 
+    public static float getRotation(int id) {
+        return getRotation(Statics.currentSynth, id);
+    }
+
     //    public static int[] knobVals=new int[8];
-    public static void touchDragged(int id, float offset) {
+    public static void touchDragged(int synthIndex, int id, float offset) {
         int cc = (int) (127f / 2f - offset);
 
         switch (id) {
             case 0:
                 // tune
-                Statics.synths[Statics.currentSynth].controlChange(33, cc);
+                Statics.synths[synthIndex].controlChange(33, cc);
                 break;
             case 1:
                 //cutoff
-                Statics.synths[Statics.currentSynth].controlChange(34, cc);
+                Statics.synths[synthIndex].controlChange(34, cc);
                 break;
 
             case 2:
                 //resonance
-                Statics.synths[Statics.currentSynth].controlChange(35, cc);
+                Statics.synths[synthIndex].controlChange(35, cc);
                 break;
 
             case 3:
                 //envelope
-                Statics.synths[Statics.currentSynth].controlChange(36, cc);
+                Statics.synths[synthIndex].controlChange(36, cc);
                 break;
 
             case 4:
                 //decay
-                Statics.synths[Statics.currentSynth].controlChange(37, cc);
+                Statics.synths[synthIndex].controlChange(37, cc);
                 break;
 
             case 5:
                 //accent
-                Statics.synths[Statics.currentSynth].controlChange(38, cc);
+                Statics.synths[synthIndex].controlChange(38, cc);
                 break;
             case 6:
                 //bpm
@@ -165,7 +171,7 @@ public class KnobImpl {
                 break;
             case 7:
                 //volume
-                Statics.synths[Statics.currentSynth].controlChange(39, cc);
+                Statics.synths[synthIndex].controlChange(39, cc);
                 break;
             case 8:
                 //Delay time
@@ -174,42 +180,58 @@ public class KnobImpl {
             case 9:
                 Output.getDelay().controlChange(41, cc);
         }
-        KnobData.factory();
+        KnobData.factory(synthIndex);
     }
 
-    public static void refill() {
-        double[] contrls = KnobImpl.getControls();
+    public static void touchDragged(int id, float offset) {
+        touchDragged(Statics.currentSynth, id, offset);
+    }
+
+    public static void refill(int synthIndex) {
+        double[] contrls = KnobImpl.getControls(synthIndex);
 
         for (int i = 0; i < 16; i++) {
             for (int j = 0; j < 6; j++) {
-                KnobImpl.knobs[i][j] = contrls[j];
+                KnobImpl.knobs[synthIndex][i][j] = contrls[j];
             }
         }
-        KnobData.factory();
+        KnobData.factory(synthIndex);
+    }
+
+    public static void refill() {
+        refill(Statics.currentSynth);
+    }
+
+    public static void setControl(int synthIndex, int step, int id) {
+        if (Statics.free) {
+            for (int i = 0; i < 16; i++) {
+                knobs[synthIndex][i % 16][id] = getControls(synthIndex)[id];
+            }
+        } else {
+            knobs[synthIndex][step % 16][id] = getControls(synthIndex)[id];
+        }
     }
 
     public static void setControl(int step, int id) {
-        if (Statics.free) {
-            for (int i = 0; i < 16; i++) {
-                knobs[i % 16][id] = getControls()[id];
-            }
-        } else {
-            knobs[step % 16][id] = getControls()[id];
-        }
+        setControl(Statics.currentSynth, step, id);
+    }
+
+    public static double[] getControl(int synthIndex, int step) {
+        return knobs[synthIndex][step % 16];
     }
 
     public static double[] getControl(int step) {
-        return knobs[step % 16];
+        return getControl(Statics.currentSynth, step);
     }
 
-    public static double[] getControls() {
+    public static double[] getControls(int synthIndex) {
         double[] vals = new double[10];
-        vals[0] = Statics.synths[Statics.currentSynth].tune;
-        vals[1] = Statics.synths[Statics.currentSynth].cutoff.getValue();
-        vals[2] = Statics.synths[Statics.currentSynth].resonance.getValue();
-        vals[3] = Statics.synths[Statics.currentSynth].envMod;
-        vals[4] = Statics.synths[Statics.currentSynth].decay;
-        vals[5] = Statics.synths[Statics.currentSynth].accent;
+        vals[0] = Statics.synths[synthIndex].tune;
+        vals[1] = Statics.synths[synthIndex].cutoff.getValue();
+        vals[2] = Statics.synths[synthIndex].resonance.getValue();
+        vals[3] = Statics.synths[synthIndex].envMod;
+        vals[4] = Statics.synths[synthIndex].decay;
+        vals[5] = Statics.synths[synthIndex].accent;
         vals[6] = Statics.output.getSequencer().bpm;
         vals[7] = Output.volume;
         vals[8] = Output.getDelay().getTime();
@@ -217,26 +239,38 @@ public class KnobImpl {
         return vals;
     }
 
+    public static double[] getControls() {
+        return getControls(Statics.currentSynth);
+    }
+
+    public static void setControls(int synthIndex, double[] vals) {
+        Statics.synths[synthIndex].tune = vals[0];
+        Statics.synths[synthIndex].cutoff.setValue(vals[1]);
+        Statics.synths[synthIndex].resonance.setValue(vals[2]);
+        Statics.synths[synthIndex].envMod = vals[3];
+        Statics.synths[synthIndex].decay = vals[4];
+        Statics.synths[synthIndex].accent = vals[5];
+        //Statics.output.getSequencer().setBpm(vals[6]);
+        //Statics.output.volume=vals[7];
+    }
+
     public static void setControls(double[] vals) {
-        Statics.synths[Statics.currentSynth].tune = vals[0];
-        Statics.synths[Statics.currentSynth].cutoff.setValue(vals[1]);
-        Statics.synths[Statics.currentSynth].resonance.setValue(vals[2]);
-        Statics.synths[Statics.currentSynth].envMod = vals[3];
-        Statics.synths[Statics.currentSynth].decay = vals[4];
-        Statics.synths[Statics.currentSynth].accent = vals[5];
+        setControls(Statics.currentSynth, vals);
+    }
+
+    public static void setControls(int synthIndex, double vals, int id) {
+        if (id == 0) Statics.synths[synthIndex].tune = vals;
+        if (id == 1) Statics.synths[synthIndex].cutoff.setValue(vals);
+        if (id == 2) Statics.synths[synthIndex].resonance.setValue(vals);
+        if (id == 3) Statics.synths[synthIndex].envMod = vals;
+        if (id == 4) Statics.synths[synthIndex].decay = vals;
+        if (id == 5) Statics.synths[synthIndex].accent = vals;
         //Statics.output.getSequencer().setBpm(vals[6]);
         //Statics.output.volume=vals[7];
     }
 
     public static void setControls(double vals, int id) {
-        if (id == 0) Statics.synths[Statics.currentSynth].tune = vals;
-        if (id == 1) Statics.synths[Statics.currentSynth].cutoff.setValue(vals);
-        if (id == 2) Statics.synths[Statics.currentSynth].resonance.setValue(vals);
-        if (id == 3) Statics.synths[Statics.currentSynth].envMod = vals;
-        if (id == 4) Statics.synths[Statics.currentSynth].decay = vals;
-        if (id == 5) Statics.synths[Statics.currentSynth].accent = vals;
-        //Statics.output.getSequencer().setBpm(vals[6]);
-        //Statics.output.volume=vals[7];
+        setControls(Statics.currentSynth, vals, id);
     }
 
 
