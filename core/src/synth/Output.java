@@ -14,6 +14,7 @@ public class Output implements Runnable {
     public static boolean running = false;
     private static Thread thread = null;
     private static Synthesizer[] tracks;
+    public static boolean[] muteState = new boolean[5];
     private static Reverb reverb;
     private static Delay delay;
     private static boolean paused = false;
@@ -24,17 +25,20 @@ public class Output implements Runnable {
 
     public Output() {
         ad = Gdx.audio.newAudioDevice((int) SAMPLE_RATE, false);
-        tracks = new Synthesizer[Statics.drumsOn ? 2 : 1];
-        BasslineSynthesizer tb = new BasslineSynthesizer();
-        tracks[0] = tb;
+        tracks = new Synthesizer[5];
+        BasslineSynthesizer[] tbs = new BasslineSynthesizer[4];
+        for (int i = 0; i < 4; i++) {
+            tbs[i] = new BasslineSynthesizer();
+            tracks[i] = tbs[i];
+        }
         RhythmSynthesizer tr = new RhythmSynthesizer();
-        if (Statics.drumsOn)
-            tracks[1] = tr;
+        tracks[4] = tr;
+
 
         delay = new Delay();
         reverb = new Reverb();
 
-        this.sequencer = new AcidSequencer(tb, tr, this);
+        this.sequencer = new AcidSequencer(tbs, tr, this);
 
         thread = new Thread(this);
         thread.setPriority(10);
@@ -117,26 +121,17 @@ public class Output implements Runnable {
                 double right = 0.0D;
 
                 this.sequencer.tick();
-                if (Statics.drumsOn) {
-                    double[] tmp = null;
-                    tmp = tracks[1].stereoOutput();
 
-                    delay.input(tmp[2]);
-                    reverb.input(tmp[3]);
-
-                    left += tmp[0];
-                    right += tmp[1];
+                for (int j = 0; j < tracks.length; j++) {
+                    if (!muteState[j]) {
+                        double[] tmp = tracks[j].stereoOutput();
+                        delay.input(tmp[2]);
+                        reverb.input(tmp[3]);
+                        left += tmp[0];
+                        right += tmp[1];
+                    }
                 }
-                if (Statics.synthOn) {
-                    double[] tmp = null;
-                    tmp = tracks[0].stereoOutput();
 
-                    delay.input(tmp[2]);
-                    reverb.input(tmp[3]);
-
-                    left += tmp[0];
-                    right += tmp[1];
-                }
 
                 double[] del = delay.output();
                 left += del[0];
@@ -189,6 +184,10 @@ public class Output implements Runnable {
 
     public Synthesizer getTrack(int i) {
         return tracks[i];
+    }
+
+    public Synthesizer[] getTracks() {
+        return tracks;
     }
 
     public AcidSequencer getSequencer() {

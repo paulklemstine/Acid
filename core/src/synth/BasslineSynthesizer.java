@@ -38,6 +38,7 @@ public class BasslineSynthesizer
     private final ADREnvelope feg;
     private final Distortion distortion;
     private int tmp;
+    public boolean waveSquare = false;
     private static final double[] MIDI_NOTES = new double[127];
     public static final int MSG_NOTE_ON = 30;
     public static final int MSG_NOTE_OFF = 31;
@@ -84,10 +85,10 @@ public class BasslineSynthesizer
     public void randomize() {
         if (Math.random() > 0.5D) {
             this.osc.setWavetable(WAVETABLE_SQUARE);
-            Statics.waveSquare=true;
+            this.waveSquare=true;
         } else {
             this.osc.setWavetable(WAVETABLE_SAW);
-            Statics.waveSquare=false;
+            this.waveSquare=false;
         }
         cutoff.setValue(Math.random() * 3866.0D + 100.0D);
         resonance.setValue(Math.random());
@@ -159,11 +160,11 @@ public class BasslineSynthesizer
     public void switchWaveform() {
         if (this.osc.getWavetable() == WAVETABLE_SAW) {
             this.osc.setWavetable(WAVETABLE_SQUARE);
-            Statics.waveSquare = true;
+            this.waveSquare = true;
         }
         else {
             this.osc.setWavetable(WAVETABLE_SAW);
-            Statics.waveSquare=false;
+            this.waveSquare=false;
         }
     }
 

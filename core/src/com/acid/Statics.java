@@ -9,21 +9,18 @@ import synth.Synthesizer;
 public class Statics {
 
 
-    public static boolean drumsOn = true;
-    public static boolean synthOn = true;
-
     public static ShapeRenderer renderer;
     public static String sdcard;
     public static FileHandle exportConvertedWav;
     public static FileHandle exportConvertedFlac;
 
-    static BasslineSynthesizer synth;
+    public static BasslineSynthesizer[] synths;
+    public static int currentSynth = 0;
     public static Synthesizer drums;
     public static Output output;
 
     public static boolean recording = true;
     public static boolean free = true;
-    public static boolean waveSquare;
     public static boolean export;
     public static FileHandle exportFile;
     public static FileHandle saveName;
