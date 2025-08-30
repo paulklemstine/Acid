@@ -28,10 +28,10 @@ public class SequencerData extends InstrumentData {
     public SequencerData() {
 
         for (int x1 = 0; x1 < 16; x1++) {
-            note[x1] = Statics.output.getSequencer().bassline.note[x1];
-            pause[x1] = Statics.output.getSequencer().bassline.pause[x1];
-            slide[x1] = Statics.output.getSequencer().bassline.slide[x1];
-            accent[x1] = Statics.output.getSequencer().bassline.accent[x1];
+            note[x1] = Statics.output.getSequencer().basslines[Statics.currentSynth].note[x1];
+            pause[x1] = Statics.output.getSequencer().basslines[Statics.currentSynth].pause[x1];
+            slide[x1] = Statics.output.getSequencer().basslines[Statics.currentSynth].slide[x1];
+            accent[x1] = Statics.output.getSequencer().basslines[Statics.currentSynth].accent[x1];
         }
         pixmap = drawPixmap(300, 300);
         region = new TextureRegion(new Texture(pixmap));
@@ -41,38 +41,38 @@ public class SequencerData extends InstrumentData {
     public static void render(ShapeRenderer renderer1, float skipx, float skipy) {
         renderer1.begin(ShapeRenderer.ShapeType.Line);
         for (int i = 0; i < 16; i++) {
-            if (Statics.output.getSequencer().bassline.pause[i]) {
+            if (Statics.output.getSequencer().basslines[Statics.currentSynth].pause[i]) {
                 continue;
             }
-            if (Statics.output.getSequencer().bassline.accent[i]) {
+            if (Statics.output.getSequencer().basslines[Statics.currentSynth].accent[i]) {
                 renderer1.setColor(ColorHelper.rainbowInverse());
             } else {
 
                 renderer1.setColor(ColorHelper.rainbowLight());
             }
-            if (Statics.output.getSequencer().bassline.slide[i]) {
+            if (Statics.output.getSequencer().basslines[Statics.currentSynth].slide[i]) {
                 if (i < 15) {
                     renderer1
                             .line((i) * skipx + skipx / 2,
-                                    (Statics.output.getSequencer().bassline.note[i] + 16)
+                                    (Statics.output.getSequencer().basslines[Statics.currentSynth].note[i] + 16)
                                             * skipy + skipy / 2,
                                     (i + 1) * skipx + skipx / 2,
-                                    (Statics.output.getSequencer().bassline.note[(i + 1) % 16] + 16)
+                                    (Statics.output.getSequencer().basslines[Statics.currentSynth].note[(i + 1) % 16] + 16)
                                             * skipy + skipy / 2);
                 } else {
                     renderer1
                             .line((i) * skipx + skipx / 2,
-                                    (Statics.output.getSequencer().bassline.note[i] + 16)
+                                    (Statics.output.getSequencer().basslines[Statics.currentSynth].note[i] + 16)
                                             * skipy + skipy / 2,
                                     (i + 1) * skipx,
-                                    (Statics.output.getSequencer().bassline.note[(i + 1) % 16] + 16)
+                                    (Statics.output.getSequencer().basslines[Statics.currentSynth].note[(i + 1) % 16] + 16)
                                             * skipy + skipy / 2);
                     renderer1
                             .line(skipx / 2,
-                                    (Statics.output.getSequencer().bassline.note[0] + 16)
+                                    (Statics.output.getSequencer().basslines[Statics.currentSynth].note[0] + 16)
                                             * skipy + skipy / 2,
                                     0,
-                                    (Statics.output.getSequencer().bassline.note[15] + 16)
+                                    (Statics.output.getSequencer().basslines[Statics.currentSynth].note[15] + 16)
                                             * skipy + skipy / 2);
                 }
             }
@@ -81,28 +81,28 @@ public class SequencerData extends InstrumentData {
 
         renderer1.begin(ShapeRenderer.ShapeType.Filled);
         for (int i = 0; i < 16; i++) {
-            if (Statics.output.getSequencer().bassline.pause[i]) {
+            if (Statics.output.getSequencer().basslines[Statics.currentSynth].pause[i]) {
                 continue;
             }
-            if (Statics.output.getSequencer().bassline.accent[i]) {
+            if (Statics.output.getSequencer().basslines[Statics.currentSynth].accent[i]) {
                 renderer1.setColor(ColorHelper.rainbowInverse());
             } else {
                 renderer1.setColor(ColorHelper.rainbowLight());
             }
 
-            if (Statics.output.getSequencer().bassline.accent[i]) {
+            if (Statics.output.getSequencer().basslines[Statics.currentSynth].accent[i]) {
 //                    if (i==0||!Statics.output.getSequencer().bassline.slide[i-1])
                 float cx = Math.min(skipx, skipy);
                 renderer1
                         .rect(
                                 i * skipx + ((skipx - cx) / 2),
-                                (Statics.output.getSequencer().bassline.note[i] + 16)
+                                (Statics.output.getSequencer().basslines[Statics.currentSynth].note[i] + 16)
                                         * skipy, cx,
                                 cx);
 //                        renderer1.circle(i * skipx + skipx / 2, (Statics.output.getSequencer().bassline.note[i] + 16) * skipy + skipy / 2, Math.min(skipx, skipy) / 2);
 
             } else {
-                renderer1.circle(i * skipx + skipx / 2, (Statics.output.getSequencer().bassline.note[i] + 16) * skipy + skipy / 2, Math.min(skipx, skipy) / 2);
+                renderer1.circle(i * skipx + skipx / 2, (Statics.output.getSequencer().basslines[Statics.currentSynth].note[i] + 16) * skipy + skipy / 2, Math.min(skipx, skipy) / 2);
             }
         }
         renderer1.end();
@@ -125,10 +125,10 @@ public class SequencerData extends InstrumentData {
 
     public void refresh() {
         for (int x1 = 0; x1 < 16; x1++) {
-            Statics.output.getSequencer().bassline.note[x1] = note[x1];
-            Statics.output.getSequencer().bassline.pause[x1] = pause[x1];
-            Statics.output.getSequencer().bassline.slide[x1] = slide[x1];
-            Statics.output.getSequencer().bassline.accent[x1] = accent[x1];
+            Statics.output.getSequencer().basslines[Statics.currentSynth].note[x1] = note[x1];
+            Statics.output.getSequencer().basslines[Statics.currentSynth].pause[x1] = pause[x1];
+            Statics.output.getSequencer().basslines[Statics.currentSynth].slide[x1] = slide[x1];
+            Statics.output.getSequencer().basslines[Statics.currentSynth].accent[x1] = accent[x1];
         }
     }
 

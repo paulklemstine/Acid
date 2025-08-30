@@ -142,9 +142,7 @@ public class Acid implements ApplicationListener {
         Statics.output = new Output();
         Statics.output.getSequencer().setBpm(120);
         Statics.output.getSequencer().randomizeRhythm();
-        for (int i = 0; i < 4; i++) {
-            Statics.output.getSequencer().randomizeSequence(i);
-        }
+        Statics.output.getSequencer().randomizeAllSynths();
 
         InputMultiplexer multiplexer = new InputMultiplexer();
         GestureListener gl = new GestureListener() {
