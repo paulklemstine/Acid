@@ -29,6 +29,7 @@ public class BasslineSynthesizer
     public double accent;
     private double vol_i;
     private double gain_i;
+    public double volume = 1.0;
     private static final double DECAY_MAX = 0.125D;
     private static final double DECAY_MIN = 20.0D;
     private static final int coeffOptimization = 16;
@@ -50,6 +51,7 @@ public class BasslineSynthesizer
     public static final int MSG_CC_DECAY = 37;
     public static final int MSG_CC_ACCENT = 38;
     public static final int MSG_CC_VOLUME = 39;
+    public static final int MSG_CC_SYNTH_VOLUME = 40;
     private double out;
     private double aux1;
     private double aux1Amt;
@@ -132,7 +134,7 @@ public class BasslineSynthesizer
                 this.osc.setFrequency(this.frequency * this.tune);
             }
 
-            this.out = (this.distortion.distort(this.filter.filter(this.osc.tick() * this.aeg.tick())) * 1.66D);
+            this.out = (this.distortion.distort(this.filter.filter(this.osc.tick() * this.aeg.tick())) * 1.66D) * this.volume;
             return this.out;
         }
 
@@ -224,6 +226,12 @@ public class BasslineSynthesizer
                 newValue = value / 127.0D;
                 if (newValue >= 0d && newValue <= 1d) {
                     this.accent = (newValue);
+                }
+                break;
+            case MSG_CC_SYNTH_VOLUME:
+                newValue = value / 127.0D;
+                if (newValue >= 0d && newValue <= 2d) {
+                    this.volume = newValue;
                 }
         }
     }

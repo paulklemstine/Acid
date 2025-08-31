@@ -1274,6 +1274,9 @@ public class Acid implements ApplicationListener {
             final TextButton selectionButton = new TextButton(buttonText, skin);
             if (i < 4) {
                 selectionButton.setPosition(470 + (i * 40), 310);
+                KnobActor volKnob = new KnobActor("Vol", 10, i);
+                volKnob.setPosition(470 + (i * 40), 280);
+                table.addActor(volKnob);
             } else {
                 selectionButton.setPosition(470, 280);
             }
@@ -1308,9 +1311,13 @@ public class Acid implements ApplicationListener {
 //            }
                                              public boolean touchDown(InputEvent event, float x, float y,
                                                                       int pointer, int button) {
-                                                 Statics.output.getSequencer().randomizeRhythm();
-                                                 Statics.output.getSequencer().randomizeAllSynths();
-                                                 KnobImpl.refill();
+                                                 if (sequencerView < 4) {
+                                                     int[] scale = synth.Harmony.SCALE_ALL[(int) (Math.random() * synth.Harmony.SCALE_ALL.length)];
+                                                     Statics.output.getSequencer().randomizeSequence(sequencerView, scale);
+                                                 } else {
+                                                     Statics.output.getSequencer().randomizeRhythm();
+                                                 }
+                                                 KnobImpl.refill(sequencerView);
                                                  return true;
                                              }
                                          });

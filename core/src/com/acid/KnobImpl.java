@@ -120,6 +120,9 @@ public class KnobImpl {
             case 9:
                 rotation = (float) Output.getDelay().getFeedback() * 360f;
                 break;
+            case 10:
+                rotation = (float) ((BasslineSynthesizer) Statics.synths[synthIndex]).volume * 360f;
+                break;
 
         }
         return rotation;
@@ -179,6 +182,9 @@ public class KnobImpl {
                 break;
             case 9:
                 Output.getDelay().controlChange(41, cc);
+                break;
+            case 10:
+                Statics.synths[synthIndex].controlChange(BasslineSynthesizer.MSG_CC_SYNTH_VOLUME, cc);
         }
         KnobData.factory(synthIndex);
     }
