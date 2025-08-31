@@ -3,6 +3,7 @@ package com.acid;
 import com.badlogic.gdx.Gdx;
 import synth.BasslineSynthesizer;
 import synth.Output;
+import synth.RhythmSynthesizer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,7 +22,7 @@ public class KnobImpl {
         }
     }
 
-    static boolean[] touched = new boolean[11];
+    static boolean[] touched = new boolean[12];
 
     static boolean isTouched() {
         for (int i = 0; i < 6; i++) {
@@ -123,6 +124,9 @@ public class KnobImpl {
             case 10:
                 rotation = (float) ((BasslineSynthesizer) Statics.synths[synthIndex]).volume * 360f;
                 break;
+            case 11:
+                rotation = (float) ((RhythmSynthesizer) Statics.drums).volume * 360f;
+                break;
 
         }
         return rotation;
@@ -185,6 +189,9 @@ public class KnobImpl {
                 break;
             case 10:
                 Statics.synths[synthIndex].controlChange(BasslineSynthesizer.MSG_CC_SYNTH_VOLUME, cc);
+                break;
+            case 11:
+                ((RhythmSynthesizer) Statics.drums).controlChange(RhythmSynthesizer.MSG_CC_DRUM_VOLUME, cc);
         }
         KnobData.factory(synthIndex);
     }

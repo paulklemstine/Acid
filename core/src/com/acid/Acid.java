@@ -1275,10 +1275,13 @@ public class Acid implements ApplicationListener {
             if (i < 4) {
                 selectionButton.setPosition(470 + (i * 40), 310);
                 KnobActor volKnob = new KnobActor("Vol", 10, i);
-                volKnob.setPosition(470 + (i * 40), 280);
+                volKnob.setPosition(470 + (i * 40), 250);
                 table.addActor(volKnob);
             } else {
                 selectionButton.setPosition(470 + (4 * 40), 310);
+                KnobActor volKnob = new KnobActor("Vol", 11, 4);
+                volKnob.setPosition(470 + (4 * 40), 250);
+                table.addActor(volKnob);
             }
             table.addActor(selectionButton);
             selectionButtons.add(selectionButton);
@@ -1592,22 +1595,24 @@ public class Acid implements ApplicationListener {
         if (newZoom > ((OrthographicCamera) stage.getCamera()).zoom)
             ((OrthographicCamera) stage.getCamera()).zoom += .005f;
         stage.draw();
-        if (sequencerView < 4 && KnobImpl.getControl(sequencerView, Statics.output.getSequencer().step) != null)
-            for (int i = 0; i < 6; i++) {
-                if (!KnobImpl.touched[i]) {
-                    if (Statics.free) {
+        if (sequencerView < 4) {
+            if (KnobImpl.getControl(sequencerView, Statics.output.getSequencer().step) != null)
+                for (int i = 0; i < 6; i++) {
+                    if (!KnobImpl.touched[i]) {
+                        if (Statics.free) {
 
+                        } else {
+                            KnobImpl.setControls(sequencerView, KnobImpl.getControl(sequencerView, Statics.output.getSequencer().step)[i], i);
+                        }
                     } else {
-                        KnobImpl.setControls(sequencerView, KnobImpl.getControl(sequencerView, Statics.output.getSequencer().step)[i], i);
+                        KnobData.factory(sequencerView);
+                        if (Statics.recording) {
+                            KnobImpl.setControl(sequencerView, Statics.output.getSequencer().step, i);
+                        }
                     }
-                } else {
-                    KnobData.factory(sequencerView);
-                    if (Statics.recording) {
-                        KnobImpl.setControl(sequencerView, Statics.output.getSequencer().step, i);
-                    }
-                }
 
-            }
+                }
+        }
 //            KnobImpl.setControls(KnobImpl.getControl(Statics.output.getSequencer().step));
 
         if (Statics.output.getSequencer().step % 16 == 0 && prevStep % 16 == 1) {
@@ -1649,7 +1654,11 @@ public class Acid implements ApplicationListener {
         drumDataArrayListLabel.setText(DrumData.sequences.size() + "");
 
         knobDataArrayListLabel.setColor(ColorHelper.rainbowLight());
-        knobDataArrayListLabel.setText(KnobData.sequences[sequencerView].size() + "");
+        if (sequencerView < 4) {
+            knobDataArrayListLabel.setText(KnobData.sequences[sequencerView].size() + "");
+        } else {
+            knobDataArrayListLabel.setText("");
+        }
 
         BpmLabel.setText((int) Statics.output.getSequencer().bpm + "");
 
