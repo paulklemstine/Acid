@@ -1270,7 +1270,7 @@ public class Acid implements ApplicationListener {
 
         for (int i = 0; i < 5; i++) {
             final int trackIndex = i;
-            String buttonText = (i < 4) ? "S" + (i + 1) : "Drums";
+            String buttonText = (i < 4) ? "S" + (i + 1) : "D";
             final TextButton selectionButton = new TextButton(buttonText, skin);
             if (i < 4) {
                 selectionButton.setPosition(470 + (i * 40), 310);
@@ -1278,7 +1278,7 @@ public class Acid implements ApplicationListener {
                 volKnob.setPosition(470 + (i * 40), 280);
                 table.addActor(volKnob);
             } else {
-                selectionButton.setPosition(470, 280);
+                selectionButton.setPosition(470 + (4 * 40), 310);
             }
             table.addActor(selectionButton);
             selectionButtons.add(selectionButton);

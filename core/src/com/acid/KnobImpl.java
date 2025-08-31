@@ -21,7 +21,7 @@ public class KnobImpl {
         }
     }
 
-    static boolean[] touched = new boolean[10];
+    static boolean[] touched = new boolean[11];
 
     static boolean isTouched() {
         for (int i = 0; i < 6; i++) {
