@@ -81,7 +81,7 @@ public class AcidSequencer {
     public void tick() {
         if (this.tick == 0) {
             if (this.sixteenth_note) {
-                for (int i = 0; i < Statics.NUM_SYNTHS_TOTAL; i++) {
+                for (int i = 0; i < Statics.numActiveSynths; i++) {
                     if ((this.basslines[i].pause[this.step] == false)
                             && (this.basslines[i].note[this.step] != -1)) {
                         this.synths[i]
@@ -119,8 +119,8 @@ public class AcidSequencer {
                 if (this.shuffle)
                     setBpm(this.bpm);
             } else {
-                for (int i = 0; i < 4; i++) {
-                    if (this.basslines[i].slide[this.step] == false)
+                for (int i = 0; i < Statics.numActiveSynths; i++) {
+                    if (this.basslines[i] != null && this.basslines[i].slide[this.step] == false)
                         this.synths[i].noteOff();
                 }
                 this.step += 1;
