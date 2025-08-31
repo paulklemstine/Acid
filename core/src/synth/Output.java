@@ -26,8 +26,8 @@ public class Output implements Runnable {
     public Output() {
         ad = Gdx.audio.newAudioDevice((int) SAMPLE_RATE, false);
         tracks = new Synthesizer[5];
-        BasslineSynthesizer[] tbs = new BasslineSynthesizer[Statics.NUM_SYNTHS];
-        for (int i = 0; i < Statics.NUM_SYNTHS; i++) {
+        BasslineSynthesizer[] tbs = new BasslineSynthesizer[Statics.NUM_SYNTHS_TOTAL];
+        for (int i = 0; i < Statics.NUM_SYNTHS_TOTAL; i++) {
             tbs[i] = new BasslineSynthesizer();
             tracks[i] = tbs[i];
         }

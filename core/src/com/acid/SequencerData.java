@@ -16,19 +16,19 @@ import java.util.Stack;
  * Created by Paul on 1/10/2017.
  */
 public class SequencerData extends InstrumentData {
-    static Stack<SequencerData>[] sequences = new Stack[Statics.NUM_SYNTHS];
+    static Stack<SequencerData>[] sequences = new Stack[Statics.NUM_SYNTHS_TOTAL];
     static {
-        for (int i = 0; i < Statics.NUM_SYNTHS; i++) {
+        for (int i = 0; i < Statics.NUM_SYNTHS_TOTAL; i++) {
             sequences[i] = new Stack<SequencerData>();
         }
     }
-    private final byte[] note = new byte[16];
-    private final boolean[] pause = new boolean[16];
-    private final boolean[] slide = new boolean[16];
+    public final byte[] note = new byte[16];
+    public final boolean[] pause = new boolean[16];
+    public final boolean[] slide = new boolean[16];
     //    public SequencerData parent;
 //    public SequencerData child;
 //    public static SequencerData currentSequence;
-    private final boolean[] accent = new boolean[16];
+    public final boolean[] accent = new boolean[16];
     private int synthIndex;
 
     public SequencerData(int synthIndex) {
