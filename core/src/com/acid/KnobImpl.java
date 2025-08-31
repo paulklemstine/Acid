@@ -350,13 +350,21 @@ public class KnobImpl {
         return (val - dx) / (dy - dx);
     }
 
-    public static void touchReleased(int id) {
+    public static void touchReleased(int synthIndex, int id) {
         touched[id] = false;
-        KnobData.factory();
+        KnobData.factory(synthIndex);
+    }
+
+    public static void touchReleased(int id) {
+        touchReleased(Statics.currentSynth, id);
+    }
+
+    public static void touchDown(int synthIndex, int id) {
+        touched[id] = true;
+        KnobData.factory(synthIndex);
     }
 
     public static void touchDown(int id) {
-        touched[id] = true;
-        KnobData.factory();
+        touchDown(Statics.currentSynth, id);
     }
 }

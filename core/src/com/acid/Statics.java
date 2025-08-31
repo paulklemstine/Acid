@@ -14,6 +14,7 @@ public class Statics {
     public static FileHandle exportConvertedWav;
     public static FileHandle exportConvertedFlac;
 
+    public static final int NUM_SYNTHS = 4;
     public static BasslineSynthesizer[] synths;
     public static int currentSynth = 0;
     public static Synthesizer drums;
