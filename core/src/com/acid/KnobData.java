@@ -18,9 +18,11 @@ import java.util.Stack;
 public class KnobData extends InstrumentData {
     double[][] knobs = new double[16][8];
     public static KnobData[] currentSequences = new KnobData[Statics.NUM_SYNTHS];
+    public int synthIndex;
 
 
     public KnobData(int synthIndex) {
+        this.synthIndex = synthIndex;
         for (int i = 0; i < 16; i++) {
             for (int j = 0; j < 8; j++) {
                 knobs[i][j] = KnobImpl.knobs[synthIndex][i][j];
@@ -121,39 +123,21 @@ public class KnobData extends InstrumentData {
         renderer1.end();
     }
 
-    static Stack<KnobData>[] sequences = new Stack[Statics.NUM_SYNTHS];
-    static {
-        for (int i = 0; i < Statics.NUM_SYNTHS; i++) {
-            sequences[i] = new Stack<KnobData>();
-        }
-    }
+    static Stack<KnobData> sequences = new Stack<KnobData>();
 
-
-    public static KnobData peekStack(int synthIndex) {
-        if (sequences[synthIndex].empty()) return null;
-        KnobData peek = sequences[synthIndex].peek();
-        return peek;
-    }
 
     public static KnobData peekStack() {
-        return peekStack(Statics.currentSynth);
-    }
-
-    public static KnobData popStack(int synthIndex) {
-        if (sequences[synthIndex].empty()) return null;
-        return sequences[synthIndex].pop();
+        if (sequences.empty()) return null;
+        return sequences.peek();
     }
 
     public static KnobData popStack() {
-        return popStack(Statics.currentSynth);
-    }
-
-    public static void pushStack(KnobData sd, int synthIndex) {
-        sequences[synthIndex].push(sd);
+        if (sequences.empty()) return null;
+        return sequences.pop();
     }
 
     public static void pushStack(KnobData sd) {
-        pushStack(sd, Statics.currentSynth);
+        sequences.push(sd);
     }
 
 
