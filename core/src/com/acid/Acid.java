@@ -84,7 +84,7 @@ public class Acid implements ApplicationListener {
     private Label songLengthCaption;
     private Label maxSongLengthCaption;
     private Label stepCaption;
-    private TextButton waveButton;
+    private TextButton[] waveButtons = new TextButton[4];
     private SelectBox<String> selectSongList;
     private ArrayList<String> fileList;
     private Label knobDataArrayListLabel;
@@ -1251,22 +1251,6 @@ public class Acid implements ApplicationListener {
                                             }
                                         });
 
-        waveButton = new
-
-                TextButton(" # ", skin);
-        table.addActor(waveButton);
-        waveButton.setPosition(520f, 280);
-        waveButton.addListener(new
-
-                                       InputListener() {
-                                           public boolean touchDown(InputEvent event, float x, float y,
-                                                                    int pointer, int button) {
-                                               if (sequencerView < 4) {
-                                                   Statics.synths[Statics.currentSynth].switchWaveform();
-                                               }
-                                               return true;
-                                           }
-                                       });
 
         for (int i = 0; i < 5; i++) {
             final int trackIndex = i;
@@ -1277,6 +1261,17 @@ public class Acid implements ApplicationListener {
                 KnobActor volKnob = new KnobActor("Vol", 10, i);
                 volKnob.setPosition(470 + (i * 40), 250);
                 table.addActor(volKnob);
+                waveButtons[i] = new TextButton(" # ", skin);
+                waveButtons[i].setPosition(470 + (i * 40), 220);
+                final int synthIndex = i;
+                waveButtons[i].addListener(new InputListener() {
+                    public boolean touchDown(InputEvent event, float x, float y,
+                                             int pointer, int button) {
+                        Statics.synths[synthIndex].switchWaveform();
+                        return true;
+                    }
+                });
+                table.addActor(waveButtons[i]);
             } else {
                 selectionButton.setPosition(470 + (4 * 40), 310);
                 KnobActor volKnob = new KnobActor("Vol", 11, 4);
@@ -1317,10 +1312,10 @@ public class Acid implements ApplicationListener {
                                                  if (sequencerView < 4) {
                                                      int[] scale = synth.Harmony.SCALE_ALL[(int) (Math.random() * synth.Harmony.SCALE_ALL.length)];
                                                      Statics.output.getSequencer().randomizeSequence(sequencerView, scale);
+                                                     KnobImpl.refill(sequencerView);
                                                  } else {
                                                      Statics.output.getSequencer().randomizeRhythm();
                                                  }
-                                                 KnobImpl.refill(sequencerView);
                                                  return true;
                                              }
                                          });
@@ -1640,11 +1635,14 @@ public class Acid implements ApplicationListener {
         }
         prevStep = Statics.output.getSequencer().step;
 
-        if (sequencerView < 4) {
-            waveButton.setColor(Statics.synths[Statics.currentSynth].waveSquare ? Color.WHITE : Color.RED);
-            waveButton.setText(Statics.synths[Statics.currentSynth].waveSquare ? " # " : " ^ ");
-        } else {
-            waveButton.setColor(Color.DARK_GRAY);
+        for (int i = 0; i < 4; i++) {
+            if (waveButtons[i] != null) {
+                waveButtons[i].setVisible(i == sequencerView);
+                if (i == sequencerView) {
+                    waveButtons[i].setColor(Statics.synths[i].waveSquare ? Color.WHITE : Color.RED);
+                    waveButtons[i].setText(Statics.synths[i].waveSquare ? " # " : " ^ ");
+                }
+            }
         }
 
         sequencerDataArrayListLabel.setColor(ColorHelper.rainbowLight());

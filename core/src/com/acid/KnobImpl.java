@@ -25,7 +25,7 @@ public class KnobImpl {
     static boolean[] touched = new boolean[12];
 
     static boolean isTouched() {
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < touched.length; i++) {
             if (touched[i]) return true;
         }
         return false;
