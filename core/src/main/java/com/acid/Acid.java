@@ -102,6 +102,7 @@ public class Acid implements ApplicationListener {
     private TextButton technoButton;
     private TextButton tranceButton;
     private TextButton dnbButton;
+    private ArrayList<String> navigationPath = new ArrayList<String>();
 
     public Acid(SDCard androidSDCard) {
         Statics.sdcard=androidSDCard.getPath();
@@ -1312,11 +1313,11 @@ public class Acid implements ApplicationListener {
 
         Table rightTable = new Table(skin);
         table.addActor(rightTable);
-        rightTable.setPosition(580, 160);
+        rightTable.setPosition(580, 360);
 
         leftTable = new Table(skin);
         table.addActor(leftTable);
-        leftTable.setPosition(20, 160);
+        leftTable.setPosition(20, 360);
 
         dubstepButton = new TextButton("Dubstep", skin);
         leftTable.add(dubstepButton);
@@ -1336,54 +1337,6 @@ public class Acid implements ApplicationListener {
         dnbButton = new TextButton("DnB", skin);
         leftTable.add(dnbButton);
 
-        dubstepButton.addListener(new InputListener() {
-            public boolean touchDown(InputEvent event, float x, float y,
-                                     int pointer, int button) {
-                synth.PatternGenerator.setGenre("dubstep");
-                updatePatternButtons("dubstep", leftTable, skin);
-                return true;
-            }
-        });
-        houseButton.addListener(new InputListener() {
-            public boolean touchDown(InputEvent event, float x, float y,
-                                     int pointer, int button) {
-                synth.PatternGenerator.setGenre("house");
-                updatePatternButtons("house", leftTable, skin);
-                return true;
-            }
-        });
-        psytranceButton.addListener(new InputListener() {
-            public boolean touchDown(InputEvent event, float x, float y,
-                                     int pointer, int button) {
-                synth.PatternGenerator.setGenre("psytrance");
-                updatePatternButtons("psytrance", leftTable, skin);
-                return true;
-            }
-        });
-        technoButton.addListener(new InputListener() {
-            public boolean touchDown(InputEvent event, float x, float y,
-                                     int pointer, int button) {
-                synth.PatternGenerator.setGenre("techno");
-                updatePatternButtons("techno", leftTable, skin);
-                return true;
-            }
-        });
-        tranceButton.addListener(new InputListener() {
-            public boolean touchDown(InputEvent event, float x, float y,
-                                     int pointer, int button) {
-                synth.PatternGenerator.setGenre("trance");
-                updatePatternButtons("trance", leftTable, skin);
-                return true;
-            }
-        });
-        dnbButton.addListener(new InputListener() {
-            public boolean touchDown(InputEvent event, float x, float y,
-                                     int pointer, int button) {
-                synth.PatternGenerator.setGenre("dnb");
-                updatePatternButtons("dnb", leftTable, skin);
-                return true;
-            }
-        });
 
 
         TextButton randomButton = new TextButton("Random", skin);
@@ -2223,32 +2176,70 @@ public class Acid implements ApplicationListener {
         sequences.add(0,rem);
     }
 
-    private void updatePatternButtons(String genre, Table table, Skin skin) {
-        table.clearChildren();
+    private void updateLeftPanel(Skin skin) {
+        leftTable.clearChildren();
 
-        TextButton basslineButton = new TextButton("Bassline", skin);
-        table.add(basslineButton);
-        basslineButton.addListener(new InputListener() {
-            public boolean touchDown(InputEvent event, float x, float y,
-                                     int pointer, int button) {
-                if (sequencerView < Statics.NUM_SYNTHS) {
-                    synth.PatternGenerator.generateBassline(sequencerView);
+        if (navigationPath.size() > 0) {
+            TextButton backButton = new TextButton("..Back", skin);
+            leftTable.add(backButton);
+            leftTable.row();
+            backButton.addListener(new InputListener() {
+                public boolean touchDown(InputEvent event, float x, float y,
+                                         int pointer, int button) {
+                    navigationPath.remove(navigationPath.size() - 1);
+                    updateLeftPanel(skin);
+                    return true;
                 }
-                return true;
-            }
-        });
+            });
+        }
 
-        table.row();
-        TextButton melodyButton = new TextButton("Melody", skin);
-        table.add(melodyButton);
-        melodyButton.addListener(new InputListener() {
-            public boolean touchDown(InputEvent event, float x, float y,
-                                     int pointer, int button) {
-                if (sequencerView < Statics.NUM_SYNTHS) {
-                    synth.PatternGenerator.generateMelody(sequencerView);
-                }
-                return true;
+        if (navigationPath.size() == 0) {
+            String[] genres = synth.PatternGenerator.getGenres();
+            for (final String genre : genres) {
+                TextButton genreButton = new TextButton(genre, skin);
+                leftTable.add(genreButton);
+                leftTable.row();
+                genreButton.addListener(new InputListener() {
+                    public boolean touchDown(InputEvent event, float x, float y,
+                                             int pointer, int button) {
+                        navigationPath.add(genre);
+                        updateLeftPanel(skin);
+                        return true;
+                    }
+                });
             }
-        });
+        } else if (navigationPath.size() == 1) {
+            String genre = navigationPath.get(0);
+            String[] banks = synth.PatternGenerator.getBanks(genre);
+            for (final String bank : banks) {
+                TextButton bankButton = new TextButton(bank, skin);
+                leftTable.add(bankButton);
+                leftTable.row();
+                bankButton.addListener(new InputListener() {
+                    public boolean touchDown(InputEvent event, float x, float y,
+                                             int pointer, int button) {
+                        navigationPath.add(bank);
+                        updateLeftPanel(skin);
+                        return true;
+                    }
+                });
+            }
+        } else if (navigationPath.size() == 2) {
+            String genre = navigationPath.get(0);
+            String bank = navigationPath.get(1);
+            String[] patterns = synth.PatternGenerator.getPatterns(genre, bank);
+            for (final String pattern : patterns) {
+                TextButton patternButton = new TextButton(pattern, skin);
+                leftTable.add(patternButton);
+                leftTable.row();
+                patternButton.addListener(new InputListener() {
+                    public boolean touchDown(InputEvent event, float x, float y,
+                                             int pointer, int button) {
+                        // TODO: Implement pattern loading
+                        return true;
+                    }
+                });
+            }
+        }
     }
 }

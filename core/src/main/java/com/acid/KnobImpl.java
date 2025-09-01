@@ -188,9 +188,11 @@ public class KnobImpl {
                 Output.getDelay().controlChange(41, cc);
                 break;
             case 10:
+                cc = Math.max(0, Math.min(127, cc));
                 Statics.synths[synthIndex].controlChange(BasslineSynthesizer.MSG_CC_SYNTH_VOLUME, cc);
                 break;
             case 11:
+                cc = Math.max(0, Math.min(127, cc));
                 ((RhythmSynthesizer) Statics.drums).controlChange(RhythmSynthesizer.MSG_CC_DRUM_VOLUME, cc);
         }
         KnobData.factory(synthIndex);
@@ -341,6 +343,14 @@ public class KnobImpl {
                 dy = 360f;
                 break;
             case 9:
+                dx = 0f;
+                dy = 360f;
+                break;
+            case 10:
+                dx = 0f;
+                dy = 360f;
+                break;
+            case 11:
                 dx = 0f;
                 dy = 360f;
                 break;

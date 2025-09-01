@@ -155,7 +155,7 @@ public class SequencerData extends InstrumentData {
 
     public void randomize() {
         for (int i = 0; i < 16; i++) {
-            note[i] = (byte) (Math.random() * 36);
+            note[i] = (byte) (Math.random() * 24);
             pause[i] = Math.random() > 0.5;
             slide[i] = Math.random() > 0.8;
             accent[i] = Math.random() > 0.8;

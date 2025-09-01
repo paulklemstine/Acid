@@ -3,12 +3,42 @@ package synth;
 import com.acid.SequencerData;
 import com.acid.Statics;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class PatternGenerator {
 
     private static String currentGenre = "house";
     private static int rootKey = Harmony.C;
     private static int[] scale = Harmony.SCALE_NATURAL_MINOR;
     private static int[] progression = Harmony.Pop;
+
+    private static Map<String, Map<String, String[]>> genreBank;
+
+    static {
+        genreBank = new HashMap<>();
+        Map<String, String[]> houseBanks = new HashMap<>();
+        houseBanks.put("Classic", new String[]{"Bassline 1", "Melody 1"});
+        houseBanks.put("Deep", new String[]{"Bassline 1", "Pad 1"});
+        genreBank.put("House", houseBanks);
+
+        Map<String, String[]> dubstepBanks = new HashMap<>();
+        dubstepBanks.put("Wobble", new String[]{"Bassline 1", "Wobble 1"});
+        dubstepBanks.put("Brostep", new String[]{"Bassline 1", "Growl 1"});
+        genreBank.put("Dubstep", dubstepBanks);
+    }
+
+    public static String[] getGenres() {
+        return genreBank.keySet().toArray(new String[0]);
+    }
+
+    public static String[] getBanks(String genre) {
+        return genreBank.get(genre).keySet().toArray(new String[0]);
+    }
+
+    public static String[] getPatterns(String genre, String bank) {
+        return genreBank.get(genre).get(bank);
+    }
 
     public static void setGenre(String genre) {
         currentGenre = genre;
