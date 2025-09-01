@@ -370,7 +370,9 @@ public class KnobImpl {
 
     public static void touchDown(int synthIndex, int id) {
         touched[id] = true;
-        KnobData.factory(synthIndex);
+        if (synthIndex < Statics.NUM_SYNTHS) {
+            KnobData.factory(synthIndex);
+        }
     }
 
     public static void touchDown(int id) {

@@ -1337,7 +1337,7 @@ public class Acid implements ApplicationListener {
         dnbButton = new TextButton("DnB", skin);
         leftTable.add(dnbButton);
 
-
+        updateLeftPanel(skin);
 
         TextButton randomButton = new TextButton("Random", skin);
         rightTable.add(randomButton);

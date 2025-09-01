@@ -71,7 +71,10 @@ public class PatternGenerator {
 
     private static SequencerData applyPatternToSequencer(int[] pattern, int synthIndex) {
         SequencerData sd = new SequencerData(synthIndex);
-        sd.randomize();
+        for (int i = 0; i < 16; i++) {
+            sd.note[i] = (byte) (pattern[i % pattern.length] - 12);
+            sd.pause[i] = Math.random() > 0.8; // Add some random pauses
+        }
         sd.refresh();
         return sd;
     }
