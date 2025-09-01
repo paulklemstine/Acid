@@ -295,7 +295,6 @@ public class KnobImpl {
         if (id == idd) {
             max = Math.max(max, val);
             min = Math.min(min, val);
-           // System.out.println("knob:id=" + id + "\tval=" + val + "\tmin=" + min + "\tmax=" + max);
         }
         float dx = 0;
         float dy = 0;

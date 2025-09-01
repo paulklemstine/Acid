@@ -19,6 +19,15 @@ public class PatternGenerator {
         } else if (genre.equals("dubstep")) {
             scale = Harmony.SCALE_NATURAL_MINOR;
             progression = new int[]{1, 6, 4, 5};
+        } else if (genre.equals("techno")) {
+            scale = Harmony.SCALE_NATURAL_MINOR;
+            progression = new int[]{1, 1, 1, 1};
+        } else if (genre.equals("trance")) {
+            scale = Harmony.SCALE_NATURAL_MINOR;
+            progression = new int[]{6, 4, 1, 5};
+        } else if (genre.equals("dnb")) {
+            scale = Harmony.SCALE_NATURAL_MINOR;
+            progression = new int[]{1, 5, 6, 4};
         } else { // house
             scale = Harmony.SCALE_DORIAN;
             progression = Harmony.Jazz;
@@ -32,19 +41,13 @@ public class PatternGenerator {
 
     private static SequencerData applyPatternToSequencer(int[] pattern, int synthIndex) {
         SequencerData sd = new SequencerData(synthIndex);
-        for (int i = 0; i < 16; i++) {
-            sd.note[i] = (byte) pattern[i % pattern.length];
-            sd.pause[i] = Math.random() > 0.8; // Add some random pauses
-        }
+        sd.randomize();
         sd.refresh();
         return sd;
     }
 
     public static void generateBassline(int synthIndex) {
         int[] bassline = MelodyGenerator.generateBassline(progression, scale, 16);
-        for(int i=0; i<bassline.length; i++) {
-            bassline[i] += rootKey;
-        }
         applyPatternToSequencer(bassline, synthIndex);
     }
 
@@ -53,19 +56,19 @@ public class PatternGenerator {
         int[] harmony = new int[16];
         for (int i = 0; i < 16; i++) {
              int degree = progression[ (i/4) % progression.length];
-             harmony[i] = new Harmony().getFromScale(degree-1, scale) + rootKey + 12;
+             harmony[i] = new Harmony().getFromScale(degree-1, scale);
         }
         applyPatternToSequencer(harmony, synthIndex);
     }
 
     public static void generateArpeggio(int synthIndex) {
         int[] arpeggio = new int[16];
-        int[] chord = new Harmony().getNotesInChord(rootKey, scale, progression[0]-1, 3, 0);
+        int[] chord = new Harmony().getNotesInChord(0, scale, progression[0]-1, 3, 0);
         int[] arpNotes = new Harmony().arpeggiate(chord, 2);
 
         for (int i=0; i<16; i++) {
             int degree = progression[(i/4) % progression.length];
-            chord = new Harmony().getNotesInChord(rootKey, scale, degree-1, 3, 0);
+            chord = new Harmony().getNotesInChord(0, scale, degree-1, 3, 0);
             arpNotes = new Harmony().arpeggiate(chord, 2);
             arpeggio[i] = arpNotes[i % arpNotes.length];
         }
@@ -75,7 +78,7 @@ public class PatternGenerator {
     public static void generateMelody(int synthIndex) {
         int[] melody = MelodyGenerator.generateMelody(progression, scale, 16);
          for(int i=0; i<melody.length; i++) {
-            melody[i] += rootKey + 24;
+            melody[i] += rootKey;
         }
         applyPatternToSequencer(melody, synthIndex);
     }
@@ -91,7 +94,7 @@ public class PatternGenerator {
                  }
                  int[] counterMelody = Harmonizer.createCounterMelody(baseMelody, progression, scale, 16);
                  for(int j=0; j<counterMelody.length; j++) {
-                    counterMelody[j] += rootKey + 12;
+                counterMelody[j] += rootKey;
                  }
                  applyPatternToSequencer(counterMelody, synthIndex);
                  foundBase = true;
@@ -107,7 +110,7 @@ public class PatternGenerator {
                 }
                 int[] harmony = Harmonizer.harmonize(baseMelody, progression, scale, 16);
                 for(int j=0; j<harmony.length; j++) {
-                    harmony[j] += rootKey + 12;
+                harmony[j] += rootKey;
                 }
                 applyPatternToSequencer(harmony, synthIndex);
             }
