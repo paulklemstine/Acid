@@ -144,6 +144,8 @@ public class Acid implements ApplicationListener {
 
     @Override
     public void create() {
+        Gdx.files.local("filelist.ser").delete();
+        Gdx.files.local("supersecrettempfile.txt").delete();
         Output.resume();
         final Skin skin = new Skin(Gdx.files.internal("data/uiskin.json"));
         stage = new Stage();
@@ -1272,7 +1274,7 @@ public class Acid implements ApplicationListener {
             final TextButton selectionButton = new TextButton(buttonText, skin);
             if (i < Statics.NUM_SYNTHS) {
                 selectionButton.setPosition(410 + (i * 40), 310);
-                KnobActor volKnob = new KnobActor("Vol", 10, i);
+                KnobActor volKnob = new KnobActor(buttonText + " Vol", 10, i);
                 volKnob.setPosition(410 + (i * 40), 280);
                 table.addActor(volKnob);
                 waveButtons[i] = new TextButton(" # ", skin);
@@ -1288,7 +1290,7 @@ public class Acid implements ApplicationListener {
                 table.addActor(waveButtons[i]);
             } else {
                 selectionButton.setPosition(410 + (4 * 40), 310);
-                KnobActor volKnob = new KnobActor("Vol", 11, 4);
+                KnobActor volKnob = new KnobActor(buttonText + " Vol", 11, 4);
                 volKnob.setPosition(410 + (4 * 40), 280);
                 table.addActor(volKnob);
             }
@@ -1375,6 +1377,9 @@ public class Acid implements ApplicationListener {
             public boolean touchDown(InputEvent event, float x, float y,
                                      int pointer, int button) {
                 synth.PatternGenerator.newKey();
+                if (sequencerView < Statics.NUM_SYNTHS) {
+                    synth.PatternGenerator.randomize(sequencerView);
+                }
                 return true;
             }
         });
@@ -2235,7 +2240,19 @@ public class Acid implements ApplicationListener {
                 patternButton.addListener(new InputListener() {
                     public boolean touchDown(InputEvent event, float x, float y,
                                              int pointer, int button) {
-                        // TODO: Implement pattern loading
+                        if (sequencerView < Statics.NUM_SYNTHS) {
+                            if (pattern.toLowerCase().contains("bassline")) {
+                                synth.PatternGenerator.generateBassline(sequencerView);
+                            } else if (pattern.toLowerCase().contains("melody")) {
+                                synth.PatternGenerator.generateMelody(sequencerView);
+                            } else if (pattern.toLowerCase().contains("pad")) {
+                                synth.PatternGenerator.generateHarmony(sequencerView);
+                            } else if (pattern.toLowerCase().contains("wobble")) {
+                                synth.PatternGenerator.generateArpeggio(sequencerView);
+                            } else if (pattern.toLowerCase().contains("growl")) {
+                                synth.PatternGenerator.generateMusical(sequencerView);
+                            }
+                        }
                         return true;
                     }
                 });

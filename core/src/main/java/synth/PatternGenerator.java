@@ -18,14 +18,29 @@ public class PatternGenerator {
     static {
         genreBank = new HashMap<>();
         Map<String, String[]> houseBanks = new HashMap<>();
-        houseBanks.put("Classic", new String[]{"Bassline 1", "Melody 1"});
-        houseBanks.put("Deep", new String[]{"Bassline 1", "Pad 1"});
+        houseBanks.put("Classic", new String[]{"Bassline 1", "Melody 1", "Bassline 2", "Melody 2"});
+        houseBanks.put("Deep", new String[]{"Bassline 1", "Pad 1", "Bassline 2", "Pad 2"});
         genreBank.put("House", houseBanks);
 
         Map<String, String[]> dubstepBanks = new HashMap<>();
-        dubstepBanks.put("Wobble", new String[]{"Bassline 1", "Wobble 1"});
-        dubstepBanks.put("Brostep", new String[]{"Bassline 1", "Growl 1"});
+        dubstepBanks.put("Wobble", new String[]{"Bassline 1", "Wobble 1", "Bassline 2", "Wobble 2"});
+        dubstepBanks.put("Brostep", new String[]{"Bassline 1", "Growl 1", "Bassline 2", "Growl 2"});
         genreBank.put("Dubstep", dubstepBanks);
+
+        Map<String, String[]> technoBanks = new HashMap<>();
+        technoBanks.put("Minimal", new String[]{"Bassline 1", "Stab 1", "Bassline 2", "Stab 2"});
+        technoBanks.put("Industrial", new String[]{"Bassline 1", "Noise 1", "Bassline 2", "Noise 2"});
+        genreBank.put("Techno", technoBanks);
+
+        Map<String, String[]> tranceBanks = new HashMap<>();
+        tranceBanks.put("Progressive", new String[]{"Bassline 1", "Arp 1", "Bassline 2", "Arp 2"});
+        tranceBanks.put("Goa", new String[]{"Bassline 1", "Lead 1", "Bassline 2", "Lead 2"});
+        genreBank.put("Trance", tranceBanks);
+
+        Map<String, String[]> dnbBanks = new HashMap<>();
+        dnbBanks.put("Liquid", new String[]{"Bassline 1", "Pad 1", "Bassline 2", "Pad 2"});
+        dnbBanks.put("Neurofunk", new String[]{"Bassline 1", "Reese 1", "Bassline 2", "Reese 2"});
+        genreBank.put("DnB", dnbBanks);
     }
 
     public static String[] getGenres() {
@@ -72,7 +87,7 @@ public class PatternGenerator {
     private static SequencerData applyPatternToSequencer(int[] pattern, int synthIndex) {
         SequencerData sd = new SequencerData(synthIndex);
         for (int i = 0; i < 16; i++) {
-            sd.note[i] = (byte) (pattern[i % pattern.length] - 12);
+            sd.note[i] = (byte) pattern[i % pattern.length];
             sd.pause[i] = Math.random() > 0.8; // Add some random pauses
         }
         sd.refresh();
