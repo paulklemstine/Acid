@@ -87,7 +87,7 @@ public class PatternGenerator {
     private static SequencerData applyPatternToSequencer(int[] pattern, int synthIndex) {
         SequencerData sd = new SequencerData(synthIndex);
         for (int i = 0; i < 16; i++) {
-            sd.note[i] = (byte) pattern[i % pattern.length];
+            sd.note[i] = (byte) (pattern[i % pattern.length] - 12);
             sd.pause[i] = Math.random() > 0.8; // Add some random pauses
         }
         sd.refresh();
@@ -114,11 +114,18 @@ public class PatternGenerator {
         int[] chord = new Harmony().getNotesInChord(0, scale, progression[0]-1, 3, 0);
         int[] arpNotes = new Harmony().arpeggiate(chord, 2);
 
+        if (arpNotes.length == 0) {
+            randomize(synthIndex);
+            return;
+        }
+
         for (int i=0; i<16; i++) {
             int degree = progression[(i/4) % progression.length];
             chord = new Harmony().getNotesInChord(0, scale, degree-1, 3, 0);
             arpNotes = new Harmony().arpeggiate(chord, 2);
-            arpeggio[i] = arpNotes[i % arpNotes.length];
+            if (arpNotes.length > 0) {
+                arpeggio[i] = arpNotes[i % arpNotes.length];
+            }
         }
         applyPatternToSequencer(arpeggio, synthIndex);
     }

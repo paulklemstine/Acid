@@ -1481,6 +1481,71 @@ public class Acid implements ApplicationListener {
                                                      return true;
                                                  }
                                              });
+        rightTable.row();
+        TextButton upButton = new TextButton("Up", skin);
+        rightTable.add(upButton);
+        upButton.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y,
+                                     int pointer, int button) {
+                if (sequencerView < Statics.NUM_SYNTHS) {
+                    for (int i = 0; i < 16; i++) {
+                        if (!Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
+                            Statics.output.getSequencer().basslines[sequencerView].note[i]++;
+                        }
+                    }
+                }
+                return true;
+            }
+        });
+        rightTable.row();
+        TextButton downButton = new TextButton("Down", skin);
+        rightTable.add(downButton);
+        downButton.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y,
+                                     int pointer, int button) {
+                if (sequencerView < Statics.NUM_SYNTHS) {
+                    for (int i = 0; i < 16; i++) {
+                        if (!Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
+                            Statics.output.getSequencer().basslines[sequencerView].note[i]--;
+                        }
+                    }
+                }
+                return true;
+            }
+        });
+        rightTable.row();
+        TextButton octUpButton = new TextButton("Oct Up", skin);
+        rightTable.add(octUpButton);
+        octUpButton.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y,
+                                     int pointer, int button) {
+                if (sequencerView < Statics.NUM_SYNTHS) {
+                    for (int i = 0; i < 16; i++) {
+                        if (!Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
+                            Statics.output.getSequencer().basslines[sequencerView].note[i] += 12;
+                        }
+                    }
+                }
+                return true;
+            }
+        });
+        rightTable.row();
+        TextButton octDownButton = new TextButton("Oct Down", skin);
+        rightTable.add(octDownButton);
+        octDownButton.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y,
+                                     int pointer, int button) {
+                if (sequencerView < Statics.NUM_SYNTHS) {
+                    for (int i = 0; i < 16; i++) {
+                        if (!Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
+                            Statics.output.getSequencer().basslines[sequencerView].note[i] -= 12;
+                        }
+                    }
+                }
+                return true;
+            }
+        });
+
 
         BpmLabel = new
 
