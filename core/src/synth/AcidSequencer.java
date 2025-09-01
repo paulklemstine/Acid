@@ -155,7 +155,9 @@ public class AcidSequencer {
 
     public void randomizeAllSynths() {
         int[] scale = Harmony.SCALE_ALL[(int) (Math.random() * Harmony.SCALE_ALL.length)];
-        randomizeSequence(0, scale);
+        for (int i = 0; i < Statics.NUM_SYNTHS_TOTAL; i++) {
+            randomizeSequence(i, scale);
+        }
 
         Harmony harmony = new Harmony();
         int[] progression = {0, 4, 5, 3}; // I-V-vi-IV
