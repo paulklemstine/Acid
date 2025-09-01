@@ -1315,7 +1315,7 @@ public class Acid implements ApplicationListener {
 
         Table rightTable = new Table(skin);
         table.addActor(rightTable);
-        rightTable.setPosition(580, 360);
+        rightTable.setPosition(580, 310);
 
         leftTable = new Table(skin);
         table.addActor(leftTable);
