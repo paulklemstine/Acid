@@ -16,9 +16,9 @@ import java.util.Stack;
  * Created by Paul on 1/10/2017.
  */
 public class SequencerData extends InstrumentData {
-    static Stack<SequencerData>[] sequences = new Stack[Statics.NUM_SYNTHS_TOTAL];
+    static Stack<SequencerData>[] sequences = new Stack[Statics.NUM_SYNTHS];
     static {
-        for (int i = 0; i < Statics.NUM_SYNTHS_TOTAL; i++) {
+        for (int i = 0; i < Statics.NUM_SYNTHS; i++) {
             sequences[i] = new Stack<SequencerData>();
         }
     }

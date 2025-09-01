@@ -17,7 +17,7 @@ import java.util.Stack;
  */
 public class KnobData extends InstrumentData {
     public double[][] knobs = new double[16][8];
-    public static KnobData[] currentSequences = new KnobData[Statics.NUM_SYNTHS_TOTAL];
+    public static KnobData[] currentSequences = new KnobData[Statics.NUM_SYNTHS];
     public int synthIndex;
 
 

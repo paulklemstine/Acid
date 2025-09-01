@@ -23,7 +23,7 @@ public class AcidSequencer {
                          Output output) {
         this.synths = synths;
         this.drums = drums;
-        this.basslines = new BasslinePattern[Statics.NUM_SYNTHS_TOTAL];
+        this.basslines = new BasslinePattern[Statics.NUM_SYNTHS];
 
         randomizeRhythm();
         randomizeAllSynths();
@@ -81,7 +81,7 @@ public class AcidSequencer {
     public void tick() {
         if (this.tick == 0) {
             if (this.sixteenth_note) {
-                for (int i = 0; i < Statics.numActiveSynths; i++) {
+                for (int i = 0; i < Statics.NUM_SYNTHS; i++) {
                     if ((this.basslines[i].pause[this.step] == false)
                             && (this.basslines[i].note[this.step] != -1)) {
                         this.synths[i]
@@ -119,7 +119,7 @@ public class AcidSequencer {
                 if (this.shuffle)
                     setBpm(this.bpm);
             } else {
-                for (int i = 0; i < Statics.numActiveSynths; i++) {
+                for (int i = 0; i < Statics.NUM_SYNTHS; i++) {
                     if (this.basslines[i] != null && this.basslines[i].slide[this.step] == false)
                         this.synths[i].noteOff();
                 }
@@ -139,7 +139,7 @@ public class AcidSequencer {
 
     public void setBpm(double value) {
         this.bpm = value;
-        for (int i = 0; i < Statics.NUM_SYNTHS_TOTAL; i++) {
+        for (int i = 0; i < Statics.NUM_SYNTHS; i++) {
             this.synths[i].setBpm(value);
         }
         this.drums.setBpm(value);
@@ -155,14 +155,14 @@ public class AcidSequencer {
 
     public void randomizeAllSynths() {
         int[] scale = Harmony.SCALE_ALL[(int) (Math.random() * Harmony.SCALE_ALL.length)];
-        for (int i = 0; i < Statics.NUM_SYNTHS_TOTAL; i++) {
+        for (int i = 0; i < Statics.NUM_SYNTHS; i++) {
             randomizeSequence(i, scale);
         }
 
         Harmony harmony = new Harmony();
         int[] progression = {0, 4, 5, 3}; // I-V-vi-IV
 
-        for (int i = 1; i < Statics.numActiveSynths; i++) {
+        for (int i = 1; i < Statics.NUM_SYNTHS; i++) {
             int[] chordProgression = new int[16];
             for(int step=0; step<16; step++){
                 int degree = progression[step/4];

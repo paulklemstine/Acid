@@ -15,6 +15,10 @@ public class Output implements Runnable {
     private static Thread thread = null;
     private static Synthesizer[] tracks;
     public static boolean[] muteState = new boolean[5];
+    static {
+        muteState[2] = true;
+        muteState[3] = true;
+    }
     private static Reverb reverb;
     private static Delay delay;
     private static boolean paused = false;
@@ -26,8 +30,8 @@ public class Output implements Runnable {
     public Output() {
         ad = Gdx.audio.newAudioDevice((int) SAMPLE_RATE, false);
         tracks = new Synthesizer[5];
-        BasslineSynthesizer[] tbs = new BasslineSynthesizer[Statics.NUM_SYNTHS_TOTAL];
-        for (int i = 0; i < Statics.NUM_SYNTHS_TOTAL; i++) {
+        BasslineSynthesizer[] tbs = new BasslineSynthesizer[Statics.NUM_SYNTHS];
+        for (int i = 0; i < Statics.NUM_SYNTHS; i++) {
             tbs[i] = new BasslineSynthesizer();
             tracks[i] = tbs[i];
         }
@@ -153,6 +157,7 @@ public class Output implements Runnable {
                 buffer[i] = (float) (left * volume);
                 buffer[i + 1] = (float) (right * volume);
             }
+            System.out.println("Buffer: " + buffer[0] + ", " + buffer[1] + ", " + buffer[2] + ", " + buffer[3]);
             if (Statics.export) {
                 if (Statics.exportFile != null)
                     Statics.exportFile.writeBytes(FloatArray2ByteArray(buffer), true);

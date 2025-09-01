@@ -20,7 +20,7 @@ public class SaveObject implements Serializable {
     private double vol = 1f;
     private double delayTime = 44100 / 10f;
     private double delayFeedback = .1f;
-    private ArrayList<SequencerData>[] sequencerStack = new ArrayList[Statics.NUM_SYNTHS_TOTAL];
+    private ArrayList<SequencerData>[] sequencerStack = new ArrayList[Statics.NUM_SYNTHS];
     private ArrayList<KnobData> knobStack = new ArrayList<>();
     private ArrayList<DrumData> drumStack = new ArrayList<>();
 
@@ -28,7 +28,7 @@ public class SaveObject implements Serializable {
         this.sequencerDataArrayList = acid.sequencerDataArrayList;
         this.drumDataArrayList = acid.drumDataArrayList;
         this.knobsArrayList = acid.knobsArrayList;
-        for (int i = 0; i < Statics.NUM_SYNTHS_TOTAL; i++) {
+        for (int i = 0; i < Statics.NUM_SYNTHS; i++) {
             if (SequencerData.sequences[i] != null) {
                 this.sequencerStack[i] = new ArrayList<>(Collections.list(SequencerData.sequences[i].elements()));
             }
@@ -47,7 +47,7 @@ public class SaveObject implements Serializable {
     }
 
     public void restore(Acid acid) {
-        for (int i = 0; i < Statics.NUM_SYNTHS_TOTAL; i++) {
+        for (int i = 0; i < Statics.NUM_SYNTHS; i++) {
             SequencerData.sequences[i] = new Stack<>();
             if (sequencerStack[i] != null) {
                 for (InstrumentData data : sequencerStack[i]) {
@@ -81,7 +81,7 @@ public class SaveObject implements Serializable {
         Output.volume = vol;
         Output.getDelay().setTime(delayTime);
         Output.getDelay().setFeedback(delayFeedback);
-        for (int i = 0; i < Statics.NUM_SYNTHS_TOTAL; i++) {
+        for (int i = 0; i < Statics.NUM_SYNTHS; i++) {
             if (acid.knobsArrayList.get(i).size() > 0) {
                 acid.knobsArrayList.get(i).get(0).refresh();
             }
