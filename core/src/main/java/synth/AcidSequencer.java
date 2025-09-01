@@ -264,6 +264,24 @@ public class AcidSequencer {
         return pattern;
     }
 
+    public static int[][] createDubstepRhythm(int patternLength) {
+        int[] kick = {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0};
+        int[] snare = {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0};
+        int[] hihat = {0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0};
+        int[] nothing = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        int[][] r = {kick, snare, hihat, nothing, nothing, nothing, nothing};
+        return r;
+    }
+
+    public static int[][] createPsytranceRhythm(int patternLength) {
+        int[] kick = {1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0};
+        int[] snare = {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0};
+        int[] hihat = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+        int[] nothing = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        int[][] r = {kick, snare, hihat, nothing, nothing, nothing, nothing};
+        return r;
+    }
+
     public int[][] createRhythm(int patternLength) {
         int[] nothing = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 

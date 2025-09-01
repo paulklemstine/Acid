@@ -123,21 +123,34 @@ public class KnobData extends InstrumentData {
         renderer1.end();
     }
 
-    static Stack<KnobData> sequences = new Stack<KnobData>();
+    static Stack<KnobData>[] sequences = new Stack[Statics.NUM_SYNTHS];
+    static {
+        for (int i = 0; i < Statics.NUM_SYNTHS; i++) {
+            sequences[i] = new Stack<KnobData>();
+        }
+    }
 
+
+    public static KnobData peekStack(int synthIndex) {
+        if (sequences[synthIndex].empty()) return null;
+        return sequences[synthIndex].peek();
+    }
 
     public static KnobData peekStack() {
-        if (sequences.empty()) return null;
-        return sequences.peek();
+        return peekStack(Statics.currentSynth);
+    }
+
+    public static KnobData popStack(int synthIndex) {
+        if (sequences[synthIndex].empty()) return null;
+        return sequences[synthIndex].pop();
     }
 
     public static KnobData popStack() {
-        if (sequences.empty()) return null;
-        return sequences.pop();
+        return popStack(Statics.currentSynth);
     }
 
     public static void pushStack(KnobData sd) {
-        sequences.push(sd);
+        sequences[sd.synthIndex].push(sd);
     }
 
 

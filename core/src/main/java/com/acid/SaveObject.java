@@ -21,7 +21,7 @@ public class SaveObject implements Serializable {
     private double delayTime = 44100 / 10f;
     private double delayFeedback = .1f;
     private ArrayList<SequencerData>[] sequencerStack = new ArrayList[Statics.NUM_SYNTHS];
-    private ArrayList<KnobData> knobStack = new ArrayList<>();
+    private ArrayList<KnobData>[] knobStack = new ArrayList[Statics.NUM_SYNTHS];
     private ArrayList<DrumData> drumStack = new ArrayList<>();
 
     SaveObject(Acid acid) {
@@ -32,11 +32,11 @@ public class SaveObject implements Serializable {
             if (SequencerData.sequences[i] != null) {
                 this.sequencerStack[i] = new ArrayList<>(Collections.list(SequencerData.sequences[i].elements()));
             }
+            if (KnobData.sequences[i] != null) {
+                this.knobStack[i] = new ArrayList<>(Collections.list(KnobData.sequences[i].elements()));
+            }
         }
         this.drumStack = new ArrayList<>(Collections.list(DrumData.sequences.elements()));
-        if (KnobData.sequences != null) {
-            this.knobStack = new ArrayList<>(Collections.list(KnobData.sequences.elements()));
-        }
         this.songPosition = acid.songPosition;
         this.maxSongPosition = acid.maxSongPosition;
         this.minSongPosition = acid.minSongPosition;
@@ -63,11 +63,12 @@ public class SaveObject implements Serializable {
                 DrumData.sequences.add(new DrumData());
             }
         }
-        KnobData.sequences = new Stack<>();
-        if (knobStack != null) {
-            for (InstrumentData data : knobStack) {
-                data.refresh();
-                KnobData.sequences.add(new KnobData(((KnobData)data).synthIndex));
+        for (int i = 0; i < Statics.NUM_SYNTHS; i++) {
+            KnobData.sequences[i] = new Stack<>();
+            if (knobStack[i] != null) {
+                for (KnobData data : knobStack[i]) {
+                    KnobData.sequences[i].add(data);
+                }
             }
         }
         acid.sequencerDataArrayList = sequencerDataArrayList;
@@ -82,10 +83,14 @@ public class SaveObject implements Serializable {
         Output.getDelay().setTime(delayTime);
         Output.getDelay().setFeedback(delayFeedback);
         for (int i = 0; i < Statics.NUM_SYNTHS; i++) {
-            if (acid.knobsArrayList.get(i).size() > 0) {
+            if (!KnobData.sequences[i].isEmpty()) {
+                KnobData.currentSequences[i] = KnobData.sequences[i].peek();
+                KnobData.currentSequences[i].refresh();
+            } else if (acid.knobsArrayList.get(i).size() > 0) {
                 acid.knobsArrayList.get(i).get(0).refresh();
+            } else {
+                 KnobData.currentSequences[i] = new KnobData(i);
             }
-            KnobData.currentSequences[i] = new KnobData(i);
         }
     }
 }
