@@ -81,18 +81,41 @@ public class KnobActor extends Actor {
         Statics.renderer.translate(getX(), getY(), 0);
 
         Statics.renderer.begin(ShapeType.Filled);
-        Statics.renderer.setColor(Color.GRAY);
-        Statics.renderer.circle(xc, yc, 10, 20);
-        Statics.renderer.end();
+        Statics.renderer.setColor(ColorHelper.rainbow());
+        for (float i = 0, ic = 0; i < Math.PI * 2; ic++, i += Math.PI / 8) {
+//            if (ic % 4 == 2) Statics.renderer.setColor(Color.LIGHT_GRAY);
+//            else if (ic % 4 == 2) Statics.renderer.setColor(Color.YELLOW);
+//            else if (ic % 4 == 1) Statics.renderer.setColor(Color.RED);
+//            else if (ic % 4 == 3) Statics.renderer.setColor(Color.CYAN);
 
-        Statics.renderer.begin(ShapeType.Line);
-        Statics.renderer.setColor(Color.BLACK);
+            float x1, x2, y1, y2;
+            x1 = MathUtils.cos(i) * 12f + xc;
+            y1 = MathUtils.sin(i) * 12f + yc;
+            x2 = MathUtils.cos(i) * 16f + xc;
+            y2 = MathUtils.sin(i) * 16f + yc;
+            Statics.renderer.line(x1, y1, x2, y2);
+        }
+        Statics.renderer.setColor(ColorHelper.numberToColorPercentage(KnobImpl.percent(id,rotation)));
+        Statics.renderer.arc(xc, yc, 13, 180-KnobImpl.percent(id,rotation)*360,KnobImpl.percent(id,rotation)*360 );
+        Statics.renderer.setColor(Color.DARK_GRAY);
         Statics.renderer.circle(xc, yc, 10, 20);
-        Statics.renderer.end();
+//        Statics.renderer.end();
+//
+//        Statics.renderer.begin(ShapeType.Line);
+//        Statics.renderer.setColor(Color.BLACK);
+//        Statics.renderer.circle(xc, yc, 10, 20);
+//        Statics.renderer.end();
+//
+//        Statics.renderer.begin(ShapeType.Filled);
+//        Statics.renderer.setColor(Color.RED);
+        Statics.renderer.setColor(ColorHelper.numberToColorPercentage(KnobImpl.percent(id,KnobImpl.getRotation(id))));
+        for (float i = 2; i < 12; i += 2) {
 
-        Statics.renderer.begin(ShapeType.Filled);
-        Statics.renderer.setColor(Color.WHITE);
-        Statics.renderer.line(xc, yc, xc + MathUtils.cosDeg(rotation) * 10, yc + MathUtils.sinDeg(rotation) * 10);
+            Statics.renderer.circle(xc + MathUtils.cosDeg(rotation) * -i,
+                    yc + MathUtils.sinDeg(rotation) * i, 2, 5);
+        }
+
+
         Statics.renderer.end();
 
         batch.begin();
