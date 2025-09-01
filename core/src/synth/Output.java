@@ -157,7 +157,6 @@ public class Output implements Runnable {
                 buffer[i] = (float) (left * volume);
                 buffer[i + 1] = (float) (right * volume);
             }
-            System.out.println("Buffer: " + buffer[0] + ", " + buffer[1] + ", " + buffer[2] + ", " + buffer[3]);
             if (Statics.export) {
                 if (Statics.exportFile != null)
                     Statics.exportFile.writeBytes(FloatArray2ByteArray(buffer), true);
