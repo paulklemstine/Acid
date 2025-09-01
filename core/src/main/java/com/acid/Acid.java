@@ -369,14 +369,6 @@ public class Acid implements ApplicationListener {
             }
         });
 
-        dnbButton.addListener(new InputListener() {
-            public boolean touchDown(InputEvent event, float x, float y,
-                                     int pointer, int button) {
-                synth.PatternGenerator.setGenre("dnb");
-                updatePatternButtons("dnb", leftTable, skin);
-                return true;
-            }
-        });
         TextButton popFromSequencer = new TextButton("<", skin);
         popFromSequencer.setPosition(105, 360);
         table.addActor(popFromSequencer);
@@ -1328,6 +1320,22 @@ public class Acid implements ApplicationListener {
 
         dubstepButton = new TextButton("Dubstep", skin);
         leftTable.add(dubstepButton);
+        leftTable.row();
+        houseButton = new TextButton("House", skin);
+        leftTable.add(houseButton);
+        leftTable.row();
+        psytranceButton = new TextButton("Psytrance", skin);
+        leftTable.add(psytranceButton);
+        leftTable.row();
+        technoButton = new TextButton("Techno", skin);
+        leftTable.add(technoButton);
+        leftTable.row();
+        tranceButton = new TextButton("Trance", skin);
+        leftTable.add(tranceButton);
+        leftTable.row();
+        dnbButton = new TextButton("DnB", skin);
+        leftTable.add(dnbButton);
+
         dubstepButton.addListener(new InputListener() {
             public boolean touchDown(InputEvent event, float x, float y,
                                      int pointer, int button) {
@@ -1336,10 +1344,6 @@ public class Acid implements ApplicationListener {
                 return true;
             }
         });
-
-        leftTable.row();
-        houseButton = new TextButton("House", skin);
-        leftTable.add(houseButton);
         houseButton.addListener(new InputListener() {
             public boolean touchDown(InputEvent event, float x, float y,
                                      int pointer, int button) {
@@ -1348,10 +1352,6 @@ public class Acid implements ApplicationListener {
                 return true;
             }
         });
-
-        leftTable.row();
-        psytranceButton = new TextButton("Psytrance", skin);
-        leftTable.add(psytranceButton);
         psytranceButton.addListener(new InputListener() {
             public boolean touchDown(InputEvent event, float x, float y,
                                      int pointer, int button) {
@@ -1360,10 +1360,6 @@ public class Acid implements ApplicationListener {
                 return true;
             }
         });
-
-        leftTable.row();
-        technoButton = new TextButton("Techno", skin);
-        leftTable.add(technoButton);
         technoButton.addListener(new InputListener() {
             public boolean touchDown(InputEvent event, float x, float y,
                                      int pointer, int button) {
@@ -1372,10 +1368,6 @@ public class Acid implements ApplicationListener {
                 return true;
             }
         });
-
-        leftTable.row();
-        tranceButton = new TextButton("Trance", skin);
-        leftTable.add(tranceButton);
         tranceButton.addListener(new InputListener() {
             public boolean touchDown(InputEvent event, float x, float y,
                                      int pointer, int button) {
@@ -1384,10 +1376,6 @@ public class Acid implements ApplicationListener {
                 return true;
             }
         });
-
-        leftTable.row();
-        dnbButton = new TextButton("DnB", skin);
-        leftTable.add(dnbButton);
         dnbButton.addListener(new InputListener() {
             public boolean touchDown(InputEvent event, float x, float y,
                                      int pointer, int button) {
@@ -1396,6 +1384,7 @@ public class Acid implements ApplicationListener {
                 return true;
             }
         });
+
 
         TextButton randomButton = new TextButton("Random", skin);
         rightTable.add(randomButton);
