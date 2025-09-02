@@ -1303,6 +1303,8 @@ public class Acid implements ApplicationListener {
                     if (trackIndex < Statics.NUM_SYNTHS) {
                         Statics.currentSynth = trackIndex;
                     }
+                    navigationPath.clear();
+                    updateLeftPanel(skin);
                 }
 
                 @Override
@@ -1320,24 +1322,6 @@ public class Acid implements ApplicationListener {
         leftTable = new Table(skin);
         table.addActor(leftTable);
         leftTable.setPosition(20, 360);
-
-        dubstepButton = new TextButton("Dubstep", skin);
-        leftTable.add(dubstepButton);
-        leftTable.row();
-        houseButton = new TextButton("House", skin);
-        leftTable.add(houseButton);
-        leftTable.row();
-        psytranceButton = new TextButton("Psytrance", skin);
-        leftTable.add(psytranceButton);
-        leftTable.row();
-        technoButton = new TextButton("Techno", skin);
-        leftTable.add(technoButton);
-        leftTable.row();
-        tranceButton = new TextButton("Trance", skin);
-        leftTable.add(tranceButton);
-        leftTable.row();
-        dnbButton = new TextButton("DnB", skin);
-        leftTable.add(dnbButton);
 
         updateLeftPanel(skin);
 
@@ -2246,7 +2230,7 @@ public class Acid implements ApplicationListener {
         sequences.add(0,rem);
     }
 
-    private void updateLeftPanel(Skin skin) {
+    private void updateLeftPanel(final Skin skin) {
         leftTable.clearChildren();
 
         if (navigationPath.size() > 0) {
@@ -2263,64 +2247,98 @@ public class Acid implements ApplicationListener {
             });
         }
 
-        if (navigationPath.size() == 0) {
-            String[] genres = synth.PatternGenerator.getGenres();
-            for (final String genre : genres) {
-                TextButton genreButton = new TextButton(genre, skin);
-                leftTable.add(genreButton);
-                leftTable.row();
-                genreButton.addListener(new InputListener() {
-                    public boolean touchDown(InputEvent event, float x, float y,
-                                             int pointer, int button) {
-                        navigationPath.add(genre);
-                        updateLeftPanel(skin);
-                        return true;
-                    }
-                });
-            }
-        } else if (navigationPath.size() == 1) {
-            String genre = navigationPath.get(0);
-            String[] banks = synth.PatternGenerator.getBanks(genre);
-            for (final String bank : banks) {
-                TextButton bankButton = new TextButton(bank, skin);
-                leftTable.add(bankButton);
-                leftTable.row();
-                bankButton.addListener(new InputListener() {
-                    public boolean touchDown(InputEvent event, float x, float y,
-                                             int pointer, int button) {
-                        navigationPath.add(bank);
-                        updateLeftPanel(skin);
-                        return true;
-                    }
-                });
-            }
-        } else if (navigationPath.size() == 2) {
-            String genre = navigationPath.get(0);
-            String bank = navigationPath.get(1);
-            String[] patterns = synth.PatternGenerator.getPatterns(genre, bank);
-            for (final String pattern : patterns) {
-                TextButton patternButton = new TextButton(pattern, skin);
-                leftTable.add(patternButton);
-                leftTable.row();
-                patternButton.addListener(new InputListener() {
-                    public boolean touchDown(InputEvent event, float x, float y,
-                                             int pointer, int button) {
-                        if (sequencerView < Statics.NUM_SYNTHS) {
+        if (sequencerView < Statics.NUM_SYNTHS) {
+            // Synth presets
+            if (navigationPath.size() == 0) {
+                String[] genres = synth.PatternGenerator.getGenres();
+                for (final String genre : genres) {
+                    TextButton genreButton = new TextButton(genre, skin);
+                    leftTable.add(genreButton);
+                    leftTable.row();
+                    genreButton.addListener(new InputListener() {
+                        public boolean touchDown(InputEvent event, float x, float y,
+                                                 int pointer, int button) {
+                            navigationPath.add(genre);
+                            updateLeftPanel(skin);
+                            return true;
+                        }
+                    });
+                }
+            } else if (navigationPath.size() == 1) {
+                String genre = navigationPath.get(0);
+                String[] banks = synth.PatternGenerator.getBanks(genre);
+                for (final String bank : banks) {
+                    TextButton bankButton = new TextButton(bank, skin);
+                    leftTable.add(bankButton);
+                    leftTable.row();
+                    bankButton.addListener(new InputListener() {
+                        public boolean touchDown(InputEvent event, float x, float y,
+                                                 int pointer, int button) {
+                            navigationPath.add(bank);
+                            updateLeftPanel(skin);
+                            return true;
+                        }
+                    });
+                }
+            } else if (navigationPath.size() == 2) {
+                String genre = navigationPath.get(0);
+                String bank = navigationPath.get(1);
+                String[] patterns = synth.PatternGenerator.getPatterns(genre, bank);
+                for (final String pattern : patterns) {
+                    TextButton patternButton = new TextButton(pattern, skin);
+                    leftTable.add(patternButton);
+                    leftTable.row();
+                    patternButton.addListener(new InputListener() {
+                        public boolean touchDown(InputEvent event, float x, float y,
+                                                 int pointer, int button) {
                             if (pattern.toLowerCase().contains("bassline")) {
                                 synth.PatternGenerator.generateBassline(sequencerView);
                             } else if (pattern.toLowerCase().contains("melody")) {
                                 synth.PatternGenerator.generateMelody(sequencerView);
                             } else if (pattern.toLowerCase().contains("pad")) {
                                 synth.PatternGenerator.generateHarmony(sequencerView);
-                            } else if (pattern.toLowerCase().contains("wobble")) {
+                            } else if (pattern.toLowerCase().contains("arp")) {
                                 synth.PatternGenerator.generateArpeggio(sequencerView);
-                            } else if (pattern.toLowerCase().contains("growl")) {
+                            } else {
                                 synth.PatternGenerator.generateMusical(sequencerView);
                             }
+                            return true;
                         }
-                        return true;
-                    }
-                });
+                    });
+                }
+            }
+        } else {
+            // Drum presets
+            if (navigationPath.size() == 0) {
+                String[] genres = synth.PatternGenerator.getDrumGenres();
+                for (final String genre : genres) {
+                    TextButton genreButton = new TextButton(genre, skin);
+                    leftTable.add(genreButton);
+                    leftTable.row();
+                    genreButton.addListener(new InputListener() {
+                        public boolean touchDown(InputEvent event, float x, float y,
+                                                 int pointer, int button) {
+                            navigationPath.add(genre);
+                            updateLeftPanel(skin);
+                            return true;
+                        }
+                    });
+                }
+            } else if (navigationPath.size() == 1) {
+                final String genre = navigationPath.get(0);
+                String[] banks = synth.PatternGenerator.getDrumBanks(genre);
+                for (final String bank : banks) {
+                    TextButton bankButton = new TextButton(bank, skin);
+                    leftTable.add(bankButton);
+                    leftTable.row();
+                    bankButton.addListener(new InputListener() {
+                        public boolean touchDown(InputEvent event, float x, float y,
+                                                 int pointer, int button) {
+                            synth.PatternGenerator.applyDrumPattern(genre, bank);
+                            return true;
+                        }
+                    });
+                }
             }
         }
     }
