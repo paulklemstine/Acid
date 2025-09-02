@@ -16,45 +16,57 @@ import java.util.Stack;
  * Created by Paul on 1/10/2017.
  */
 public class KnobData extends InstrumentData {
-    double[][] knobs = new double[16][8];
-    public static KnobData currentSequence;
+    public double[][] knobs = new double[16][8];
+    public static KnobData[] currentSequences = new KnobData[Statics.NUM_SYNTHS];
+    public int synthIndex;
 
 
-    public KnobData() {
+    public KnobData(int synthIndex) {
+        this.synthIndex = synthIndex;
         for (int i = 0; i < 16; i++) {
             for (int j = 0; j < 8; j++) {
-                knobs[i][j] = KnobImpl.knobs[i][j];
+                knobs[i][j] = KnobImpl.knobs[synthIndex][i][j];
             }
         }
 
-        currentSequence = this;
+        currentSequences[synthIndex] = this;
         pixmap = drawPixmap(50, 50);
         region = new TextureRegion(new Texture(pixmap));
         region.flip(false, true);
     }
 
-    public static KnobData factory() {
-        if (currentSequence != null) {
+    public static KnobData factory(int synthIndex) {
+        if (currentSequences[synthIndex] != null) {
             boolean same = true;
             for (int i = 0; i < 16; i++) {
                 for (int j = 0; j < 8; j++) {
-                    if (currentSequence.knobs[i][j] != KnobImpl.knobs[i][j]) same = false;
+                    if (currentSequences[synthIndex].knobs[i][j] != KnobImpl.knobs[synthIndex][i][j])
+                        same = false;
                 }
             }
-            if (same) return currentSequence;
+            if (same) return currentSequences[synthIndex];
         }
-        return new KnobData();
+        return new KnobData(synthIndex);
+    }
+
+    public static KnobData factory() {
+        return factory(Statics.currentSynth);
+    }
+
+    public void refresh(int synthIndex) {
+        for (int i = 0; i < 16; i++) {
+            for (int j = 0; j < 8; j++) {
+                KnobImpl.knobs[synthIndex][i][j] = knobs[i][j];
+            }
+        }
+        KnobImpl.setControls(KnobImpl.getControl(synthIndex, Statics.output.getSequencer().step));
+        KnobData.currentSequences[synthIndex] = this;
     }
 
     public void refresh() {
-        for (int i = 0; i < 16; i++) {
-            for (int j = 0; j < 8; j++) {
-                KnobImpl.knobs[i][j] = knobs[i][j];
-            }
-        }
-        KnobImpl.setControls(KnobImpl.getControl(Statics.output.getSequencer().step));
-        KnobData.currentSequence=this;
+        refresh(Statics.currentSynth);
     }
+
 
     @Override
     public String toString() {
@@ -67,10 +79,10 @@ public class KnobData extends InstrumentData {
         return s;
     }
 
-    public static void setcurrentSequence(KnobData sd) {
+    public static void setCurrentSequence(KnobData sd, int synthIndex) {
         if (sd != null) {
-            currentSequence = sd;
-            currentSequence.refresh();
+            currentSequences[synthIndex] = sd;
+            currentSequences[synthIndex].refresh(synthIndex);
         }
     }
 
@@ -111,21 +123,34 @@ public class KnobData extends InstrumentData {
         renderer1.end();
     }
 
-    static Stack<KnobData> sequences = new Stack<KnobData>();
+    static Stack<KnobData>[] sequences = new Stack[Statics.NUM_SYNTHS];
+    static {
+        for (int i = 0; i < Statics.NUM_SYNTHS; i++) {
+            sequences[i] = new Stack<KnobData>();
+        }
+    }
+
+
+    public static KnobData peekStack(int synthIndex) {
+        if (sequences[synthIndex].empty()) return null;
+        return sequences[synthIndex].peek();
+    }
 
     public static KnobData peekStack() {
-        if (sequences.empty()) return null;
-        KnobData peek = sequences.peek();
-        return peek;
+        return peekStack(Statics.currentSynth);
+    }
+
+    public static KnobData popStack(int synthIndex) {
+        if (sequences[synthIndex].empty()) return null;
+        return sequences[synthIndex].pop();
     }
 
     public static KnobData popStack() {
-        if (sequences.empty()) return null;
-        return sequences.pop();
+        return popStack(Statics.currentSynth);
     }
 
     public static void pushStack(KnobData sd) {
-        sequences.push(sd);
+        sequences[sd.synthIndex].push(sd);
     }
 
 

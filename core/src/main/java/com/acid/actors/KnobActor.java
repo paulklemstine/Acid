@@ -21,14 +21,16 @@ public class KnobActor extends Actor {
     private final BitmapFont font;
     private final int id;
     private final String name;
+    private final int synthIndex;
 
-    public KnobActor(String name, final int id) {
+    public KnobActor(String name, final int id, final int synthIndex) {
         font = new BitmapFont(Gdx.app.getFiles().getFileHandle("data/font.fnt",
                 Files.FileType.Internal), false);
 
         font.getData().setScale(.75f);
         this.id = id;
         this.name = name;
+        this.synthIndex = synthIndex;
         this.setWidth(60);
         this.setHeight(60);
         this.addListener(new InputListener() {
@@ -39,22 +41,22 @@ public class KnobActor extends Actor {
                                      int pointer, int button) {
                 distx = x;
                 disty = y;
-                KnobImpl.touchDown(id);
+                KnobImpl.touchDown(synthIndex, id);
 //                ccpos = (int) ((int) ((KnobImpl.getRotation(id) * (127f / 360f) + 127 + 127 / 2) % 127) - 0);
                 return true;
             }
 
             public void touchUp(InputEvent event, float x, float y,
                                 int pointer, int button) {
-                KnobImpl.touchReleased(id);
+                KnobImpl.touchReleased(synthIndex, id);
             }
 
             public void touchDragged(InputEvent event, float x, float y,
                                      int pointer) {
                 // (ShapeRenderingActor.this).rotate((distx - x));
-               // ccpos = (int) ((int) ((KnobImpl.getRotation(id) * (127f / 360f) + 127 + 127 / 2) % 127) - 0);
+                // ccpos = (int) ((int) ((KnobImpl.getRotation(id) * (127f / 360f) + 127 + 127 / 2) % 127) - 0);
 
-                KnobImpl.touchDragged(id,(distx - x) + (disty - y));
+                KnobImpl.touchDragged(synthIndex, id, (distx - x) + (disty - y));
             }
         });
     }
@@ -63,7 +65,7 @@ public class KnobActor extends Actor {
     public void draw(Batch batch, float parentAlpha) {
         int xc = 20;
         int yc = 20;
-        float rotation = KnobImpl.getRotation(id);
+        float rotation = KnobImpl.getRotation(synthIndex, id);
         font.setColor(ColorHelper.rainbow());
         GlyphLayout gl1 = new GlyphLayout(font, name);
         font.draw(batch, name, this.getX() + xc - gl1.width / 2, this.getY() + this.getHeight() - gl1.height);
@@ -93,8 +95,8 @@ public class KnobActor extends Actor {
             y2 = MathUtils.sin(i) * 16f + yc;
             Statics.renderer.line(x1, y1, x2, y2);
         }
-        Statics.renderer.setColor(ColorHelper.numberToColorPercentage(KnobImpl.percent(id,KnobImpl.getRotation(id))));
-        Statics.renderer.arc(xc, yc, 13, 180-KnobImpl.percent(id,KnobImpl.getRotation(id))*360,KnobImpl.percent(id,KnobImpl.getRotation(id))*360 );
+        Statics.renderer.setColor(ColorHelper.numberToColorPercentage(KnobImpl.percent(id,rotation)));
+        Statics.renderer.arc(xc, yc, 13, 180-KnobImpl.percent(id,rotation)*360,KnobImpl.percent(id,rotation)*360 );
         Statics.renderer.setColor(Color.DARK_GRAY);
         Statics.renderer.circle(xc, yc, 10, 20);
 //        Statics.renderer.end();

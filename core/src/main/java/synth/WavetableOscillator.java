@@ -19,6 +19,11 @@ public class WavetableOscillator extends Oscillator {
 	private double a2;
 	private double a3;
 
+    public WavetableOscillator() {
+        this.wavetable = loadWavetable(Resources.load("saw.raw.tab"));
+        this.wave = this.wavetable[this.waveIndex];
+    }
+
 	public final double tick() {
 		try{
 		this.phase += this.phaseDelta;

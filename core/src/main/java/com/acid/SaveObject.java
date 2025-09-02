@@ -10,9 +10,9 @@ import synth.Output;
 public class SaveObject implements Serializable {
 
     private static final long serialVersionUID = -1216569043511623845L;
-    private ArrayList<SequencerData> sequencerDataArrayList = new ArrayList<SequencerData>();
+    private ArrayList<ArrayList<SequencerData>> sequencerDataArrayList = new ArrayList<ArrayList<SequencerData>>();
     private ArrayList<DrumData> drumDataArrayList = new ArrayList<DrumData>();
-    private ArrayList<KnobData> knobsArrayList = new ArrayList<KnobData>();
+    private ArrayList<ArrayList<KnobData>> knobsArrayList = new ArrayList<ArrayList<KnobData>>();
     private int songPosition = 0;
     private int maxSongPosition = 0;
     private int minSongPosition = 0;
@@ -20,17 +20,23 @@ public class SaveObject implements Serializable {
     private double vol = 1f;
     private double delayTime = 44100 / 10f;
     private double delayFeedback = .1f;
-    private ArrayList<SequencerData> sequencerStack = new ArrayList<>();
-    private ArrayList<KnobData> knobStack = new ArrayList<>();
+    private ArrayList<SequencerData>[] sequencerStack = new ArrayList[Statics.NUM_SYNTHS];
+    private ArrayList<KnobData>[] knobStack = new ArrayList[Statics.NUM_SYNTHS];
     private ArrayList<DrumData> drumStack = new ArrayList<>();
 
     SaveObject(Acid acid) {
         this.sequencerDataArrayList = acid.sequencerDataArrayList;
         this.drumDataArrayList = acid.drumDataArrayList;
         this.knobsArrayList = acid.knobsArrayList;
-        this.sequencerStack = new ArrayList<>(Collections.list(SequencerData.sequences.elements()));
+        for (int i = 0; i < Statics.NUM_SYNTHS; i++) {
+            if (SequencerData.sequences[i] != null) {
+                this.sequencerStack[i] = new ArrayList<>(Collections.list(SequencerData.sequences[i].elements()));
+            }
+            if (KnobData.sequences[i] != null) {
+                this.knobStack[i] = new ArrayList<>(Collections.list(KnobData.sequences[i].elements()));
+            }
+        }
         this.drumStack = new ArrayList<>(Collections.list(DrumData.sequences.elements()));
-        this.knobStack = new ArrayList<>(Collections.list(KnobData.sequences.elements()));
         this.songPosition = acid.songPosition;
         this.maxSongPosition = acid.maxSongPosition;
         this.minSongPosition = acid.minSongPosition;
@@ -41,11 +47,13 @@ public class SaveObject implements Serializable {
     }
 
     public void restore(Acid acid) {
-        SequencerData.sequences = new Stack<>();
-        if (sequencerStack != null) {
-            for (InstrumentData data : sequencerStack) {
-                data.refresh();
-                SequencerData.sequences.add(new SequencerData());
+        for (int i = 0; i < Statics.NUM_SYNTHS; i++) {
+            SequencerData.sequences[i] = new Stack<>();
+            if (sequencerStack[i] != null) {
+                for (InstrumentData data : sequencerStack[i]) {
+                    data.refresh();
+                    SequencerData.sequences[i].add(new SequencerData(i));
+                }
             }
         }
         DrumData.sequences = new Stack<>();
@@ -55,14 +63,14 @@ public class SaveObject implements Serializable {
                 DrumData.sequences.add(new DrumData());
             }
         }
-        KnobData.sequences = new Stack<>();
-        if (knobStack != null) {
-            for (InstrumentData data : knobStack) {
-                data.refresh();
-                KnobData.sequences.add(new KnobData());
+        for (int i = 0; i < Statics.NUM_SYNTHS; i++) {
+            KnobData.sequences[i] = new Stack<>();
+            if (knobStack[i] != null) {
+                for (KnobData data : knobStack[i]) {
+                    KnobData.sequences[i].add(data);
+                }
             }
         }
-        acid.swapPattern(acid.songPosition, acid.songPosition);
         acid.sequencerDataArrayList = sequencerDataArrayList;
         acid.drumDataArrayList = drumDataArrayList;
         acid.knobsArrayList = knobsArrayList;
@@ -74,9 +82,15 @@ public class SaveObject implements Serializable {
         Output.volume = vol;
         Output.getDelay().setTime(delayTime);
         Output.getDelay().setFeedback(delayFeedback);
-        if (acid.knobsArrayList.size() > 0) {
-            acid.knobsArrayList.get(0).refresh();
+        for (int i = 0; i < Statics.NUM_SYNTHS; i++) {
+            if (!KnobData.sequences[i].isEmpty()) {
+                KnobData.currentSequences[i] = KnobData.sequences[i].peek();
+                KnobData.currentSequences[i].refresh();
+            } else if (acid.knobsArrayList.get(i).size() > 0) {
+                acid.knobsArrayList.get(i).get(0).refresh();
+            } else {
+                 KnobData.currentSequences[i] = new KnobData(i);
+            }
         }
-        KnobData.currentSequence = new KnobData();
     }
 }

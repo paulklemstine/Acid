@@ -1,8 +1,7 @@
 
 android {
-
-    buildToolsVersion "30.0.3"
-    compileSdkVersion 33
+    namespace 'com.acid'
+    compileSdkVersion 34
     sourceSets {
         main {
             manifest.srcFile 'AndroidManifest.xml'
@@ -16,12 +15,14 @@ android {
 
     }
     packagingOptions {
-        exclude 'META-INF/robovm/ios/robovm.xml'
+        resources {
+            excludes += ['META-INF/robovm/ios/robovm.xml']
+        }
     }
     defaultConfig {
         applicationId "com.acid"
         minSdkVersion 16
-        targetSdkVersion 33
+        targetSdkVersion 34
         versionCode 56
         versionName "1.5.6"
         ndkVersion "22.1.7171670"

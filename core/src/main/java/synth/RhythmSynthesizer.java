@@ -61,6 +61,7 @@
    private double sd_snappy;
    private double sd_volume;
    private double cp_volume;
+   public double volume = 1.0;
    public static final int MSG_CC_BD_TUNE = 33;
    public static final int MSG_CC_BD_ATTACK = 34;
    public static final int MSG_CC_BD_DECAY = 35;
@@ -78,6 +79,7 @@
    public static final int MSG_CC_HT_TUNE = 47;
    public static final int MSG_CC_HT_DECAY = 48;
    public static final int MSG_CC_HT_VOLUME = 49;
+   public static final int MSG_CC_DRUM_VOLUME = 50;
    private double aux;
    private double aux1Amt;
    private double aux2Amt;
@@ -306,7 +308,7 @@
  
      this.left += bds + (sds + perc2) * 0.66D + (chs + perc1 + ohs) * 1.33D + cps + crs * 0.5D;
      this.right += bds + (sds + perc2) * 1.33D + (chs + perc1 + ohs) * 0.66D + cps + crs * 1.5D;
-     return new double[] { this.left, this.right, this.aux * this.aux1Amt, this.aux * this.aux2Amt };
+     return new double[] { this.left * this.volume, this.right * this.volume, this.aux * this.aux1Amt, this.aux * this.aux2Amt };
    }
  
  
@@ -408,6 +410,9 @@
        break;
      case 49:
        this.ht_volume = (value / 127.0D);
+       break;
+     case MSG_CC_DRUM_VOLUME:
+         this.volume = (value / 127.0D);
      }
    }
  
