@@ -151,13 +151,11 @@ public class PatternGenerator {
         return new String[]{bank};
     }
 
-    public static void applyDrumPattern(String genre, String bank) {
+    public static int[][] getDrumPattern(String genre, String bank) {
         if (drumGenreBank.containsKey(genre) && drumGenreBank.get(genre).containsKey(bank)) {
-            int[][] pattern = drumGenreBank.get(genre).get(bank);
-            DrumData dd = new DrumData();
-            dd.setRhythm(pattern);
-            dd.refresh();
+            return drumGenreBank.get(genre).get(bank);
         }
+        return null;
     }
 
     public static void setGenre(String genre) {
