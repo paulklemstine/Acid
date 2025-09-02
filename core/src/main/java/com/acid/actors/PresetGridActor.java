@@ -41,6 +41,7 @@ public class PresetGridActor extends Group {
                             selectedGenre = null;
                         }
                         selectedBank = null;
+                        selectedPattern = null;
                         updateGrid();
                     }
                     return true;
@@ -61,6 +62,7 @@ public class PresetGridActor extends Group {
 
     private String selectedGenre = null;
     private String selectedBank = null;
+    private String selectedPattern = null;
 
     private void displayGenres() {
         String[] genres = isSynth ? PatternGenerator.getGenres() : PatternGenerator.getDrumGenres();
@@ -112,51 +114,44 @@ public class PresetGridActor extends Group {
     private void displayPatterns() {
         String genre = navigationPath.get(0);
         String bank = navigationPath.get(1);
-        String[] patterns = isSynth ? PatternGenerator.getPatterns(genre, bank) : new String[]{}; // Drums handled differently
+        String[] patterns = isSynth ? PatternGenerator.getPatterns(genre, bank) : new String[]{bank};
 
-        if (!isSynth) {
-            TextButton button = new TextButton(bank, skin);
+        int col = 0;
+        for (final String patternName : patterns) {
+            TextButton button = new TextButton("", skin);
+            if (patternName.equals(selectedPattern)) {
+                button.setColor(Color.RED);
+            }
             button.addListener(new InputListener() {
                 public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                    int[][] pattern = PatternGenerator.getDrumPattern(genre, bank);
-                    if (pattern != null) {
-                        for (int i = 0; i < 4; i++) {
-                            for (int j = 0; j < 16; j++) {
-                                com.acid.Statics.output.getSequencer().rhythm[i][j] = pattern[i][j];
+                    selectedPattern = patternName;
+                    if (isSynth) {
+                        if (patternName.toLowerCase().contains("bassline")) {
+                            PatternGenerator.generateBassline(sequencerView);
+                        } else if (patternName.toLowerCase().contains("melody")) {
+                            PatternGenerator.generateMelody(sequencerView);
+                        } else if (patternName.toLowerCase().contains("pad")) {
+                            PatternGenerator.generateHarmony(sequencerView);
+                        } else if (patternName.toLowerCase().contains("arp")) {
+                            PatternGenerator.generateArpeggio(sequencerView);
+                        } else {
+                            PatternGenerator.generateMusical(sequencerView);
+                        }
+                    } else {
+                        int[][] drumPattern = PatternGenerator.getDrumPattern(genre, bank);
+                        if (drumPattern != null) {
+                            for (int i = 0; i < 4; i++) {
+                                for (int j = 0; j < 16; j++) {
+                                    com.acid.Statics.output.getSequencer().rhythm[i][j] = drumPattern[i][j];
+                                }
                             }
                         }
                     }
-                    navigationPath.clear();
                     updateGrid();
                     return true;
                 }
             });
-            table.add(button).pad(5);
-            return;
-        }
-
-        int col = 0;
-        for (final String pattern : patterns) {
-            TextButton button = new TextButton(pattern, skin);
-            button.addListener(new InputListener() {
-                public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                    if (pattern.toLowerCase().contains("bassline")) {
-                        PatternGenerator.generateBassline(sequencerView);
-                    } else if (pattern.toLowerCase().contains("melody")) {
-                        PatternGenerator.generateMelody(sequencerView);
-                    } else if (pattern.toLowerCase().contains("pad")) {
-                        PatternGenerator.generateHarmony(sequencerView);
-                    } else if (pattern.toLowerCase().contains("arp")) {
-                        PatternGenerator.generateArpeggio(sequencerView);
-                    } else {
-                        PatternGenerator.generateMusical(sequencerView);
-                    }
-                    navigationPath.clear();
-                    updateGrid();
-                    return true;
-                }
-            });
-            table.add(button).pad(5);
+            table.add(button).width(20).height(20).pad(5);
             if (++col % 4 == 0) {
                 table.row();
             }
