@@ -194,7 +194,7 @@ public class PatternGenerator {
             sd.pause[i] = Math.random() > 0.8; // Add some random pauses
         }
         sd.refresh();
-        ((BasslineSynthesizer)Statics.output.getTrack(synthIndex)).randomize();
+        ((BasslineSynthesizer)Statics.output.getTrack(synthIndex)).initOscillator();
         return sd;
     }
 
