@@ -5,159 +5,93 @@ import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import synth.PatternGenerator;
-import java.util.ArrayList;
 
 public class PresetGridActor extends Group {
 
     private Skin skin;
     private Table table;
     private ShapeRenderer shapeRenderer;
-    private ArrayList<String> navigationPath = new ArrayList<>();
     private boolean isSynth = true;
+    private TextButton selectedPatternButton = null;
 
     public PresetGridActor(Skin skin) {
         this.skin = skin;
         this.table = new Table();
         this.shapeRenderer = new ShapeRenderer();
         addActor(table);
-        updateGrid();
+        buildGrid();
     }
 
-    private void updateGrid() {
+    private void buildGrid() {
         table.clear();
+        table.defaults().pad(2);
 
-        if (!navigationPath.isEmpty()) {
-            TextButton backButton = new TextButton("..Back", skin);
-            backButton.addListener(new InputListener() {
-                public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                    if (!navigationPath.isEmpty()) {
-                        String removed = navigationPath.remove(navigationPath.size() - 1);
-                        if (navigationPath.size() == 0) {
-                            selectedGenre = null;
-                        }
-                        selectedBank = null;
-                        selectedPattern = null;
-                        updateGrid();
-                    }
-                    return true;
-                }
-            });
-            table.add(backButton).colspan(4).left();
-            table.row();
-        }
-
-        if (navigationPath.isEmpty()) {
-            displayGenres();
-        } else if (navigationPath.size() == 1) {
-            displayBanks();
-        } else if (navigationPath.size() == 2) {
-            displayPatterns();
-        }
-    }
-
-    private String selectedGenre = null;
-    private String selectedBank = null;
-    private String selectedPattern = null;
-
-    private void displayGenres() {
         String[] genres = isSynth ? PatternGenerator.getGenres() : PatternGenerator.getDrumGenres();
-        int col = 0;
+
         for (final String genre : genres) {
-            TextButton button = new TextButton(genre, skin);
-            if (genre.equals(selectedGenre)) {
-                button.setColor(Color.RED);
-            }
-            button.addListener(new InputListener() {
-                public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                    selectedGenre = genre;
-                    navigationPath.add(genre);
-                    updateGrid();
-                    return true;
-                }
-            });
-            table.add(button).pad(5);
-            if (++col % 4 == 0) {
-                table.row();
-            }
-        }
-    }
+            table.add(new Label(genre, skin)).colspan(16).left();
+            table.row();
 
-    private void displayBanks() {
-        String genre = navigationPath.get(0);
-        String[] banks = isSynth ? PatternGenerator.getBanks(genre) : PatternGenerator.getDrumBanks(genre);
-        int col = 0;
-        for (final String bank : banks) {
-            TextButton button = new TextButton(bank, skin);
-            if (bank.equals(selectedBank)) {
-                button.setColor(Color.RED);
-            }
-            button.addListener(new InputListener() {
-                public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                    selectedBank = bank;
-                    navigationPath.add(bank);
-                    updateGrid();
-                    return true;
-                }
-            });
-            table.add(button).pad(5);
-            if (++col % 4 == 0) {
-                table.row();
-            }
-        }
-    }
+            String[] banks = isSynth ? PatternGenerator.getBanks(genre) : PatternGenerator.getDrumBanks(genre);
+            for (final String bank : banks) {
+                table.add(new Label(bank, skin)).left();
 
-    private void displayPatterns() {
-        String genre = navigationPath.get(0);
-        String bank = navigationPath.get(1);
-        String[] patterns = isSynth ? PatternGenerator.getPatterns(genre, bank) : new String[]{bank};
-
-        int col = 0;
-        for (final String patternName : patterns) {
-            TextButton button = new TextButton("", skin);
-            if (patternName.equals(selectedPattern)) {
-                button.setColor(Color.RED);
-            }
-            button.addListener(new InputListener() {
-                public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                    selectedPattern = patternName;
-                    if (isSynth) {
-                        if (patternName.toLowerCase().contains("bassline")) {
-                            PatternGenerator.generateBassline(sequencerView);
-                        } else if (patternName.toLowerCase().contains("melody")) {
-                            PatternGenerator.generateMelody(sequencerView);
-                        } else if (patternName.toLowerCase().contains("pad")) {
-                            PatternGenerator.generateHarmony(sequencerView);
-                        } else if (patternName.toLowerCase().contains("arp")) {
-                            PatternGenerator.generateArpeggio(sequencerView);
-                        } else {
-                            PatternGenerator.generateMusical(sequencerView);
-                        }
-                    } else {
-                        int[][] drumPattern = PatternGenerator.getDrumPattern(genre, bank);
-                        if (drumPattern != null) {
-                            for (int i = 0; i < 4; i++) {
-                                for (int j = 0; j < 16; j++) {
-                                    com.acid.Statics.output.getSequencer().rhythm[i][j] = drumPattern[i][j];
-                                }
+                String[] patterns = isSynth ? PatternGenerator.getPatterns(genre, bank) : new String[]{bank};
+                for (final String patternName : patterns) {
+                    final TextButton button = new TextButton("", skin);
+                    button.addListener(new InputListener() {
+                        public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                            if (selectedPatternButton != null) {
+                                selectedPatternButton.setColor(Color.WHITE);
                             }
+                            selectedPatternButton = (TextButton)event.getListenerActor();
+                            selectedPatternButton.setColor(Color.RED);
+
+                            if (isSynth) {
+                                applySynthPattern(patternName);
+                            } else {
+                                applyDrumPattern(genre, bank);
+                            }
+                            return true;
                         }
-                    }
-                    updateGrid();
-                    return true;
+                    });
+                    table.add(button).width(20).height(20);
                 }
-            });
-            table.add(button).width(20).height(20).pad(5);
-            if (++col % 4 == 0) {
                 table.row();
             }
         }
     }
 
+    private void applySynthPattern(String patternName) {
+        if (patternName.toLowerCase().contains("bassline")) {
+            PatternGenerator.generateBassline(sequencerView);
+        } else if (patternName.toLowerCase().contains("melody")) {
+            PatternGenerator.generateMelody(sequencerView);
+        } else if (patternName.toLowerCase().contains("pad")) {
+            PatternGenerator.generateHarmony(sequencerView);
+        } else if (patternName.toLowerCase().contains("arp")) {
+            PatternGenerator.generateArpeggio(sequencerView);
+        } else {
+            PatternGenerator.generateMusical(sequencerView);
+        }
+    }
+
+    private void applyDrumPattern(String genre, String bank) {
+        int[][] drumPattern = PatternGenerator.getDrumPattern(genre, bank);
+        if (drumPattern != null) {
+            for (int i = 0; i < 4; i++) {
+                for (int j = 0; j < 16; j++) {
+                    com.acid.Statics.output.getSequencer().rhythm[i][j] = drumPattern[i][j];
+                }
+            }
+        }
+    }
 
     @Override
     public void draw(Batch batch, float parentAlpha) {
@@ -174,18 +108,12 @@ public class PresetGridActor extends Group {
 
     public void showSynthPresets() {
         this.isSynth = true;
-        this.navigationPath.clear();
-        this.selectedGenre = null;
-        this.selectedBank = null;
-        updateGrid();
+        buildGrid();
     }
 
     public void showDrumPresets() {
         this.isSynth = false;
-        this.navigationPath.clear();
-        this.selectedGenre = null;
-        this.selectedBank = null;
-        updateGrid();
+        buildGrid();
     }
 
     private int sequencerView;
