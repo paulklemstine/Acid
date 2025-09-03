@@ -96,5 +96,35 @@
    public int getFromScale(int i, int[] scale) {
      return scale[(i % scale.length)] + 12 * (i / scale.length);
    }
+
+    public static int[] generateHarmony(int[] melody, int[] chordProgression, int[] scale) {
+        int[] harmony = new int[melody.length];
+        Harmony h = new Harmony();
+        for (int i = 0; i < melody.length; i++) {
+            if (melody[i] != -1) { // If there is a note in the melody
+                int degree = chordProgression[(i / 4) % chordProgression.length];
+                int[] chord = h.getNotesInChord(0, scale, degree - 1, 3, 0);
+
+                // Find a harmony note from the chord that is not the melody note
+                int harmonyNote = -1;
+                for (int j = 0; j < chord.length; j++) {
+                    if (chord[j] % 12 != melody[i] % 12) {
+                        harmonyNote = chord[j];
+                        break;
+                    }
+                }
+
+                if (harmonyNote != -1) {
+                    harmony[i] = harmonyNote;
+                } else {
+                    // if no other note is available, play the root of the chord one octave higher or lower
+                    harmony[i] = chord[0] + 12;
+                }
+            } else {
+                harmony[i] = -1; // Rest
+            }
+        }
+        return harmony;
+    }
  }
 

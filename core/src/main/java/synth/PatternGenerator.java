@@ -99,4 +99,19 @@ public class PatternGenerator {
         sd.refresh();
         ((BasslineSynthesizer)Statics.output.getTrack(synthIndex)).initOscillator();
     }
+
+    public static int[] mutatePattern(int[] pattern, int[] scale, float mutationRate) {
+        int[] mutatedPattern = new int[pattern.length];
+        System.arraycopy(pattern, 0, mutatedPattern, 0, pattern.length);
+
+        for (int i = 0; i < mutatedPattern.length; i++) {
+            if (Math.random() < mutationRate) {
+                // Mutate this note
+                int randomNoteFromScale = scale[(int) (Math.random() * scale.length)];
+                int octave = (int) (Math.random() * 3) + 2; // C3 to C5
+                mutatedPattern[i] = randomNoteFromScale + (12 * octave);
+            }
+        }
+        return mutatedPattern;
+    }
 }
