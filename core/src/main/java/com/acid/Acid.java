@@ -1357,7 +1357,7 @@ public class Acid implements ApplicationListener {
                     int[] chordProgression = getProgressionFromName(progressionSelectBox.getSelected());
                     int[] melody = MelodyGenerator.generateMelody(chordProgression, scale, 16);
                     for (int i = 0; i < 16; i++) {
-                        melody[i] += key;
+                        melody[i] += key - 12;
                     }
                     PatternGenerator.applySynthPattern(melody, sequencerView);
                 }
@@ -1376,7 +1376,7 @@ public class Acid implements ApplicationListener {
                     int[] chordProgression = getProgressionFromName(progressionSelectBox.getSelected());
                     int[] bassline = MelodyGenerator.generateBassline(chordProgression, scale, 16);
                     for (int i = 0; i < 16; i++) {
-                        bassline[i] += key;
+                        bassline[i] += key - 12;
                     }
                     PatternGenerator.applySynthPattern(bassline, sequencerView);
                 }
@@ -1441,27 +1441,100 @@ public class Acid implements ApplicationListener {
         generatorTable.add(mutateButton);
         generatorTable.row();
 
+        TextButton mutateRhythmButton = new TextButton("Mutate Rhythm", skin);
+        mutateRhythmButton.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                if (sequencerView < Statics.NUM_SYNTHS) {
+                    int[] pattern = new int[16];
+                    boolean[] pauses = new boolean[16];
+                    for (int i = 0; i < 16; i++) {
+                        pattern[i] = Statics.output.getSequencer().basslines[sequencerView].note[i];
+                        pauses[i] = Statics.output.getSequencer().basslines[sequencerView].pause[i];
+                    }
+                    PatternGenerator.mutateRhythm(pauses, 0.2f);
+                    PatternGenerator.applySynthPattern(pattern, pauses, Statics.output.getSequencer().basslines[sequencerView].accent, Statics.output.getSequencer().basslines[sequencerView].slide, sequencerView);
+                }
+                return true;
+            }
+        });
+        generatorTable.add(mutateRhythmButton);
+        generatorTable.row();
+
+        TextButton mutateAccentsButton = new TextButton("Mutate Accents", skin);
+        mutateAccentsButton.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                if (sequencerView < Statics.NUM_SYNTHS) {
+                    int[] pattern = new int[16];
+                    boolean[] accents = new boolean[16];
+                    for (int i = 0; i < 16; i++) {
+                        pattern[i] = Statics.output.getSequencer().basslines[sequencerView].note[i];
+                        accents[i] = Statics.output.getSequencer().basslines[sequencerView].accent[i];
+                    }
+                    PatternGenerator.mutateAccents(accents, 0.2f);
+                    PatternGenerator.applySynthPattern(pattern, Statics.output.getSequencer().basslines[sequencerView].pause, accents, Statics.output.getSequencer().basslines[sequencerView].slide, sequencerView);
+                }
+                return true;
+            }
+        });
+        generatorTable.add(mutateAccentsButton);
+        generatorTable.row();
+
+        TextButton mutateSlidesButton = new TextButton("Mutate Slides", skin);
+        mutateSlidesButton.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                if (sequencerView < Statics.NUM_SYNTHS) {
+                    int[] pattern = new int[16];
+                    boolean[] slides = new boolean[16];
+                    for (int i = 0; i < 16; i++) {
+                        pattern[i] = Statics.output.getSequencer().basslines[sequencerView].note[i];
+                        slides[i] = Statics.output.getSequencer().basslines[sequencerView].slide[i];
+                    }
+                    PatternGenerator.mutateSlides(slides, 0.2f);
+                    PatternGenerator.applySynthPattern(pattern, Statics.output.getSequencer().basslines[sequencerView].pause, Statics.output.getSequencer().basslines[sequencerView].accent, slides, sequencerView);
+                }
+                return true;
+            }
+        });
+        generatorTable.add(mutateSlidesButton);
+        generatorTable.row();
+
+        TextButton arpeggiateButton = new TextButton("Arpeggiate", skin);
+        arpeggiateButton.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                if (sequencerView < Statics.NUM_SYNTHS) {
+                    int[] pattern = new int[16];
+                    for (int i = 0; i < 16; i++) {
+                        pattern[i] = Statics.output.getSequencer().basslines[sequencerView].note[i];
+                    }
+                    int[] arpeggiatedPattern = PatternGenerator.arpeggiate(pattern, 1, "up");
+                    PatternGenerator.applySynthPattern(arpeggiatedPattern, sequencerView);
+                }
+                return true;
+            }
+        });
+        generatorTable.add(arpeggiateButton);
+        generatorTable.row();
+
         transposeButton = new TextButton("Transpose", skin);
         transposeButton.addListener(new InputListener() {
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 if (sequencerView < Statics.NUM_SYNTHS) {
                     int key = keySelectBox.getSelectedIndex();
-                    // Get current pattern's root note. For simplicity, we'll find the first note.
+                    // Get current pattern's root note. For simplicity, we'll find the lowest note.
                     int rootNote = -1;
-                    for(int i=0; i<16; i++){
-                        if(!Statics.output.getSequencer().basslines[sequencerView].pause[i]){
-                            rootNote = Statics.output.getSequencer().basslines[sequencerView].note[i] % 12;
-                            break;
+                    int lowestNote = 127;
+                    for (int i = 0; i < 16; i++) {
+                        if (!Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
+                            if (Statics.output.getSequencer().basslines[sequencerView].note[i] < lowestNote) {
+                                lowestNote = Statics.output.getSequencer().basslines[sequencerView].note[i];
+                            }
                         }
                     }
 
-                    if(rootNote != -1){
+                    if (lowestNote != 127) {
+                        rootNote = lowestNote % 12;
                         int transposeAmount = key - rootNote;
-                        for (int i = 0; i < 16; i++) {
-                            if (!Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
-                                Statics.output.getSequencer().basslines[sequencerView].note[i] += transposeAmount;
-                            }
-                        }
+                        shiftPattern(transposeAmount);
                     }
                 }
                 return true;
@@ -1497,7 +1570,7 @@ public class Acid implements ApplicationListener {
         generatorTable.add(new Label("Progression:", skin));
         generatorTable.row();
         progressionSelectBox = new SelectBox<String>(skin);
-        progressionSelectBox.setItems("Pop", "Pachelbel", "Jazz", "Blues");
+        progressionSelectBox.setItems("Pop", "Pachelbel", "Jazz", "Blues", "Pop Punk", "Andalusian", "50s");
         generatorTable.add(progressionSelectBox);
         generatorTable.row();
 
@@ -1540,19 +1613,7 @@ public class Acid implements ApplicationListener {
         upButton.addListener(new InputListener() {
             public boolean touchDown(InputEvent event, float x, float y,
                                      int pointer, int button) {
-                if (sequencerView < Statics.NUM_SYNTHS) {
-                    for (int i = 0; i < 16; i++) {
-                        if (!Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
-                            boolean isEndOfSlide = (i > 0) && Statics.output.getSequencer().basslines[sequencerView].slide[i - 1];
-                            if (!isEndOfSlide) {
-                                Statics.output.getSequencer().basslines[sequencerView].note[i]++;
-                                if (Statics.output.getSequencer().basslines[sequencerView].slide[i] && i < 15) {
-                                    Statics.output.getSequencer().basslines[sequencerView].note[i + 1]++;
-                                }
-                            }
-                        }
-                    }
-                }
+                shiftPattern(1);
                 return true;
             }
         });
@@ -1562,19 +1623,7 @@ public class Acid implements ApplicationListener {
         downButton.addListener(new InputListener() {
             public boolean touchDown(InputEvent event, float x, float y,
                                      int pointer, int button) {
-                if (sequencerView < Statics.NUM_SYNTHS) {
-                    for (int i = 0; i < 16; i++) {
-                        if (!Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
-                            boolean isEndOfSlide = (i > 0) && Statics.output.getSequencer().basslines[sequencerView].slide[i - 1];
-                            if (!isEndOfSlide) {
-                                Statics.output.getSequencer().basslines[sequencerView].note[i]--;
-                                if (Statics.output.getSequencer().basslines[sequencerView].slide[i] && i < 15) {
-                                    Statics.output.getSequencer().basslines[sequencerView].note[i + 1]--;
-                                }
-                            }
-                        }
-                    }
-                }
+                shiftPattern(-1);
                 return true;
             }
         });
@@ -1584,19 +1633,7 @@ public class Acid implements ApplicationListener {
         octUpButton.addListener(new InputListener() {
             public boolean touchDown(InputEvent event, float x, float y,
                                      int pointer, int button) {
-                if (sequencerView < Statics.NUM_SYNTHS) {
-                    for (int i = 0; i < 16; i++) {
-                        if (!Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
-                            boolean isEndOfSlide = (i > 0) && Statics.output.getSequencer().basslines[sequencerView].slide[i - 1];
-                            if (!isEndOfSlide) {
-                                Statics.output.getSequencer().basslines[sequencerView].note[i] += 12;
-                                if (Statics.output.getSequencer().basslines[sequencerView].slide[i] && i < 15) {
-                                    Statics.output.getSequencer().basslines[sequencerView].note[i + 1] += 12;
-                                }
-                            }
-                        }
-                    }
-                }
+                shiftPattern(12);
                 return true;
             }
         });
@@ -1606,19 +1643,7 @@ public class Acid implements ApplicationListener {
         octDownButton.addListener(new InputListener() {
             public boolean touchDown(InputEvent event, float x, float y,
                                      int pointer, int button) {
-                if (sequencerView < Statics.NUM_SYNTHS) {
-                    for (int i = 0; i < 16; i++) {
-                        if (!Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
-                            boolean isEndOfSlide = (i > 0) && Statics.output.getSequencer().basslines[sequencerView].slide[i - 1];
-                            if (!isEndOfSlide) {
-                                Statics.output.getSequencer().basslines[sequencerView].note[i] -= 12;
-                                if (Statics.output.getSequencer().basslines[sequencerView].slide[i] && i < 15) {
-                                    Statics.output.getSequencer().basslines[sequencerView].note[i + 1] -= 12;
-                                }
-                            }
-                        }
-                    }
-                }
+                shiftPattern(-12);
                 return true;
             }
         });
@@ -2334,6 +2359,22 @@ public class Acid implements ApplicationListener {
         sequences.add(0,rem);
     }
 
+    public void shiftPattern(int amount) {
+        if (sequencerView < Statics.NUM_SYNTHS) {
+            for (int i = 0; i < 16; i++) {
+                if (!Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
+                    boolean isEndOfSlide = (i > 0) && Statics.output.getSequencer().basslines[sequencerView].slide[i - 1];
+                    if (!isEndOfSlide) {
+                        Statics.output.getSequencer().basslines[sequencerView].note[i] += amount;
+                        if (Statics.output.getSequencer().basslines[sequencerView].slide[i] && i < 15) {
+                            Statics.output.getSequencer().basslines[sequencerView].note[i + 1] += amount;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private int[] getScaleFromName(String name) {
         switch (name) {
             case "Major":
@@ -2371,6 +2412,12 @@ public class Acid implements ApplicationListener {
                 return Harmony.Jazz;
             case "Blues":
                 return Harmony.Blues;
+            case "Pop Punk":
+                return Harmony.PopPunk;
+            case "Andalusian":
+                return Harmony.Andalusian;
+            case "50s":
+                return Harmony.FiftySixFourOne;
             default:
                 return Harmony.Pop;
         }
