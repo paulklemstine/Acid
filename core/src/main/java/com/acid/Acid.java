@@ -1323,6 +1323,127 @@ public class Acid implements ApplicationListener {
         presetGridActor.setPosition(20, 360);
         table.addActor(presetGridActor);
 
+        Table rightTable = new Table(skin);
+        table.addActor(rightTable);
+        rightTable.setPosition(580, 310);
+
+        TextButton clearButton = new TextButton("Clear Synth", skin);
+        rightTable.add(clearButton);
+        clearButton.addListener(new
+                                        InputListener() {
+                                            public boolean touchDown(InputEvent event, float x, float y,
+                                                                     int pointer, int button) {
+                                                if (sequencerView < Statics.NUM_SYNTHS) {
+                                                    for (int i = 0; i < 16; i++) {
+                                                        Statics.output.getSequencer().basslines[sequencerView].pause[i] = true;
+                                                    }
+                                                }
+                                                return true;
+                                            }
+                                        });
+        rightTable.row();
+        TextButton clearDrumsButton = new TextButton("Clear Drums", skin);
+        rightTable.add(clearDrumsButton);
+        clearDrumsButton.addListener(new
+                                             InputListener() {
+                                                 public boolean touchDown(InputEvent event, float x, float y,
+                                                                          int pointer, int button) {
+                                                     for (int i = 0; i < Statics.output.getSequencer().rhythm.length; i++) {
+                                                         for (int j = 0; j < Statics.output.getSequencer().rhythm[0].length; j++) {
+                                                             Statics.output.getSequencer().rhythm[i][j] = 0;
+                                                         }
+                                                     }
+                                                     return true;
+                                                 }
+                                             });
+        rightTable.row();
+        TextButton upButton = new TextButton("Up", skin);
+        rightTable.add(upButton);
+        upButton.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y,
+                                     int pointer, int button) {
+                if (sequencerView < Statics.NUM_SYNTHS) {
+                    for (int i = 0; i < 16; i++) {
+                        if (!Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
+                            boolean isEndOfSlide = (i > 0) && Statics.output.getSequencer().basslines[sequencerView].slide[i - 1];
+                            if (!isEndOfSlide) {
+                                Statics.output.getSequencer().basslines[sequencerView].note[i]++;
+                                if (Statics.output.getSequencer().basslines[sequencerView].slide[i] && i < 15) {
+                                    Statics.output.getSequencer().basslines[sequencerView].note[i + 1]++;
+                                }
+                            }
+                        }
+                    }
+                }
+                return true;
+            }
+        });
+        rightTable.row();
+        TextButton downButton = new TextButton("Down", skin);
+        rightTable.add(downButton);
+        downButton.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y,
+                                     int pointer, int button) {
+                if (sequencerView < Statics.NUM_SYNTHS) {
+                    for (int i = 0; i < 16; i++) {
+                        if (!Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
+                            boolean isEndOfSlide = (i > 0) && Statics.output.getSequencer().basslines[sequencerView].slide[i - 1];
+                            if (!isEndOfSlide) {
+                                Statics.output.getSequencer().basslines[sequencerView].note[i]--;
+                                if (Statics.output.getSequencer().basslines[sequencerView].slide[i] && i < 15) {
+                                    Statics.output.getSequencer().basslines[sequencerView].note[i + 1]--;
+                                }
+                            }
+                        }
+                    }
+                }
+                return true;
+            }
+        });
+        rightTable.row();
+        TextButton octUpButton = new TextButton("Oct Up", skin);
+        rightTable.add(octUpButton);
+        octUpButton.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y,
+                                     int pointer, int button) {
+                if (sequencerView < Statics.NUM_SYNTHS) {
+                    for (int i = 0; i < 16; i++) {
+                        if (!Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
+                            boolean isEndOfSlide = (i > 0) && Statics.output.getSequencer().basslines[sequencerView].slide[i - 1];
+                            if (!isEndOfSlide) {
+                                Statics.output.getSequencer().basslines[sequencerView].note[i] += 12;
+                                if (Statics.output.getSequencer().basslines[sequencerView].slide[i] && i < 15) {
+                                    Statics.output.getSequencer().basslines[sequencerView].note[i + 1] += 12;
+                                }
+                            }
+                        }
+                    }
+                }
+                return true;
+            }
+        });
+        rightTable.row();
+        TextButton octDownButton = new TextButton("Oct Down", skin);
+        rightTable.add(octDownButton);
+        octDownButton.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y,
+                                     int pointer, int button) {
+                if (sequencerView < Statics.NUM_SYNTHS) {
+                    for (int i = 0; i < 16; i++) {
+                        if (!Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
+                            boolean isEndOfSlide = (i > 0) && Statics.output.getSequencer().basslines[sequencerView].slide[i - 1];
+                            if (!isEndOfSlide) {
+                                Statics.output.getSequencer().basslines[sequencerView].note[i] -= 12;
+                                if (Statics.output.getSequencer().basslines[sequencerView].slide[i] && i < 15) {
+                                    Statics.output.getSequencer().basslines[sequencerView].note[i + 1] -= 12;
+                                }
+                            }
+                        }
+                    }
+                }
+                return true;
+            }
+        });
 
 
         BpmLabel = new
