@@ -44,6 +44,9 @@ import java.util.Stack;
 import io.nayuki.flac.app.EncodeWavToFlac;
 import synth.BasslineSynthesizer;
 import synth.Output;
+import synth.Harmony;
+import synth.MelodyGenerator;
+import synth.PatternGenerator;
 
 import static com.badlogic.gdx.input.GestureDetector.GestureListener;
 
@@ -96,7 +99,6 @@ public class Acid implements ApplicationListener {
     private TextButton freeButton;
     private TextButton pauseButton;
     private ArrayList<TextButton> selectionButtons = new ArrayList<TextButton>();
-    private PresetGridActor presetGridActor;
     private Table leftTable;
     private TextButton dubstepButton;
     private TextButton houseButton;
@@ -105,6 +107,15 @@ public class Acid implements ApplicationListener {
     private TextButton tranceButton;
     private TextButton dnbButton;
     private ArrayList<String> navigationPath = new ArrayList<String>();
+    private SelectBox<String> keySelectBox;
+    private SelectBox<String> scaleSelectBox;
+    private SelectBox<String> progressionSelectBox;
+    private TextButton generateMelodyButton;
+    private TextButton generateBasslineButton;
+    private TextButton harmonizeButton;
+    private TextButton mutateButton;
+    private TextButton generateDrumsButton;
+    private TextButton transposeButton;
 
     public Acid(SDCard androidSDCard) {
         Statics.sdcard=androidSDCard.getPath();
@@ -1275,25 +1286,16 @@ public class Acid implements ApplicationListener {
             String buttonText = (i < Statics.NUM_SYNTHS) ? "S" + (i + 1) : "D";
             final TextButton selectionButton = new TextButton(buttonText, skin);
             if (i < Statics.NUM_SYNTHS) {
-                selectionButton.setPosition(410 + (i * 40), 310);
+                // Vertical layout
+                selectionButton.setPosition(580, 460 - (i * 70));
                 KnobActor volKnob = new KnobActor(buttonText + " Vol", 10, i);
-                volKnob.setPosition(410 + (i * 40), 280);
+                volKnob.setPosition(580, 430 - (i * 70));
                 table.addActor(volKnob);
-                waveButtons[i] = new TextButton(" # ", skin);
-                waveButtons[i].setPosition(410 + (i * 40), 250);
-                final int synthIndex = i;
-                waveButtons[i].addListener(new InputListener() {
-                    public boolean touchDown(InputEvent event, float x, float y,
-                                             int pointer, int button) {
-                        Statics.synths[synthIndex].switchWaveform();
-                        return true;
-                    }
-                });
-                table.addActor(waveButtons[i]);
             } else {
-                selectionButton.setPosition(410 + (4 * 40), 310);
+                // Drums
+                selectionButton.setPosition(580, 460 - (4 * 70));
                 KnobActor volKnob = new KnobActor(buttonText + " Vol", 11, 4);
-                volKnob.setPosition(410 + (4 * 40), 280);
+                volKnob.setPosition(580, 430 - (4 * 70));
                 table.addActor(volKnob);
             }
             table.addActor(selectionButton);
@@ -1304,11 +1306,7 @@ public class Acid implements ApplicationListener {
                     sequencerView = trackIndex;
                     if (trackIndex < Statics.NUM_SYNTHS) {
                         Statics.currentSynth = trackIndex;
-                        presetGridActor.showSynthPresets();
-                    } else {
-                        presetGridActor.showDrumPresets();
                     }
-                    presetGridActor.setSequencerView(sequencerView);
                 }
 
                 @Override
@@ -1319,13 +1317,193 @@ public class Acid implements ApplicationListener {
             });
         }
 
-        presetGridActor = new PresetGridActor(skin);
-        presetGridActor.setPosition(20, 360);
-        table.addActor(presetGridActor);
+        // Global Waveform Selector
+        TextButton globalWaveButton = new TextButton(" # ", skin);
+        globalWaveButton.setPosition(130, 400); // Example position, adjust as needed
+        globalWaveButton.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                if (sequencerView < Statics.NUM_SYNTHS) {
+                    Statics.synths[sequencerView].switchWaveform();
+                }
+                return true;
+            }
+        });
+        table.addActor(globalWaveButton);
+        waveButtons[0] = globalWaveButton; // Store it for updates in render()
+
+
+        // Generator Controls
+        Table generatorTable = new Table(skin);
+        generatorTable.setPosition(20, 150);
+        table.addActor(generatorTable);
+
+        TextButton randomizeButton = new TextButton("Randomize", skin);
+        randomizeButton.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                Statics.output.getSequencer().randomizeRhythm();
+                Statics.output.getSequencer().randomizeAllSynths();
+                return true;
+            }
+        });
+        generatorTable.add(randomizeButton);
+        generatorTable.row();
+
+        generateMelodyButton = new TextButton("Gen Mel", skin);
+        generateMelodyButton.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                if (sequencerView < Statics.NUM_SYNTHS) {
+                    int key = keySelectBox.getSelectedIndex();
+                    int[] scale = getScaleFromName(scaleSelectBox.getSelected());
+                    int[] chordProgression = getProgressionFromName(progressionSelectBox.getSelected());
+                    int[] melody = MelodyGenerator.generateMelody(chordProgression, scale, 16);
+                    for (int i = 0; i < 16; i++) {
+                        melody[i] += key;
+                    }
+                    PatternGenerator.applySynthPattern(melody, sequencerView);
+                }
+                return true;
+            }
+        });
+        generatorTable.add(generateMelodyButton);
+        generatorTable.row();
+
+        generateBasslineButton = new TextButton("Gen Bass", skin);
+        generateBasslineButton.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                if (sequencerView < Statics.NUM_SYNTHS) {
+                    int key = keySelectBox.getSelectedIndex();
+                    int[] scale = getScaleFromName(scaleSelectBox.getSelected());
+                    int[] chordProgression = getProgressionFromName(progressionSelectBox.getSelected());
+                    int[] bassline = MelodyGenerator.generateBassline(chordProgression, scale, 16);
+                    for (int i = 0; i < 16; i++) {
+                        bassline[i] += key;
+                    }
+                    PatternGenerator.applySynthPattern(bassline, sequencerView);
+                }
+                return true;
+            }
+        });
+        generatorTable.add(generateBasslineButton);
+        generatorTable.row();
+
+        harmonizeButton = new TextButton("Harmonize", skin);
+        harmonizeButton.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                if (sequencerView < Statics.NUM_SYNTHS) {
+                    int key = keySelectBox.getSelectedIndex();
+                    int[] scale = getScaleFromName(scaleSelectBox.getSelected());
+                    int[] chordProgression = getProgressionFromName(progressionSelectBox.getSelected());
+
+                    int[] melody = new int[16];
+                    for (int i = 0; i < 16; i++) {
+                        melody[i] = Statics.output.getSequencer().basslines[sequencerView].note[i];
+                        if (Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
+                            melody[i] = -1;
+                        }
+                    }
+
+                    for (int s = 0; s < Statics.NUM_SYNTHS; s++) {
+                        if (s != sequencerView) {
+                            int[] harmony = Harmony.generateHarmony(melody, chordProgression, scale);
+                            for (int i = 0; i < 16; i++) {
+                                harmony[i] += key;
+                            }
+                            PatternGenerator.applySynthPattern(harmony, s);
+                        }
+                    }
+                }
+                return true;
+            }
+        });
+        generatorTable.add(harmonizeButton);
+        generatorTable.row();
+
+        mutateButton = new TextButton("Mutate", skin);
+        mutateButton.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                if (sequencerView < Statics.NUM_SYNTHS) {
+                    int[] scale = getScaleFromName(scaleSelectBox.getSelected());
+
+                    int[] melody = new int[16];
+                    for (int i = 0; i < 16; i++) {
+                        melody[i] = Statics.output.getSequencer().basslines[sequencerView].note[i];
+                        if (Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
+                            melody[i] = -1;
+                        }
+                    }
+
+                    int[] mutatedPattern = PatternGenerator.mutatePattern(melody, scale, 0.2f);
+                    PatternGenerator.applySynthPattern(mutatedPattern, sequencerView);
+                }
+                return true;
+            }
+        });
+        generatorTable.add(mutateButton);
+        generatorTable.row();
+
+        transposeButton = new TextButton("Transpose", skin);
+        transposeButton.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                if (sequencerView < Statics.NUM_SYNTHS) {
+                    int key = keySelectBox.getSelectedIndex();
+                    // Get current pattern's root note. For simplicity, we'll find the first note.
+                    int rootNote = -1;
+                    for(int i=0; i<16; i++){
+                        if(!Statics.output.getSequencer().basslines[sequencerView].pause[i]){
+                            rootNote = Statics.output.getSequencer().basslines[sequencerView].note[i] % 12;
+                            break;
+                        }
+                    }
+
+                    if(rootNote != -1){
+                        int transposeAmount = key - rootNote;
+                        for (int i = 0; i < 16; i++) {
+                            if (!Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
+                                Statics.output.getSequencer().basslines[sequencerView].note[i] += transposeAmount;
+                            }
+                        }
+                    }
+                }
+                return true;
+            }
+        });
+        generatorTable.add(transposeButton);
+        generatorTable.row();
+
+        generateDrumsButton = new TextButton("Gen Drums", skin);
+        generateDrumsButton.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                Statics.output.getSequencer().drums.randomize();
+                return true;
+            }
+        });
+        generatorTable.add(generateDrumsButton);
+        generatorTable.row();
+
+        generatorTable.add(new Label("Key:", skin));
+        generatorTable.row();
+        keySelectBox = new SelectBox<String>(skin);
+        keySelectBox.setItems(Harmony.notes);
+        generatorTable.add(keySelectBox);
+        generatorTable.row();
+
+        generatorTable.add(new Label("Scale:", skin));
+        generatorTable.row();
+        scaleSelectBox = new SelectBox<String>(skin);
+        scaleSelectBox.setItems("Major", "Natural Minor", "Dorian", "Phrygian", "Lydian", "Mixolydian", "Locrian", "Blues", "Pentatonic Major", "Pentatonic Minor");
+        generatorTable.add(scaleSelectBox);
+        generatorTable.row();
+
+        generatorTable.add(new Label("Progression:", skin));
+        generatorTable.row();
+        progressionSelectBox = new SelectBox<String>(skin);
+        progressionSelectBox.setItems("Pop", "Pachelbel", "Jazz", "Blues");
+        generatorTable.add(progressionSelectBox);
+        generatorTable.row();
 
         Table rightTable = new Table(skin);
         table.addActor(rightTable);
-        rightTable.setPosition(580, 310);
+        rightTable.setPosition(580, 400);
 
         TextButton clearButton = new TextButton("Clear Synth", skin);
         rightTable.add(clearButton);
@@ -1734,13 +1912,13 @@ public class Acid implements ApplicationListener {
         }
         prevStep = Statics.output.getSequencer().step;
 
-        for (int i = 0; i < Statics.NUM_SYNTHS; i++) {
-            if (waveButtons[i] != null) {
-                waveButtons[i].setVisible(i == sequencerView);
-                if (i == sequencerView) {
-                    waveButtons[i].setColor(Statics.synths[i].waveSquare ? Color.WHITE : Color.RED);
-                    waveButtons[i].setText(Statics.synths[i].waveSquare ? " # " : " ^ ");
-                }
+        if (waveButtons[0] != null) {
+            if (sequencerView < Statics.NUM_SYNTHS) {
+                waveButtons[0].setVisible(true);
+                waveButtons[0].setColor(Statics.synths[sequencerView].waveSquare ? Color.WHITE : Color.RED);
+                waveButtons[0].setText(Statics.synths[sequencerView].waveSquare ? " # " : " ^ ");
+            } else {
+                waveButtons[0].setVisible(false);
             }
         }
 
@@ -1828,6 +2006,17 @@ public class Acid implements ApplicationListener {
                 globalKnobs[i].setVisible(true);
             }
         }
+
+        boolean isSynthView = sequencerView < Statics.NUM_SYNTHS;
+        generateMelodyButton.setVisible(isSynthView);
+        generateBasslineButton.setVisible(isSynthView);
+        harmonizeButton.setVisible(isSynthView);
+        mutateButton.setVisible(isSynthView);
+        transposeButton.setVisible(isSynthView);
+        keySelectBox.setVisible(isSynthView);
+        scaleSelectBox.setVisible(isSynthView);
+        progressionSelectBox.setVisible(isSynthView);
+        generateDrumsButton.setVisible(!isSynthView);
     }
 
     private void startSaving(FileHandle selected) {
@@ -2145,4 +2334,45 @@ public class Acid implements ApplicationListener {
         sequences.add(0,rem);
     }
 
+    private int[] getScaleFromName(String name) {
+        switch (name) {
+            case "Major":
+                return Harmony.SCALE_MAJOR;
+            case "Natural Minor":
+                return Harmony.SCALE_NATURAL_MINOR;
+            case "Dorian":
+                return Harmony.SCALE_DORIAN;
+            case "Phrygian":
+                return Harmony.SCALE_PHRYGIAN;
+            case "Lydian":
+                return Harmony.SCALE_LYDIAN;
+            case "Mixolydian":
+                return Harmony.SCALE_MIXOLYDIAN;
+            case "Locrian":
+                return Harmony.SCALE_LOCRIAN;
+            case "Blues":
+                return Harmony.SCALE_BLUES;
+            case "Pentatonic Major":
+                return Harmony.SCALE_PENTATONIC_MAJOR;
+            case "Pentatonic Minor":
+                return Harmony.SCALE_PENTATONIC_MINOR;
+            default:
+                return Harmony.SCALE_MAJOR;
+        }
+    }
+
+    private int[] getProgressionFromName(String name) {
+        switch (name) {
+            case "Pop":
+                return Harmony.Pop;
+            case "Pachelbel":
+                return Harmony.Pachelbel;
+            case "Jazz":
+                return Harmony.Jazz;
+            case "Blues":
+                return Harmony.Blues;
+            default:
+                return Harmony.Pop;
+        }
+    }
 }

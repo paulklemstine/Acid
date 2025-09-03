@@ -5,6 +5,7 @@ public class WavetableOscillator extends Oscillator {
 	protected double waveLength;
 	protected double[][] wavetable;
 	private double[] wave;
+	private static final int WAVETABLE_MIN_INDEX = 12;
 	private static final double[] MIDI_NOTES = new double[127];
 	private double wavePhase;
 	private int x;
@@ -25,7 +26,9 @@ public class WavetableOscillator extends Oscillator {
     }
 
 	public final double tick() {
-		try{
+		if (this.wave == null) {
+			return 0.0D;
+		}
 		this.phase += this.phaseDelta;
 		if (this.phase >= 1.0D) {
 			this.phase -= 1.0D;
@@ -44,8 +47,6 @@ public class WavetableOscillator extends Oscillator {
 		this.a1 = (this.y0 - this.y1 - this.a0);
 		this.a2 = (this.y2 - this.y0);
 		this.a3 = this.y1;
-	}
-catch(Exception e){e.printStackTrace();}
 
 		return this.a0 * this.mu * this.mu2 + this.a1 * this.mu2 + this.a2
 				* this.mu + this.a3;
@@ -54,11 +55,13 @@ catch(Exception e){e.printStackTrace();}
 	public final void setFrequency(double frequency) {
 		if (this != null) {
 			this.phaseDelta = (frequency * this.oneHzPhaseDelta);
-			if ((frequency > MIDI_NOTES[this.waveIndex])
-					|| (frequency < MIDI_NOTES[this.waveIndex])) {
-				this.waveIndex = seekIndexByFrequency(frequency);
-				this.wave = this.wavetable[this.waveIndex];
-				if (this.wave!=null)this.waveLength = (this.wave.length - 3);
+			this.waveIndex = seekIndexByFrequency(frequency);
+			if (this.waveIndex < WAVETABLE_MIN_INDEX) {
+				this.waveIndex = WAVETABLE_MIN_INDEX;
+			}
+			this.wave = this.wavetable[this.waveIndex];
+			if (this.wave != null) {
+				this.waveLength = (this.wave.length - 3);
 			}
 		}
 	}
@@ -81,6 +84,13 @@ catch(Exception e){e.printStackTrace();}
 	}
 
 	private static int seekIndexByFrequency(double frequency) {
+		if (frequency < MIDI_NOTES[WAVETABLE_MIN_INDEX]) {
+			return WAVETABLE_MIN_INDEX;
+		}
+		if (frequency >= MIDI_NOTES[126]) {
+			return 126;
+		}
+
 		int i = 64;
 		int delta = 32;
 		double i1;
@@ -109,7 +119,7 @@ catch(Exception e){e.printStackTrace();}
 
 		int fileIndex = 0;
 
-		for (int i = 12; i < 127; i++) {
+		for (int i = WAVETABLE_MIN_INDEX; i < 127; i++) {
 			double[] wave = new double[(int) Math.round(Output.SAMPLE_RATE
 					/ MIDI_NOTES[i]) + 3];
 			for (int j = 1; j < wave.length - 2; j++) {
