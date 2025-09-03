@@ -100,6 +100,19 @@ public class PatternGenerator {
         ((BasslineSynthesizer)Statics.output.getTrack(synthIndex)).initOscillator();
     }
 
+    public static void applySynthPattern(int[] pattern, boolean[] pauses, boolean[] accents, boolean[] slides, int synthIndex) {
+        if (pattern == null) return;
+        SequencerData sd = new SequencerData(synthIndex);
+        for (int i = 0; i < 16; i++) {
+            sd.note[i] = (byte) (pattern[i % pattern.length]);
+            sd.pause[i] = pauses[i];
+            sd.accent[i] = accents[i];
+            sd.slide[i] = slides[i];
+        }
+        sd.refresh();
+        ((BasslineSynthesizer)Statics.output.getTrack(synthIndex)).initOscillator();
+    }
+
     public static int[] mutatePattern(int[] pattern, int[] scale, float mutationRate) {
         int[] mutatedPattern = new int[pattern.length];
         System.arraycopy(pattern, 0, mutatedPattern, 0, pattern.length);
@@ -113,5 +126,51 @@ public class PatternGenerator {
             }
         }
         return mutatedPattern;
+    }
+
+    public static void mutateRhythm(boolean[] pauses, float mutationRate) {
+        for (int i = 0; i < pauses.length; i++) {
+            if (Math.random() < mutationRate) {
+                pauses[i] = !pauses[i];
+            }
+        }
+    }
+
+    public static void mutateAccents(boolean[] accents, float mutationRate) {
+        for (int i = 0; i < accents.length; i++) {
+            if (Math.random() < mutationRate) {
+                accents[i] = !accents[i];
+            }
+        }
+    }
+
+    public static void mutateSlides(boolean[] slides, float mutationRate) {
+        for (int i = 0; i < slides.length; i++) {
+            if (Math.random() < mutationRate) {
+                slides[i] = !slides[i];
+            }
+        }
+    }
+
+    public static int[] arpeggiate(int[] pattern, int octaves, String direction) {
+        int[] arpeggiatedPattern = new int[pattern.length];
+        java.util.ArrayList<Integer> notes = new java.util.ArrayList<Integer>();
+        for (int i = 0; i < pattern.length; i++) {
+            if (pattern[i] != 0 && !notes.contains(pattern[i])) {
+                notes.add(pattern[i]);
+            }
+        }
+        java.util.Collections.sort(notes);
+        int noteIndex = 0;
+        for (int i = 0; i_real < arpeggiatedPattern.length; i++) {
+            if (pattern[i] != 0) {
+                for (int j = 0; j < octaves; j++) {
+                    arpeggiatedPattern[i_real] = notes.get(noteIndex % notes.size()) + (12 * j);
+                    i_real++;
+                }
+                noteIndex++;
+            }
+        }
+        return arpeggiatedPattern;
     }
 }
