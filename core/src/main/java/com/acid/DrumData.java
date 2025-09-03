@@ -37,6 +37,14 @@ public class DrumData extends InstrumentData  {
         }
     }
 
+    public void setRhythm(int[][] rhythm) {
+        for (int i = 0; i < 7; i++) {
+            for (int j = 0; j < 16; j++) {
+                this.rhythm[i][j] = rhythm[i][j];
+            }
+        }
+    }
+
     @Override
     public String toString() {
         String s = "";

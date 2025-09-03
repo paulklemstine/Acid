@@ -260,6 +260,14 @@ public class BasslineSynthesizer
         this.feg.release();
     }
 
+    public void initOscillator() {
+        if (this.waveSquare) {
+            this.osc.setWavetable(WAVETABLE_SQUARE);
+        } else {
+            this.osc.setWavetable(WAVETABLE_SAW);
+        }
+    }
+
     static {
         WAVETABLE_SAW = WavetableOscillator.loadWavetable(Resources.load("saw.raw.tab"));
 
