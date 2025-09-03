@@ -113,9 +113,10 @@ public class Acid implements ApplicationListener {
     private TextButton generateMelodyButton;
     private TextButton generateBasslineButton;
     private TextButton harmonizeButton;
-    private TextButton mutateButton;
     private TextButton generateDrumsButton;
     private TextButton transposeButton;
+    private boolean autoMutate = false;
+    private int patternChangeCount = 0;
 
     public Acid(SDCard androidSDCard) {
         Statics.sdcard=androidSDCard.getPath();
@@ -1357,7 +1358,7 @@ public class Acid implements ApplicationListener {
                     int[] chordProgression = getProgressionFromName(progressionSelectBox.getSelected());
                     int[] melody = MelodyGenerator.generateMelody(chordProgression, scale, 16);
                     for (int i = 0; i < 16; i++) {
-                        melody[i] += key - 12;
+                        melody[i] += key;
                     }
                     PatternGenerator.applySynthPattern(melody, sequencerView);
                 }
@@ -1376,7 +1377,7 @@ public class Acid implements ApplicationListener {
                     int[] chordProgression = getProgressionFromName(progressionSelectBox.getSelected());
                     int[] bassline = MelodyGenerator.generateBassline(chordProgression, scale, 16);
                     for (int i = 0; i < 16; i++) {
-                        bassline[i] += key - 12;
+                        bassline[i] += key;
                     }
                     PatternGenerator.applySynthPattern(bassline, sequencerView);
                 }
@@ -1418,101 +1419,54 @@ public class Acid implements ApplicationListener {
         generatorTable.add(harmonizeButton);
         generatorTable.row();
 
-        mutateButton = new TextButton("Mutate", skin);
-        mutateButton.addListener(new InputListener() {
+        final TextButton autoMutateButton = new TextButton("Auto Mutate", skin);
+        autoMutateButton.setProgrammaticChangeEvents(true);
+        autoMutateButton.addListener(new InputListener() {
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                if (sequencerView < Statics.NUM_SYNTHS) {
-                    int[] scale = getScaleFromName(scaleSelectBox.getSelected());
-
-                    int[] melody = new int[16];
-                    for (int i = 0; i < 16; i++) {
-                        melody[i] = Statics.output.getSequencer().basslines[sequencerView].note[i];
-                        if (Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
-                            melody[i] = -1;
-                        }
-                    }
-
-                    int[] mutatedPattern = PatternGenerator.mutatePattern(melody, scale, 0.2f);
-                    PatternGenerator.applySynthPattern(mutatedPattern, sequencerView);
-                }
+                autoMutate = !autoMutate;
+                autoMutateButton.setColor(autoMutate ? Color.RED : Color.WHITE);
                 return true;
             }
         });
-        generatorTable.add(mutateButton);
+        generatorTable.add(autoMutateButton);
         generatorTable.row();
 
-        TextButton mutateRhythmButton = new TextButton("Mutate Rhythm", skin);
-        mutateRhythmButton.addListener(new InputListener() {
+
+        final TextButton autoMutateButton = new TextButton("Auto Mutate", skin);
+        autoMutateButton.setProgrammaticChangeEvents(true);
+        autoMutateButton.addListener(new InputListener() {
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                if (sequencerView < Statics.NUM_SYNTHS) {
-                    int[] pattern = new int[16];
-                    boolean[] pauses = new boolean[16];
-                    for (int i = 0; i < 16; i++) {
-                        pattern[i] = Statics.output.getSequencer().basslines[sequencerView].note[i];
-                        pauses[i] = Statics.output.getSequencer().basslines[sequencerView].pause[i];
-                    }
-                    PatternGenerator.mutateRhythm(pauses, 0.2f);
-                    PatternGenerator.applySynthPattern(pattern, pauses, Statics.output.getSequencer().basslines[sequencerView].accent, Statics.output.getSequencer().basslines[sequencerView].slide, sequencerView);
-                }
+                autoMutate = !autoMutate;
+                autoMutateButton.setColor(autoMutate ? Color.RED : Color.WHITE);
                 return true;
             }
         });
-        generatorTable.add(mutateRhythmButton);
+        generatorTable.add(autoMutateButton);
         generatorTable.row();
 
-        TextButton mutateAccentsButton = new TextButton("Mutate Accents", skin);
-        mutateAccentsButton.addListener(new InputListener() {
+        final TextButton drumMutateButton = new TextButton("Drum Mutate", skin);
+        drumMutateButton.setProgrammaticChangeEvents(true);
+        drumMutateButton.addListener(new InputListener() {
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                if (sequencerView < Statics.NUM_SYNTHS) {
-                    int[] pattern = new int[16];
-                    boolean[] accents = new boolean[16];
-                    for (int i = 0; i < 16; i++) {
-                        pattern[i] = Statics.output.getSequencer().basslines[sequencerView].note[i];
-                        accents[i] = Statics.output.getSequencer().basslines[sequencerView].accent[i];
-                    }
-                    PatternGenerator.mutateAccents(accents, 0.2f);
-                    PatternGenerator.applySynthPattern(pattern, Statics.output.getSequencer().basslines[sequencerView].pause, accents, Statics.output.getSequencer().basslines[sequencerView].slide, sequencerView);
-                }
+                autoMutateDrums = !autoMutateDrums;
+                drumMutateButton.setColor(autoMutateDrums ? Color.RED : Color.WHITE);
                 return true;
             }
         });
-        generatorTable.add(mutateAccentsButton);
+        generatorTable.add(drumMutateButton);
         generatorTable.row();
 
-        TextButton mutateSlidesButton = new TextButton("Mutate Slides", skin);
-        mutateSlidesButton.addListener(new InputListener() {
+        TextButton genEuclideanButton = new TextButton("Gen Euclidean", skin);
+        genEuclideanButton.addListener(new InputListener() {
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 if (sequencerView < Statics.NUM_SYNTHS) {
-                    int[] pattern = new int[16];
-                    boolean[] slides = new boolean[16];
-                    for (int i = 0; i < 16; i++) {
-                        pattern[i] = Statics.output.getSequencer().basslines[sequencerView].note[i];
-                        slides[i] = Statics.output.getSequencer().basslines[sequencerView].slide[i];
-                    }
-                    PatternGenerator.mutateSlides(slides, 0.2f);
-                    PatternGenerator.applySynthPattern(pattern, Statics.output.getSequencer().basslines[sequencerView].pause, Statics.output.getSequencer().basslines[sequencerView].accent, slides, sequencerView);
+                    int[] pattern = PatternGenerator.generateEuclideanPattern(5, 16);
+                    PatternGenerator.applySynthPattern(pattern, sequencerView);
                 }
                 return true;
             }
         });
-        generatorTable.add(mutateSlidesButton);
-        generatorTable.row();
-
-        TextButton arpeggiateButton = new TextButton("Arpeggiate", skin);
-        arpeggiateButton.addListener(new InputListener() {
-            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                if (sequencerView < Statics.NUM_SYNTHS) {
-                    int[] pattern = new int[16];
-                    for (int i = 0; i < 16; i++) {
-                        pattern[i] = Statics.output.getSequencer().basslines[sequencerView].note[i];
-                    }
-                    int[] arpeggiatedPattern = PatternGenerator.arpeggiate(pattern, 1, "up");
-                    PatternGenerator.applySynthPattern(arpeggiatedPattern, sequencerView);
-                }
-                return true;
-            }
-        });
-        generatorTable.add(arpeggiateButton);
+        generatorTable.add(genEuclideanButton);
         generatorTable.row();
 
         transposeButton = new TextButton("Transpose", skin);
@@ -1570,7 +1524,7 @@ public class Acid implements ApplicationListener {
         generatorTable.add(new Label("Progression:", skin));
         generatorTable.row();
         progressionSelectBox = new SelectBox<String>(skin);
-        progressionSelectBox.setItems("Pop", "Pachelbel", "Jazz", "Blues", "Pop Punk", "Andalusian", "50s");
+        progressionSelectBox.setItems("Pop", "Pachelbel", "Jazz", "Blues");
         generatorTable.add(progressionSelectBox);
         generatorTable.row();
 
@@ -1835,6 +1789,29 @@ public class Acid implements ApplicationListener {
     }
 
     void swapPattern(int curr, int next) {
+        if (autoMutate) {
+            patternChangeCount++;
+            if (patternChangeCount >= 4) {
+                patternChangeCount = 0;
+                if (sequencerView < Statics.NUM_SYNTHS) {
+                    int[] scale = getScaleFromName(scaleSelectBox.getSelected());
+
+                    int[] melody = new int[16];
+                    for (int i = 0; i < 16; i++) {
+                        melody[i] = Statics.output.getSequencer().basslines[sequencerView].note[i];
+                        if (Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
+                            melody[i] = -1;
+                        }
+                    }
+
+                    int[] mutatedPattern = PatternGenerator.mutatePattern(melody, scale, 0.2f);
+                    PatternGenerator.applySynthPattern(mutatedPattern, sequencerView);
+                }
+            }
+        }
+        if (autoMutateDrums) {
+            DrumData.mutate(0.1f);
+        }
         for (int i = 0; i < Statics.NUM_SYNTHS; i++) {
             while (next >= knobsArrayList.get(i).size()) {
                 knobsArrayList.get(i).add(KnobData.currentSequences[i]);
@@ -2412,12 +2389,6 @@ public class Acid implements ApplicationListener {
                 return Harmony.Jazz;
             case "Blues":
                 return Harmony.Blues;
-            case "Pop Punk":
-                return Harmony.PopPunk;
-            case "Andalusian":
-                return Harmony.Andalusian;
-            case "50s":
-                return Harmony.FiftySixFourOne;
             default:
                 return Harmony.Pop;
         }

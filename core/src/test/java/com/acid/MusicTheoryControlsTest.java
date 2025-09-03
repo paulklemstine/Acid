@@ -68,28 +68,6 @@ public class MusicTheoryControlsTest {
     }
 
     @Test
-    public void testGenMelodyOctave() {
-        Gdx.app.postRunnable(() -> {
-            int[] melody = MelodyGenerator.generateMelody(new int[]{1, 5, 6, 4}, new int[]{0, 2, 4, 5, 7, 9, 11}, 16);
-            for (int i = 0; i < 16; i++) {
-                melody[i] += 0 - 12; // Key of C, one octave down
-            }
-            PatternGenerator.applySynthPattern(melody, 0);
-
-            boolean allNotesBelowC4 = true;
-            for (int i = 0; i < 16; i++) {
-                if (!Statics.output.getSequencer().basslines[0].pause[i]) {
-                    if (Statics.output.getSequencer().basslines[0].note[i] >= 48) {
-                        allNotesBelowC4 = false;
-                        break;
-                    }
-                }
-            }
-            assertTrue(allNotesBelowC4);
-        });
-    }
-
-    @Test
     public void testMutateRhythm() {
         Gdx.app.postRunnable(() -> {
             boolean[] pauses = {true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true};
@@ -132,6 +110,32 @@ public class MusicTheoryControlsTest {
             assertEquals(16, arpeggiated[2]);
             assertEquals(0, arpeggiated[3]);
             assertEquals(19, arpeggiated[4]);
+            assertEquals(0, arpeggiated[5]);
+        });
+    }
+
+    @Test
+    public void testShiftPatternWithSlide() {
+        Gdx.app.postRunnable(() -> {
+            Statics.output.getSequencer().basslines[0].note[0] = 12;
+            Statics.output.getSequencer().basslines[0].pause[0] = false;
+            Statics.output.getSequencer().basslines[0].slide[0] = true;
+            Statics.output.getSequencer().basslines[0].note[1] = 13;
+            Statics.output.getSequencer().basslines[0].pause[1] = false;
+            acid.shiftPattern(1);
+            assertEquals(13, Statics.output.getSequencer().basslines[0].note[0]);
+            assertEquals(14, Statics.output.getSequencer().basslines[0].note[1]);
+        });
+    }
+
+    @Test
+    public void testEuclideanPatternGenerator() {
+        Gdx.app.postRunnable(() -> {
+            int[] pattern = PatternGenerator.generateEuclideanPattern(5, 16);
+            int[] expected = {36, 0, 0, 36, 0, 0, 36, 0, 0, 36, 0, 0, 36, 0, 0, 0};
+            for (int i = 0; i < 16; i++) {
+                assertEquals(expected[i], pattern[i]);
+            }
         });
     }
 }

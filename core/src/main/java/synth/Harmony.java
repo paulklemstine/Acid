@@ -36,9 +36,6 @@
     public static final int[] Pop = {1, 5, 6, 4};
     public static final int[] Jazz = {2, 5, 1};
     public static final int[] Blues = {1, 4, 5};
-    public static final int[] PopPunk = {1, 5, 6, 4};
-    public static final int[] Andalusian = {1, 7, 6, 5};
-    public static final int[] FiftySixFourOne = {1, 6, 4, 5};
 
 
    public static final int[] SCALE_NATURAL_MINOR = { 0, 2, 3, 5, 7, 8, 10 };
