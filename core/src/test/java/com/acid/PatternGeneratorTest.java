@@ -7,7 +7,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import synth.PatternGenerator;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotEquals;
 
 public class PatternGeneratorTest {
 
@@ -21,50 +23,41 @@ public class PatternGeneratorTest {
     }
 
     @Test
-    public void testGenerateBassline() {
+    public void testGetPattern() {
         Gdx.app.postRunnable(() -> {
-            PatternGenerator.generateBassline(0);
-            assertNotNull(Statics.output.getSequencer().basslines[0]);
+            int[] pattern = PatternGenerator.getPattern("House", "A", "Bassline 1");
+            assertNotNull(pattern);
+            assertEquals(16, pattern.length);
         });
     }
 
     @Test
-    public void testGenerateMelody() {
+    public void testGetDrumPattern() {
         Gdx.app.postRunnable(() -> {
-            PatternGenerator.generateMelody(0);
-            assertNotNull(Statics.output.getSequencer().basslines[0]);
+            int[][] pattern = PatternGenerator.getDrumPattern("House", "A");
+            assertNotNull(pattern);
+            assertEquals(4, pattern.length);
         });
     }
 
     @Test
-    public void testGenerateHarmony() {
+    public void testMutatePattern() {
         Gdx.app.postRunnable(() -> {
-            PatternGenerator.generateHarmony(0);
-            assertNotNull(Statics.output.getSequencer().basslines[0]);
+            int[] pattern = new int[]{12, 14, 16, 17, 19, 21, 23, 24, 12, 14, 16, 17, 19, 21, 23, 24};
+            int[] scale = new int[]{0, 2, 4, 5, 7, 9, 11};
+            int[] mutatedPattern = PatternGenerator.mutatePattern(pattern, scale, 1.0f);
+            assertNotEquals(pattern, mutatedPattern);
         });
     }
 
     @Test
-    public void testGenerateArpeggio() {
+    public void testGenerateEuclideanPattern() {
         Gdx.app.postRunnable(() -> {
-            PatternGenerator.generateArpeggio(0);
-            assertNotNull(Statics.output.getSequencer().basslines[0]);
-        });
-    }
-
-    @Test
-    public void testNewKey() {
-        Gdx.app.postRunnable(() -> {
-            PatternGenerator.newKey();
-        });
-    }
-
-    @Test
-    public void testSetGenre() {
-        Gdx.app.postRunnable(() -> {
-            PatternGenerator.setGenre("dubstep");
-            PatternGenerator.generateBassline(0);
-            assertNotNull(Statics.output.getSequencer().basslines[0]);
+            int[] pattern = PatternGenerator.generateEuclideanPattern(5, 16);
+            int[] expected = {36, 0, 0, 36, 0, 0, 36, 0, 0, 36, 0, 0, 36, 0, 0, 0};
+            for (int i = 0; i < 16; i++) {
+                assertEquals(expected[i], pattern[i]);
+            }
         });
     }
 }

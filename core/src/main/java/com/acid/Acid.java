@@ -116,6 +116,7 @@ public class Acid implements ApplicationListener {
     private TextButton generateDrumsButton;
     private TextButton transposeButton;
     private boolean autoMutate = false;
+    private boolean autoMutateDrums = false;
     private int patternChangeCount = 0;
 
     public Acid(SDCard androidSDCard) {
@@ -1431,19 +1432,6 @@ public class Acid implements ApplicationListener {
         generatorTable.add(autoMutateButton);
         generatorTable.row();
 
-
-        final TextButton autoMutateButton = new TextButton("Auto Mutate", skin);
-        autoMutateButton.setProgrammaticChangeEvents(true);
-        autoMutateButton.addListener(new InputListener() {
-            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                autoMutate = !autoMutate;
-                autoMutateButton.setColor(autoMutate ? Color.RED : Color.WHITE);
-                return true;
-            }
-        });
-        generatorTable.add(autoMutateButton);
-        generatorTable.row();
-
         final TextButton drumMutateButton = new TextButton("Drum Mutate", skin);
         drumMutateButton.setProgrammaticChangeEvents(true);
         drumMutateButton.addListener(new InputListener() {
@@ -2013,7 +2001,6 @@ public class Acid implements ApplicationListener {
         generateMelodyButton.setVisible(isSynthView);
         generateBasslineButton.setVisible(isSynthView);
         harmonizeButton.setVisible(isSynthView);
-        mutateButton.setVisible(isSynthView);
         transposeButton.setVisible(isSynthView);
         keySelectBox.setVisible(isSynthView);
         scaleSelectBox.setVisible(isSynthView);
