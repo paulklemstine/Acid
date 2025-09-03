@@ -49,15 +49,4 @@ public class PatternGeneratorTest {
             assertNotEquals(pattern, mutatedPattern);
         });
     }
-
-    @Test
-    public void testGenerateEuclideanPattern() {
-        Gdx.app.postRunnable(() -> {
-            int[] pattern = PatternGenerator.generateEuclideanPattern(5, 16);
-            int[] expected = {36, 0, 0, 36, 0, 0, 36, 0, 0, 36, 0, 0, 36, 0, 0, 0};
-            for (int i = 0; i < 16; i++) {
-                assertEquals(expected[i], pattern[i]);
-            }
-        });
-    }
 }

@@ -43,6 +43,7 @@ import java.util.Stack;
 
 import io.nayuki.flac.app.EncodeWavToFlac;
 import synth.BasslineSynthesizer;
+import synth.MarkovChainGenerator;
 import synth.Output;
 import synth.Harmony;
 import synth.MelodyGenerator;
@@ -113,11 +114,9 @@ public class Acid implements ApplicationListener {
     private TextButton generateMelodyButton;
     private TextButton generateBasslineButton;
     private TextButton harmonizeButton;
+    private TextButton mutateButton;
     private TextButton generateDrumsButton;
     private TextButton transposeButton;
-    private boolean autoMutate = false;
-    private boolean autoMutateDrums = false;
-    private int patternChangeCount = 0;
 
     public Acid(SDCard androidSDCard) {
         Statics.sdcard=androidSDCard.getPath();
@@ -1420,41 +1419,27 @@ public class Acid implements ApplicationListener {
         generatorTable.add(harmonizeButton);
         generatorTable.row();
 
-        final TextButton autoMutateButton = new TextButton("Auto Mutate", skin);
-        autoMutateButton.setProgrammaticChangeEvents(true);
-        autoMutateButton.addListener(new InputListener() {
-            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                autoMutate = !autoMutate;
-                autoMutateButton.setColor(autoMutate ? Color.RED : Color.WHITE);
-                return true;
-            }
-        });
-        generatorTable.add(autoMutateButton);
-        generatorTable.row();
-
-        final TextButton drumMutateButton = new TextButton("Drum Mutate", skin);
-        drumMutateButton.setProgrammaticChangeEvents(true);
-        drumMutateButton.addListener(new InputListener() {
-            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                autoMutateDrums = !autoMutateDrums;
-                drumMutateButton.setColor(autoMutateDrums ? Color.RED : Color.WHITE);
-                return true;
-            }
-        });
-        generatorTable.add(drumMutateButton);
-        generatorTable.row();
-
-        TextButton genEuclideanButton = new TextButton("Gen Euclidean", skin);
-        genEuclideanButton.addListener(new InputListener() {
+        mutateButton = new TextButton("Mutate", skin);
+        mutateButton.addListener(new InputListener() {
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 if (sequencerView < Statics.NUM_SYNTHS) {
-                    int[] pattern = PatternGenerator.generateEuclideanPattern(5, 16);
-                    PatternGenerator.applySynthPattern(pattern, sequencerView);
+                    int[] scale = getScaleFromName(scaleSelectBox.getSelected());
+
+                    int[] melody = new int[16];
+                    for (int i = 0; i < 16; i++) {
+                        melody[i] = Statics.output.getSequencer().basslines[sequencerView].note[i];
+                        if (Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
+                            melody[i] = -1;
+                        }
+                    }
+
+                    int[] mutatedPattern = PatternGenerator.mutatePattern(melody, scale, 0.2f);
+                    PatternGenerator.applySynthPattern(mutatedPattern, sequencerView);
                 }
                 return true;
             }
         });
-        generatorTable.add(genEuclideanButton);
+        generatorTable.add(mutateButton);
         generatorTable.row();
 
         transposeButton = new TextButton("Transpose", skin);
@@ -1462,27 +1447,47 @@ public class Acid implements ApplicationListener {
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 if (sequencerView < Statics.NUM_SYNTHS) {
                     int key = keySelectBox.getSelectedIndex();
-                    // Get current pattern's root note. For simplicity, we'll find the lowest note.
+                    // Get current pattern's root note. For simplicity, we'll find the first note.
                     int rootNote = -1;
-                    int lowestNote = 127;
-                    for (int i = 0; i < 16; i++) {
-                        if (!Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
-                            if (Statics.output.getSequencer().basslines[sequencerView].note[i] < lowestNote) {
-                                lowestNote = Statics.output.getSequencer().basslines[sequencerView].note[i];
-                            }
+                    for(int i=0; i<16; i++){
+                        if(!Statics.output.getSequencer().basslines[sequencerView].pause[i]){
+                            rootNote = Statics.output.getSequencer().basslines[sequencerView].note[i] % 12;
+                            break;
                         }
                     }
 
-                    if (lowestNote != 127) {
-                        rootNote = lowestNote % 12;
+                    if(rootNote != -1){
                         int transposeAmount = key - rootNote;
-                        shiftPattern(transposeAmount);
+                        for (int i = 0; i < 16; i++) {
+                            if (!Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
+                                Statics.output.getSequencer().basslines[sequencerView].note[i] += transposeAmount;
+                            }
+                        }
                     }
                 }
                 return true;
             }
         });
         generatorTable.add(transposeButton);
+        generatorTable.row();
+
+        TextButton genMarkovButton = new TextButton("Gen Markov", skin);
+        genMarkovButton.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                if (sequencerView < Statics.NUM_SYNTHS) {
+                    int[] currentPattern = new int[16];
+                    for (int i = 0; i < 16; i++) {
+                        currentPattern[i] = Statics.output.getSequencer().basslines[sequencerView].note[i];
+                    }
+                    synth.MarkovChainGenerator generator = new synth.MarkovChainGenerator();
+                    generator.train(currentPattern);
+                    int[] newPattern = generator.generate(16, currentPattern[0]);
+                    PatternGenerator.applySynthPattern(newPattern, sequencerView);
+                }
+                return true;
+            }
+        });
+        generatorTable.add(genMarkovButton);
         generatorTable.row();
 
         generateDrumsButton = new TextButton("Gen Drums", skin);
@@ -1555,7 +1560,19 @@ public class Acid implements ApplicationListener {
         upButton.addListener(new InputListener() {
             public boolean touchDown(InputEvent event, float x, float y,
                                      int pointer, int button) {
-                shiftPattern(1);
+                if (sequencerView < Statics.NUM_SYNTHS) {
+                    for (int i = 0; i < 16; i++) {
+                        if (!Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
+                            boolean isEndOfSlide = (i > 0) && Statics.output.getSequencer().basslines[sequencerView].slide[i - 1];
+                            if (!isEndOfSlide) {
+                                Statics.output.getSequencer().basslines[sequencerView].note[i]++;
+                                if (Statics.output.getSequencer().basslines[sequencerView].slide[i] && i < 15) {
+                                    Statics.output.getSequencer().basslines[sequencerView].note[i + 1]++;
+                                }
+                            }
+                        }
+                    }
+                }
                 return true;
             }
         });
@@ -1565,7 +1582,19 @@ public class Acid implements ApplicationListener {
         downButton.addListener(new InputListener() {
             public boolean touchDown(InputEvent event, float x, float y,
                                      int pointer, int button) {
-                shiftPattern(-1);
+                if (sequencerView < Statics.NUM_SYNTHS) {
+                    for (int i = 0; i < 16; i++) {
+                        if (!Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
+                            boolean isEndOfSlide = (i > 0) && Statics.output.getSequencer().basslines[sequencerView].slide[i - 1];
+                            if (!isEndOfSlide) {
+                                Statics.output.getSequencer().basslines[sequencerView].note[i]--;
+                                if (Statics.output.getSequencer().basslines[sequencerView].slide[i] && i < 15) {
+                                    Statics.output.getSequencer().basslines[sequencerView].note[i + 1]--;
+                                }
+                            }
+                        }
+                    }
+                }
                 return true;
             }
         });
@@ -1575,7 +1604,19 @@ public class Acid implements ApplicationListener {
         octUpButton.addListener(new InputListener() {
             public boolean touchDown(InputEvent event, float x, float y,
                                      int pointer, int button) {
-                shiftPattern(12);
+                if (sequencerView < Statics.NUM_SYNTHS) {
+                    for (int i = 0; i < 16; i++) {
+                        if (!Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
+                            boolean isEndOfSlide = (i > 0) && Statics.output.getSequencer().basslines[sequencerView].slide[i - 1];
+                            if (!isEndOfSlide) {
+                                Statics.output.getSequencer().basslines[sequencerView].note[i] += 12;
+                                if (Statics.output.getSequencer().basslines[sequencerView].slide[i] && i < 15) {
+                                    Statics.output.getSequencer().basslines[sequencerView].note[i + 1] += 12;
+                                }
+                            }
+                        }
+                    }
+                }
                 return true;
             }
         });
@@ -1585,7 +1626,19 @@ public class Acid implements ApplicationListener {
         octDownButton.addListener(new InputListener() {
             public boolean touchDown(InputEvent event, float x, float y,
                                      int pointer, int button) {
-                shiftPattern(-12);
+                if (sequencerView < Statics.NUM_SYNTHS) {
+                    for (int i = 0; i < 16; i++) {
+                        if (!Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
+                            boolean isEndOfSlide = (i > 0) && Statics.output.getSequencer().basslines[sequencerView].slide[i - 1];
+                            if (!isEndOfSlide) {
+                                Statics.output.getSequencer().basslines[sequencerView].note[i] -= 12;
+                                if (Statics.output.getSequencer().basslines[sequencerView].slide[i] && i < 15) {
+                                    Statics.output.getSequencer().basslines[sequencerView].note[i + 1] -= 12;
+                                }
+                            }
+                        }
+                    }
+                }
                 return true;
             }
         });
@@ -1777,29 +1830,6 @@ public class Acid implements ApplicationListener {
     }
 
     void swapPattern(int curr, int next) {
-        if (autoMutate) {
-            patternChangeCount++;
-            if (patternChangeCount >= 4) {
-                patternChangeCount = 0;
-                if (sequencerView < Statics.NUM_SYNTHS) {
-                    int[] scale = getScaleFromName(scaleSelectBox.getSelected());
-
-                    int[] melody = new int[16];
-                    for (int i = 0; i < 16; i++) {
-                        melody[i] = Statics.output.getSequencer().basslines[sequencerView].note[i];
-                        if (Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
-                            melody[i] = -1;
-                        }
-                    }
-
-                    int[] mutatedPattern = PatternGenerator.mutatePattern(melody, scale, 0.2f);
-                    PatternGenerator.applySynthPattern(mutatedPattern, sequencerView);
-                }
-            }
-        }
-        if (autoMutateDrums) {
-            DrumData.mutate(0.1f);
-        }
         for (int i = 0; i < Statics.NUM_SYNTHS; i++) {
             while (next >= knobsArrayList.get(i).size()) {
                 knobsArrayList.get(i).add(KnobData.currentSequences[i]);
@@ -2001,6 +2031,7 @@ public class Acid implements ApplicationListener {
         generateMelodyButton.setVisible(isSynthView);
         generateBasslineButton.setVisible(isSynthView);
         harmonizeButton.setVisible(isSynthView);
+        mutateButton.setVisible(isSynthView);
         transposeButton.setVisible(isSynthView);
         keySelectBox.setVisible(isSynthView);
         scaleSelectBox.setVisible(isSynthView);
@@ -2321,22 +2352,6 @@ public class Acid implements ApplicationListener {
     public void shiftStackRight(Stack sequences) {
         Object rem = (InstrumentData) sequences.remove(sequences.size()-1);
         sequences.add(0,rem);
-    }
-
-    public void shiftPattern(int amount) {
-        if (sequencerView < Statics.NUM_SYNTHS) {
-            for (int i = 0; i < 16; i++) {
-                if (!Statics.output.getSequencer().basslines[sequencerView].pause[i]) {
-                    boolean isEndOfSlide = (i > 0) && Statics.output.getSequencer().basslines[sequencerView].slide[i - 1];
-                    if (!isEndOfSlide) {
-                        Statics.output.getSequencer().basslines[sequencerView].note[i] += amount;
-                        if (Statics.output.getSequencer().basslines[sequencerView].slide[i] && i < 15) {
-                            Statics.output.getSequencer().basslines[sequencerView].note[i + 1] += amount;
-                        }
-                    }
-                }
-            }
-        }
     }
 
     private int[] getScaleFromName(String name) {

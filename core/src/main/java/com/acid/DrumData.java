@@ -126,13 +126,5 @@ public class DrumData extends InstrumentData  {
         sequences.push(sd);
     }
 
-    public static void mutate(float mutationRate) {
-        for (int y1 = 0; y1 < 7; y1++) {
-            for (int x1 = 0; x1 < 16; x1++) {
-                if (Math.random() < mutationRate) {
-                    Statics.output.getSequencer().rhythm[y1][x1] = Statics.output.getSequencer().rhythm[y1][x1] == 0 ? 1 : 0;
-                }
-            }
-        }
-    }
+
 }
