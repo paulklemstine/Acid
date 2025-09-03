@@ -55,10 +55,14 @@ public class WavetableOscillator extends Oscillator {
 	public final void setFrequency(double frequency) {
 		if (this != null) {
 			this.phaseDelta = (frequency * this.oneHzPhaseDelta);
-				this.waveIndex = seekIndexByFrequency(frequency);
-				if (this.waveIndex < WAVETABLE_MIN_INDEX) this.waveIndex = WAVETABLE_MIN_INDEX;
-				this.wave = this.wavetable[this.waveIndex];
-				if (this.wave!=null)this.waveLength = (this.wave.length - 3);
+			this.waveIndex = seekIndexByFrequency(frequency);
+			if (this.waveIndex < WAVETABLE_MIN_INDEX) {
+				this.waveIndex = WAVETABLE_MIN_INDEX;
+			}
+			this.wave = this.wavetable[this.waveIndex];
+			if (this.wave != null) {
+				this.waveLength = (this.wave.length - 3);
+			}
 		}
 	}
 
@@ -80,6 +84,13 @@ public class WavetableOscillator extends Oscillator {
 	}
 
 	private static int seekIndexByFrequency(double frequency) {
+		if (frequency < MIDI_NOTES[WAVETABLE_MIN_INDEX]) {
+			return WAVETABLE_MIN_INDEX;
+		}
+		if (frequency >= MIDI_NOTES[126]) {
+			return 126;
+		}
+
 		int i = 64;
 		int delta = 32;
 		double i1;
