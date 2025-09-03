@@ -6,86 +6,100 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.SelectBox;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.utils.Array;
 import synth.PatternGenerator;
 
 public class PresetGridActor extends Group {
 
     private Skin skin;
-    private Table table;
+    private Table container;
+    private SelectBox<String> genreSelectBox;
+    private Table gridTable;
     private ShapeRenderer shapeRenderer;
     private boolean isSynth = true;
     private TextButton selectedPatternButton = null;
 
     public PresetGridActor(Skin skin) {
         this.skin = skin;
-        this.table = new Table();
+        this.container = new Table();
         this.shapeRenderer = new ShapeRenderer();
-        addActor(table);
-        buildGrid();
-    }
+        addActor(container);
 
-    private void buildGrid() {
-        table.clear();
-        table.defaults().pad(2);
+        genreSelectBox = new SelectBox<>(skin);
+        gridTable = new Table();
 
-        String[] genres = isSynth ? PatternGenerator.getGenres() : PatternGenerator.getDrumGenres();
+        container.add(genreSelectBox).left();
+        container.row();
+        container.add(gridTable).expand().fill();
 
-        for (final String genre : genres) {
-            table.add(new Label(genre, skin)).colspan(16).left();
-            table.row();
-
-            String[] banks = isSynth ? PatternGenerator.getBanks(genre) : PatternGenerator.getDrumBanks(genre);
-            for (final String bank : banks) {
-                table.add(new Label(bank, skin)).left();
-
-                String[] patterns = isSynth ? PatternGenerator.getPatterns(genre, bank) : new String[]{bank};
-                for (final String patternName : patterns) {
-                    final TextButton button = new TextButton("", skin);
-                    button.addListener(new InputListener() {
-                        public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                            if (selectedPatternButton != null) {
-                                selectedPatternButton.setColor(Color.WHITE);
-                            }
-                            selectedPatternButton = (TextButton)event.getListenerActor();
-                            selectedPatternButton.setColor(Color.RED);
-
-                            if (isSynth) {
-                                applySynthPattern(patternName);
-                            } else {
-                                applyDrumPattern(genre, bank);
-                            }
-                            return true;
-                        }
-                    });
-                    table.add(button).width(20).height(20);
-                }
-                table.row();
+        genreSelectBox.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                updateGrid();
             }
+        });
+
+        updateGenreList();
+        updateGrid();
+    }
+
+    private void updateGenreList() {
+        String[] genres = isSynth ? PatternGenerator.getGenres() : PatternGenerator.getDrumGenres();
+        genreSelectBox.setItems(new Array<>(genres));
+    }
+
+    private void updateGrid() {
+        gridTable.clear();
+        gridTable.defaults().pad(2);
+
+        String selectedGenre = genreSelectBox.getSelected();
+        if (selectedGenre == null) return;
+
+        String[] banks = isSynth ? PatternGenerator.getBanks(selectedGenre) : PatternGenerator.getDrumBanks(selectedGenre);
+        for (final String bank : banks) {
+            gridTable.add(new Label(bank, skin)).left();
+
+            String[] patterns = isSynth ? PatternGenerator.getPatterns(selectedGenre, bank) : new String[]{bank};
+            for (final String patternName : patterns) {
+                final TextButton button = new TextButton("", skin);
+                button.addListener(new InputListener() {
+                    public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                        if (selectedPatternButton != null) {
+                            selectedPatternButton.setColor(Color.WHITE);
+                        }
+                        selectedPatternButton = (TextButton)event.getListenerActor();
+                        selectedPatternButton.setColor(Color.RED);
+
+                        if (isSynth) {
+                                applySynthPattern(selectedGenre, bank, patternName);
+                        } else {
+                            applyDrumPattern(selectedGenre, bank);
+                        }
+                        return true;
+                    }
+                });
+                gridTable.add(button).width(20).height(20);
+            }
+            gridTable.row();
         }
     }
 
-    private void applySynthPattern(String patternName) {
-        if (patternName.toLowerCase().contains("bassline")) {
-            PatternGenerator.generateBassline(sequencerView);
-        } else if (patternName.toLowerCase().contains("melody")) {
-            PatternGenerator.generateMelody(sequencerView);
-        } else if (patternName.toLowerCase().contains("pad")) {
-            PatternGenerator.generateHarmony(sequencerView);
-        } else if (patternName.toLowerCase().contains("arp")) {
-            PatternGenerator.generateArpeggio(sequencerView);
-        } else {
-            PatternGenerator.generateMusical(sequencerView);
-        }
+    private void applySynthPattern(String genre, String bank, String patternName) {
+        int[] pattern = PatternGenerator.getPattern(genre, bank, patternName);
+        PatternGenerator.applySynthPattern(pattern, sequencerView);
     }
 
     private void applyDrumPattern(String genre, String bank) {
         int[][] drumPattern = PatternGenerator.getDrumPattern(genre, bank);
         if (drumPattern != null) {
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < 7; i++) {
                 for (int j = 0; j < 16; j++) {
                     com.acid.Statics.output.getSequencer().rhythm[i][j] = drumPattern[i][j];
                 }
@@ -108,12 +122,14 @@ public class PresetGridActor extends Group {
 
     public void showSynthPresets() {
         this.isSynth = true;
-        buildGrid();
+        updateGenreList();
+        updateGrid();
     }
 
     public void showDrumPresets() {
         this.isSynth = false;
-        buildGrid();
+        updateGenreList();
+        updateGrid();
     }
 
     private int sequencerView;
