@@ -38,7 +38,6 @@ public class SequenceActor extends Actor {
 
             public void touchUp(InputEvent event, float x, float y,
                                 int pointer, int button) {
-                //new SequencerData();
             }
 
             public void touchDragged(InputEvent event, float x, float y,
@@ -99,7 +98,7 @@ public class SequenceActor extends Actor {
         int skipy = (int) (getHeight() / 31);
         // grid
         Statics.renderer.begin(ShapeType.Line);
-        Statics.renderer.setColor(ColorHelper.rainbowDark());
+        Statics.renderer.setColor(ColorHelper.UI_GRAY);
         for (int r = 0; r < 16; r += 4) {
             Statics.renderer.line(r * skipx, 0, r * skipx, getHeight());
         }
@@ -109,14 +108,14 @@ public class SequenceActor extends Actor {
         Statics.renderer.end();
 
         Statics.renderer.begin(ShapeType.Line);
-        Statics.renderer.setColor(ColorHelper.rainbowInverse());
+        Statics.renderer.setColor(ColorHelper.UI_LIGHT_GRAY);
         Statics.renderer.line(
                 (Statics.output.getSequencer().step) % 16 * skipx, 0,
                 (Statics.output.getSequencer().step) % 16 * skipx, getHeight());
         Statics.renderer.end();
 
         Statics.renderer.begin(ShapeType.Line);
-        Statics.renderer.setColor(ColorHelper.rainbowInverse());
+        Statics.renderer.setColor(ColorHelper.UI_LIGHT_GRAY);
         Statics.renderer.rect(0, 0, this.getWidth(), this.getHeight());
         Statics.renderer.end();
         SequencerData.render(Statics.renderer, skipx, skipy);

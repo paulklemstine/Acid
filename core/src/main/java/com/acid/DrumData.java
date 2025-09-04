@@ -64,7 +64,7 @@ public class DrumData extends InstrumentData  {
     public Pixmap drawPixmap(int w, int h) {
         FrameBuffer drawBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, w, h, false);
         drawBuffer.begin();
-        Color c = ColorHelper.rainbowDark();
+        Color c = ColorHelper.BACKGROUND;
         Gdx.gl.glClearColor(c.r, c.g, c.b, c.a);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_STENCIL_BUFFER_BIT);
         ShapeRenderer renderer = new ShapeRenderer();
@@ -77,7 +77,7 @@ public class DrumData extends InstrumentData  {
         float skipy = (float) h / 7f;
         render(renderer, skipx, skipy);
         renderer.begin(ShapeRenderer.ShapeType.Line);
-        renderer.setColor(ColorHelper.rainbowInverse());
+        renderer.setColor(ColorHelper.UI_LIGHT_GRAY);
         for (int i=0;i<5;i++) {
             renderer.rect(i, i, w-i*2, h-i*2);
         }
@@ -96,11 +96,10 @@ public class DrumData extends InstrumentData  {
 
     public static void render(ShapeRenderer renderer1, float skipx, float skipy) {
         renderer1.begin(ShapeRenderer.ShapeType.Filled);
-        renderer1.setColor(ColorHelper.rainbowLight());
         for (int r = 0; r < Statics.output.getSequencer().rhythm.length; r++) {
-            renderer1.setColor(ColorHelper.rainbowLight());
             for (int r1 = 0; r1 < 16; r1++) {
                 if (Statics.output.getSequencer().rhythm[r][r1] > 0) {
+                    renderer1.setColor(ColorHelper.GREEN);
                     renderer1.rect(r1 * skipx + 2, (r)
                             * skipy + 2, skipx - 4, skipy - 4);
                 }

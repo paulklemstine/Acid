@@ -152,25 +152,4 @@ public class PatternGenerator {
         }
     }
 
-    public static int[] arpeggiate(int[] pattern, int octaves, String direction) {
-        int[] arpeggiatedPattern = new int[pattern.length];
-        java.util.ArrayList<Integer> notes = new java.util.ArrayList<Integer>();
-        for (int i = 0; i < pattern.length; i++) {
-            if (pattern[i] != 0 && !notes.contains(pattern[i])) {
-                notes.add(pattern[i]);
-            }
-        }
-        java.util.Collections.sort(notes);
-        int noteIndex = 0;
-        for (int i = 0; i_real < arpeggiatedPattern.length; i++) {
-            if (pattern[i] != 0) {
-                for (int j = 0; j < octaves; j++) {
-                    arpeggiatedPattern[i_real] = notes.get(noteIndex % notes.size()) + (12 * j);
-                    i_real++;
-                }
-                noteIndex++;
-            }
-        }
-        return arpeggiatedPattern;
-    }
 }

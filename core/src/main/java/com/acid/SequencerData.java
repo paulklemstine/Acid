@@ -55,10 +55,10 @@ public class SequencerData extends InstrumentData {
                 continue;
             }
             if (Statics.output.getSequencer().basslines[synthIndex].accent[i]) {
-                renderer1.setColor(ColorHelper.rainbowInverse());
+                renderer1.setColor(ColorHelper.YELLOW);
             } else {
 
-                renderer1.setColor(ColorHelper.rainbowLight());
+                renderer1.setColor(ColorHelper.UI_LIGHT_GRAY);
             }
             if (Statics.output.getSequencer().basslines[synthIndex].slide[i]) {
                 if (i < 15) {
@@ -95,9 +95,9 @@ public class SequencerData extends InstrumentData {
                 continue;
             }
             if (Statics.output.getSequencer().basslines[synthIndex].accent[i]) {
-                renderer1.setColor(ColorHelper.rainbowInverse());
+                renderer1.setColor(ColorHelper.YELLOW);
             } else {
-                renderer1.setColor(ColorHelper.rainbowLight());
+                renderer1.setColor(ColorHelper.UI_LIGHT_GRAY);
             }
 
             if (Statics.output.getSequencer().basslines[synthIndex].accent[i]) {
@@ -174,7 +174,7 @@ public class SequencerData extends InstrumentData {
     public Pixmap drawPixmap(int w, int h) {
         FrameBuffer drawBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, w, h, false);
         drawBuffer.begin();
-        Color c = ColorHelper.rainbowDark();
+        Color c = ColorHelper.BACKGROUND;
         Gdx.gl.glClearColor(c.r, c.g, c.b, c.a);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_STENCIL_BUFFER_BIT);
         ShapeRenderer renderer = new ShapeRenderer();
@@ -183,14 +183,14 @@ public class SequencerData extends InstrumentData {
         float skipy = ((float) h / 31f);
         render(renderer, skipx, skipy, this.synthIndex);
         renderer.begin(ShapeRenderer.ShapeType.Line);
-        renderer.setColor(ColorHelper.rainbowInverse());
+        renderer.setColor(ColorHelper.UI_LIGHT_GRAY);
         for (int i = 0; i < 5; i++) {
             renderer.rect(i, i, w - i * 2, h - i * 2);
         }
         renderer.end();
         Pixmap pixmap1 = ScreenUtils.getFrameBufferPixmap(0, 0, w, h);
         Pixmap pixmap = new Pixmap((int) w, (int) h, Pixmap.Format.RGBA8888);
-        pixmap.setColor(ColorHelper.rainbowInverse());
+        pixmap.setColor(ColorHelper.UI_LIGHT_GRAY);
         pixmap.fill();
         pixmap.drawPixmap(pixmap1, 0, 0);
         drawBuffer.end();
