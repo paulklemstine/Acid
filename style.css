@@ -1,0 +1,53 @@
+body {
+    font-family: sans-serif;
+    background-color: #222;
+    color: #eee;
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#global-controls, #synth-controls, #drum-machine, #sequencer {
+    border: 1px solid #888;
+    padding: 10px;
+    margin: 10px;
+    width: 80%;
+}
+
+.knob-row {
+    display: flex;
+    justify-content: space-around;
+}
+
+.drum-row {
+    display: flex;
+    align-items: center;
+}
+
+.drum-label {
+    width: 50px;
+}
+
+.drum-cell {
+    width: 20px;
+    height: 20px;
+    margin: 2px;
+}
+
+.sequencer-row {
+    display: flex;
+}
+
+.sequencer-cell {
+    width: 20px;
+    height: 20px;
+    border: 1px solid #888;
+    margin: 1px;
+}
+
+.active {
+    background-color: #f00;
+}

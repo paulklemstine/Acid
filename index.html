@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Acid JS</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <h1>Acid JS</h1>
+        <div id="global-controls">
+            <h2>Global Controls</h2>
+            <div class="control">
+                <label for="bpm">BPM</label>
+                <input type="range" id="bpm" name="bpm" min="60" max="240" value="120">
+                <span id="bpm-value">120</span>
+            </div>
+            <div class="control">
+                <label for="volume">Volume</label>
+                <input type="range" id="volume" name="volume" min="-60" max="0" value="-12">
+                <span id="volume-value">-12</span>
+            </div>
+            <button id="play-stop">Play</button>
+            <button id="save">Save</button>
+            <button id="load">Load</button>
+        </div>
+        <div id="synth-controls">
+            <h2>Synthesizer</h2>
+            <div class="knob-row">
+                <div class="control">
+                    <label for="tune">Tune</label>
+                    <input type="range" id="tune" name="tune" min="0" max="127" value="64">
+                </div>
+                <div class="control">
+                    <label for="cutoff">Cutoff</label>
+                    <input type="range" id="cutoff" name="cutoff" min="0" max="127" value="127">
+                </div>
+                <div class="control">
+                    <label for="resonance">Resonance</label>
+                    <input type="range" id="resonance" name="resonance" min="0" max="127" value="0">
+                </div>
+                <div class="control">
+                    <label for="env-mod">Env Mod</label>
+                    <input type="range" id="env-mod" name="env-mod" min="0" max="127" value="64">
+                </div>
+                <div class="control">
+                    <label for="decay">Decay</label>
+                    <input type="range" id="decay" name="decay" min="0" max="127" value="64">
+                </div>
+                <div class="control">
+                    <label for="accent">Accent</label>
+                    <input type="range" id="accent" name="accent" min="0" max="127" value="127">
+                </div>
+            </div>
+        </div>
+        <div id="drum-machine">
+            <h2>Drum Machine</h2>
+            <div class="control">
+                <label for="drum-kit">Kit</label>
+                <select id="drum-kit" name="drum-kit">
+                    <option value="808">808</option>
+                    <option value="909">909</option>
+                </select>
+            </div>
+            <div id="drum-grid"></div>
+        </div>
+        <div id="sequencer">
+            <h2>Sequencer</h2>
+            <div id="sequencer-grid"></div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

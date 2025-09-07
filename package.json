@@ -1,0 +1,16 @@
+{
+    "name": "acid-js",
+    "version": "1.0.0",
+    "description": "A Javascript port of the Acid synthesizer",
+    "main": "app.js",
+    "scripts": {
+        "test": "jest"
+    },
+    "devDependencies": {
+        "jest": "^29.0.0",
+        "jest-environment-jsdom": "^30.1.2"
+    },
+    "jest": {
+        "testEnvironment": "jsdom"
+    }
+}
