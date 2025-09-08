@@ -20,6 +20,7 @@ let synthSequence;
 let synthPattern = [];
 
 function createAudioBuffer(arrayBuffer) {
+    console.log("createAudioBuffer: starting");
     const audioContext = Tone.context.rawContext;
     const int16s = new Int16Array(arrayBuffer);
     const float32s = new Float32Array(int16s.length);
@@ -40,24 +41,28 @@ function createAudioBuffer(arrayBuffer) {
         left[i] = float32s[i * 2];
         right[i] = float32s[i * 2 + 1];
     }
-
+    console.log("createAudioBuffer: finished");
     return audioBuffer;
 }
 
 async function loadSamples() {
-    console.log('Loading samples...');
+    console.log('loadSamples: starting');
     const promises = samples808.map(async (sampleName) => {
+        console.log(`loadSamples: fetching ${sampleName}`);
         const path = sampleBasePath + sampleName;
         const response = await fetch(path);
         const arrayBuffer = await response.arrayBuffer();
+        console.log(`loadSamples: fetched ${sampleName}`);
         const audioBuffer = createAudioBuffer(arrayBuffer);
         players[sampleName] = new Tone.Player(audioBuffer).toDestination();
+        console.log(`loadSamples: loaded ${sampleName}`);
     });
     await Promise.all(promises);
-    console.log('All samples loaded.');
+    console.log('loadSamples: finished');
 }
 
 function createSynth() {
+    console.log("createSynth: starting");
     const distortion = new Tone.Distortion(0.4).toDestination();
     synth = new Tone.MonoSynth({
         oscillator: {
@@ -78,9 +83,11 @@ function createSynth() {
             octaves: 4,
         }
     }).connect(distortion);
+    console.log("createSynth: finished");
 }
 
 function randomizeSynthPattern() {
+    console.log("randomizeSynthPattern: starting");
     const notes = ["C2", "D2", "E2", "F2", "G2", "A2", "B2", "C3"];
     synthPattern = [];
     for (let i = 0; i < 16; i++) {
@@ -94,11 +101,17 @@ function randomizeSynthPattern() {
             synthPattern.push(null);
         }
     }
-    createSynthSequencerGrid(); // Redraw the grid
+    createSynthSequencerGrid();
+    console.log("randomizeSynthPattern: finished");
 }
 
 function createSynthSequencerGrid() {
+    console.log("createSynthSequencerGrid: starting");
     const container = document.getElementById('synth-sequence-matrix');
+    if (!container) {
+        console.error("createSynthSequencerGrid: synth-sequence-matrix not found!");
+        return;
+    }
     container.innerHTML = '';
 
     for (let i = 0; i < 16; i++) {
@@ -113,9 +126,11 @@ function createSynthSequencerGrid() {
         }
         container.appendChild(stepButton);
     }
+    console.log("createSynthSequencerGrid: finished");
 }
 
 function setupSynthSequencer() {
+    console.log("setupSynthSequencer: starting");
     synthSequence = new Tone.Sequence((time, step) => {
         const stepData = synthPattern[step];
         if (stepData) {
@@ -133,9 +148,11 @@ function setupSynthSequencer() {
             }
         });
     }, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], '16n').start(0);
+    console.log("setupSynthSequencer: finished");
 }
 
 function setupKnobs() {
+    console.log("setupKnobs: starting");
     document.getElementById('knob-tune').addEventListener('input', e => {
         const detuneValue = (e.target.value - 64) * 100;
         synth.oscillator.detune.value = detuneValue;
@@ -161,19 +178,23 @@ function setupKnobs() {
         const accentValue = (e.target.value / 127);
         synth.filterEnvelope.sustain = 0.5 + accentValue * 0.5;
     });
+    console.log("setupKnobs: finished");
 }
 
 async function init() {
+    console.log("init: starting");
     createSynth();
     randomizeSynthPattern();
     setupSynthSequencer();
     setupKnobs();
-    console.log('Synth ready.');
+    console.log("init: finished");
 
+    console.log("init: setting up event listeners");
     document.getElementById('randomize-button').addEventListener('click', randomizeSynthPattern);
 
     const playPauseButton = document.getElementById('play-pause-button');
     playPauseButton.addEventListener('click', () => {
+        console.log("playPauseButton: clicked, Tone.Transport.state:", Tone.Transport.state);
         if (Tone.Transport.state === 'started') {
             Tone.Transport.pause();
             playPauseButton.textContent = '>';
@@ -182,15 +203,18 @@ async function init() {
             playPauseButton.textContent = '||';
         }
     });
+    console.log("init: event listeners set up");
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("DOMContentLoaded: event listener fired");
     const startButton = document.createElement('button');
     startButton.textContent = 'Start Audio';
     document.body.prepend(startButton);
     startButton.addEventListener('click', async () => {
+        console.log("Start Audio button clicked");
         await Tone.start();
-        console.log('AudioContext started');
+        console.log("Tone.start() resolved, Tone.context.state:", Tone.context.state);
         startButton.textContent = 'Loading...';
         await init();
         startButton.style.display = 'none';
