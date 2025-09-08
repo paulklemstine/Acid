@@ -77,12 +77,54 @@ body {
     width: 80px;
 }
 
-#sequence-matrix, #drum-matrix, #synth-sequence-matrix {
+#sequence-matrix, #drum-matrix {
     width: 100%;
     background-color: #444;
     margin-bottom: 10px;
     display: flex;
     flex-direction: column;
+}
+
+#synth-sequence-matrix {
+    display: flex;
+    height: 400px;
+    background-color: #444;
+}
+
+.keyboard {
+    width: 50px;
+    background-color: #333;
+    display: flex;
+    flex-direction: column;
+}
+
+.key {
+    flex-grow: 1;
+    border-bottom: 1px solid #555;
+    color: #ccc;
+    font-size: 0.7em;
+    text-align: center;
+    line-height: 15px;
+}
+
+.key.black {
+    background-color: #222;
+    color: #aaa;
+}
+
+.piano-roll-grid-container {
+    flex-grow: 1;
+    overflow-y: scroll;
+}
+
+.piano-roll-grid {
+    display: grid;
+    grid-template-columns: repeat(16, 1fr);
+}
+
+.piano-roll-grid .step {
+    height: 15px;
+    border: 1px solid #555;
 }
 
 .track {
