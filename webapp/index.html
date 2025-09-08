@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acid JS</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Acid JS</h1>
+            <div class="song-controls">
+                <select id="song-list"></select>
+                <button>Load</button>
+                <button>Save</button>
+                <button>Delete</button>
+                <button>Export</button>
+                <button>In</button>
+                <button>Out</button>
+            </div>
+        </header>
+        <aside class="left-panel">
+            <div class="global-knobs">
+                <div class="knob-placeholder">BPM</div>
+                <div class="knob-placeholder">Vol</div>
+                <div class="knob-placeholder">Delay</div>
+                <div class="knob-placeholder">Fack</div>
+            </div>
+            <div class="generator-controls">
+                <h3>Generator</h3>
+                <button id="randomize-button">Randomize</button>
+                <button>Gen Mel</button>
+                <button>Gen Bass</button>
+                <button>Harmonize</button>
+                <button>Mutate</button>
+                <button>Mutate Rhythm</button>
+                <button>Mutate Accents</button>
+                <button>Mutate Slides</button>
+                <button>Arpeggiate</button>
+                <button>Transpose</button>
+                <button>Gen Drums</button>
+                <label for="key-select">Key:</label>
+                <select id="key-select"></select>
+                <label for="scale-select">Scale:</label>
+                <select id="scale-select"></select>
+                <label for="progression-select">Progression:</label>
+                <select id="progression-select"></select>
+            </div>
+        </aside>
+        <main class="main-content">
+            <div class="sequencer-container">
+                <div id="synth-sequence-matrix"></div>
+                <!-- <div id="drum-matrix"></div> -->
+            </div>
+            <div class="knobs-container">
+                <div class="synth-knobs">
+                    <div><label>Tune</label><input type="range" id="knob-tune" min="0" max="127" value="64"></div>
+                    <div><label>Cutoff</label><input type="range" id="knob-cutoff" min="0" max="127" value="64"></div>
+                    <div><label>Resonance</label><input type="range" id="knob-resonance" min="0" max="127" value="64"></div>
+                    <div><label>Env Mod</label><input type="range" id="knob-env-mod" min="0" max="127" value="64"></div>
+                    <div><label>Decay</label><input type="range" id="knob-decay" min="0" max="127" value="64"></div>
+                    <div><label>Accent</label><input type="range" id="knob-accent" min="0" max="127" value="64"></div>
+                </div>
+            </div>
+             <div class="transport-controls">
+                <button>Rec</button>
+                <button>Free</button>
+                <button id="play-pause-button">||</button>
+                <div class="song-position">
+                    <button>&lt;</button>
+                    <span>Start</span>
+                    <button>&gt;</button>
+                </div>
+                <div class="song-position">
+                    <button>&lt;</button>
+                    <span>Current</span>
+                    <button>&gt;</button>
+                </div>
+                <div class="song-position">
+                    <button>&lt;</button>
+                    <span>End</span>
+                    <button>&gt;</button>
+                </div>
+            </div>
+        </main>
+        <aside class="right-panel">
+            <div class="track-selection">
+                <button class="track-selector" id="synth-1">S1</button>
+                <div class="knob-placeholder">S1 Vol</div>
+                <button class="track-selector" id="synth-2">S2</button>
+                 <div class="knob-placeholder">S2 Vol</div>
+                <button class="track-selector" id="synth-3">S3</button>
+                 <div class="knob-placeholder">S3 Vol</div>
+                <button class="track-selector" id="synth-4">S4</button>
+                 <div class="knob-placeholder">S4 Vol</div>
+                <button class="track-selector" id="drums">D</button>
+                 <div class="knob-placeholder">D Vol</div>
+            </div>
+            <div class="pattern-controls">
+                <button>Clear Synth</button>
+                <button>Clear Drums</button>
+                <button>Up</button>
+                <button>Down</button>
+                <button>Oct Up</button>
+                <button>Oct Down</button>
+            </div>
+        </aside>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/15.3.3/Tone.min.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
