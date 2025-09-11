@@ -9,6 +9,7 @@ const samples808 = [
 const players = {};
 let drumSequence;
 const synths = [];
+const synthVolumes = [];
 const synthSequences = [];
 const synthPatterns = [[], [], [], []];
 let activeView = 'drums';
@@ -125,12 +126,12 @@ function setupDrumSequencer() {
 function createSynths() {
     for (let i = 0; i < 4; i++) {
         const distortion = new Tone.Distortion(0.4);
-        const volume = new Tone.Volume(0).toDestination();
+        synthVolumes[i] = new Tone.Volume(0).toDestination();
         synths[i] = new Tone.MonoSynth({
             oscillator: { type: "sawtooth" },
             envelope: { attack: 0.01, decay: 0.1, sustain: 0.2, release: 0.1 },
             filterEnvelope: { attack: 0.02, decay: 0.2, sustain: 0.5, release: 0.2, baseFrequency: 200, octaves: 4 }
-        }).connect(distortion).connect(volume);
+        }).connect(distortion).connect(synthVolumes[i]);
     }
 }
 
@@ -253,7 +254,7 @@ function setupKnobs() {
     for (let i = 0; i < 4; i++) {
         document.getElementById(`synth${i}-vol-knob`).addEventListener('input', e => {
             const volume = -40 + (e.target.value / 100) * 40;
-            synths[i].volume.value = volume;
+            synthVolumes[i].volume.value = volume;
         });
     }
     document.getElementById('drums-vol-knob').addEventListener('input', e => {
