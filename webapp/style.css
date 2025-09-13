@@ -40,6 +40,10 @@ body {
     flex-direction: column;
 }
 
+.track-selector.muted {
+    background-color: #f00;
+}
+
 .right-panel {
     grid-area: right-panel;
     background-color: #333;
@@ -86,9 +90,14 @@ body {
 }
 
 #synth-sequence-matrix {
-    display: flex;
     height: 400px;
     background-color: #444;
+}
+
+.piano-roll-scroll-container {
+    height: 100%;
+    overflow-y: scroll;
+    display: flex;
 }
 
 .keyboard {
@@ -112,12 +121,8 @@ body {
     color: #aaa;
 }
 
-.piano-roll-grid-container {
-    flex-grow: 1;
-    overflow-y: scroll;
-}
-
 .piano-roll-grid {
+    flex-grow: 1;
     display: grid;
     grid-template-columns: repeat(16, 1fr);
 }

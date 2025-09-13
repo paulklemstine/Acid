@@ -14,6 +14,13 @@ const synthSequences = [];
 const synthPatterns = [[], [], [], []];
 let activeView = 'drums';
 let drumsVolume;
+const muteStates = {
+    drums: false,
+    synth0: false,
+    synth1: false,
+    synth2: false,
+    synth3: false,
+};
 
 const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const octaves = 8;
@@ -180,6 +187,8 @@ function shiftPattern(synthIndex, amount) {
 function createSynthSequencerGrid(synthIndex) {
     const gridContainer = document.querySelector('.piano-roll-grid');
     const keyboardContainer = document.querySelector('.keyboard');
+    const gridContainerParent = document.querySelector('.piano-roll-grid-container');
+
     gridContainer.innerHTML = '';
     keyboardContainer.innerHTML = '';
     for (let octave = octaves - 1; octave >= 0; octave--) {
@@ -225,15 +234,14 @@ function createSynthSequencerGrid(synthIndex) {
 function setupSynthSequencers() {
     for (let i = 0; i < 4; i++) {
         synthSequences[i] = new Tone.Sequence((time, step) => {
-            if (activeView === `synth${i}`) {
-                const stepData = synthPatterns[i][step];
-                if (stepData) {
-                    synths[i].portamento = stepData.slide ? 0.05 : 0;
-                    const velocity = stepData.accent ? 1.0 : 0.7;
-                    synths[i].triggerAttackRelease(stepData.note, "16n", time, velocity);
-                }
+            const stepData = synthPatterns[i][step];
+            if (stepData) {
+                synths[i].portamento = stepData.slide ? 0.05 : 0;
+                const velocity = stepData.accent ? 1.0 : 0.7;
+                synths[i].triggerAttackRelease(stepData.note, "16n", time, velocity);
             }
-            if (activeView.startsWith('synth')) {
+
+            if (activeView === `synth${i}`) {
                 document.querySelectorAll('.piano-roll-grid .step').forEach(cell => {
                     cell.classList.toggle('playing', cell.dataset.step == step);
                 });
@@ -401,9 +409,27 @@ async function init() {
     });
 
     document.querySelectorAll('.track-selector').forEach(button => {
+        let pressTimer;
+        button.addEventListener('mousedown', () => {
+            pressTimer = setTimeout(() => {
+                // Long press
+                const trackId = button.id;
+                muteStates[trackId] = !muteStates[trackId];
+                if (trackId === 'drums') {
+                    drumsVolume.mute = muteStates[trackId];
+                } else if (trackId.startsWith('synth')) {
+                    const synthIndex = parseInt(trackId.replace('synth', ''));
+                    synthVolumes[synthIndex].mute = muteStates[trackId];
+                }
+                button.classList.toggle('muted', muteStates[trackId]);
+            }, 500);
+        });
+        button.addEventListener('mouseup', () => {
+            clearTimeout(pressTimer);
+        });
         button.addEventListener('click', () => {
-            activeView = button.id;
-            updateView();
+             activeView = button.id;
+             updateView();
         });
     });
 
