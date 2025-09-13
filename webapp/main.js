@@ -244,24 +244,61 @@ function setupSynthSequencers() {
 
 function setupKnobs() {
     document.getElementById('bpm-knob').addEventListener('input', e => {
-        Tone.Transport.bpm.value = e.target.value;
+        Tone.Transport.bpm.value = parseFloat(e.target.value);
     });
     document.getElementById('global-vol-knob').addEventListener('input', e => {
-        const volume = -40 + (e.target.value / 100) * 40;
-        Tone.Destination.volume.value = volume;
+        Tone.Destination.volume.value = -40 + (parseFloat(e.target.value) / 100) * 40;
     });
 
     for (let i = 0; i < 4; i++) {
         document.getElementById(`synth${i}-vol-knob`).addEventListener('input', e => {
-            const volume = -40 + (e.target.value / 100) * 40;
-            synthVolumes[i].volume.value = volume;
+            synthVolumes[i].volume.value = -40 + (parseFloat(e.target.value) / 100) * 40;
         });
     }
     document.getElementById('drums-vol-knob').addEventListener('input', e => {
-        const volume = -40 + (e.target.value / 100) * 40;
-        drumsVolume.volume.value = volume;
+        drumsVolume.volume.value = -40 + (parseFloat(e.target.value) / 100) * 40;
+    });
+
+    document.getElementById('knob-tune').addEventListener('input', e => {
+        if (activeView.startsWith('synth')) {
+            const synthIndex = parseInt(activeView.replace('synth', ''));
+            synths[synthIndex].oscillator.detune.value = (parseFloat(e.target.value) - 64) * 100;
+        }
+    });
+    document.getElementById('knob-cutoff').addEventListener('input', e => {
+        if (activeView.startsWith('synth')) {
+            const synthIndex = parseInt(activeView.replace('synth', ''));
+            synths[synthIndex].filter.frequency.value = (parseFloat(e.target.value) / 127) * 5000 + 200;
+        }
+    });
+    document.getElementById('knob-resonance').addEventListener('input', e => {
+        if (activeView.startsWith('synth')) {
+            const synthIndex = parseInt(activeView.replace('synth', ''));
+            synths[synthIndex].filter.Q.value = (parseFloat(e.target.value) / 127) * 20;
+        }
+    });
+    document.getElementById('knob-env-mod').addEventListener('input', e => {
+        if (activeView.startsWith('synth')) {
+            const synthIndex = parseInt(activeView.replace('synth', ''));
+            synths[synthIndex].filterEnvelope.octaves = (parseFloat(e.target.value) / 127) * 10;
+        }
+    });
+    document.getElementById('knob-decay').addEventListener('input', e => {
+        if (activeView.startsWith('synth')) {
+            const synthIndex = parseInt(activeView.replace('synth', ''));
+            const decay = (parseFloat(e.target.value) / 127) * 0.5 + 0.01;
+            synths[synthIndex].filterEnvelope.decay = decay;
+            synths[synthIndex].envelope.decay = decay;
+        }
+    });
+    document.getElementById('knob-accent').addEventListener('input', e => {
+        if (activeView.startsWith('synth')) {
+            const synthIndex = parseInt(activeView.replace('synth', ''));
+            synths[synthIndex].filterEnvelope.sustain = 0.5 + (parseFloat(e.target.value) / 127) * 0.5;
+        }
     });
 }
+
 
 // --- View Logic ---
 function updateView() {
