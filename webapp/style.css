@@ -1,0 +1,193 @@
+body {
+    font-family: sans-serif;
+    background-color: #222;
+    color: #eee;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    display: grid;
+    grid-template-areas:
+        "header header header"
+        "left-panel main-content right-panel";
+    grid-template-columns: 200px 1fr 200px;
+    grid-gap: 10px;
+    height: 100vh;
+    padding: 10px;
+}
+
+.header {
+    grid-area: header;
+    background-color: #333;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.left-panel {
+    grid-area: left-panel;
+    background-color: #333;
+    padding: 10px;
+}
+
+.main-content {
+    grid-area: main-content;
+    background-color: #333;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.track-selector.muted {
+    background-color: #f00;
+}
+
+.right-panel {
+    grid-area: right-panel;
+    background-color: #333;
+    padding: 10px;
+}
+
+.song-controls,
+.global-knobs,
+.generator-controls,
+.sequencer-container,
+.knobs-container,
+.transport-controls,
+.track-selection,
+.pattern-controls {
+    margin-bottom: 10px;
+}
+
+.knob-placeholder {
+    width: 50px;
+    height: 50px;
+    background-color: #555;
+    border-radius: 50%;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    margin: 5px;
+}
+
+.synth-knobs div {
+    margin-bottom: 5px;
+}
+
+.synth-knobs label {
+    display: inline-block;
+    width: 80px;
+}
+
+#sequence-matrix, #drum-matrix {
+    width: 100%;
+    background-color: #444;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+#synth-sequence-matrix {
+    height: 400px;
+    background-color: #444;
+}
+
+.piano-roll-scroll-container {
+    height: 100%;
+    overflow-y: scroll;
+    display: flex;
+}
+
+.keyboard {
+    width: 50px;
+    background-color: #333;
+    display: flex;
+    flex-direction: column;
+}
+
+.key {
+    flex-grow: 1;
+    border-bottom: 1px solid #555;
+    color: #ccc;
+    font-size: 0.7em;
+    text-align: center;
+    line-height: 15px;
+}
+
+.key.black {
+    background-color: #222;
+    color: #aaa;
+}
+
+.piano-roll-grid {
+    flex-grow: 1;
+    display: grid;
+    grid-template-columns: repeat(16, 1fr);
+}
+
+.piano-roll-grid .step {
+    height: 15px;
+    border: 1px solid #555;
+}
+
+.track {
+    display: flex;
+    align-items: center;
+}
+
+.track-label {
+    width: 80px;
+    text-align: right;
+    padding-right: 10px;
+    font-size: 0.8em;
+}
+
+.step {
+    width: 30px;
+    height: 30px;
+    background-color: #555;
+    border: 1px solid #666;
+    margin: 2px;
+    cursor: pointer;
+}
+
+.step.active {
+    background-color: #ff8c00;
+}
+
+.step.playing {
+    border-color: #fff;
+    box-shadow: 0 0 5px #fff;
+}
+
+button {
+    background-color: #555;
+    color: #eee;
+    border: 1px solid #777;
+    padding: 5px 10px;
+    margin: 2px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #666;
+}
+
+select {
+    background-color: #555;
+    color: #eee;
+    border: 1px solid #777;
+    padding: 5px;
+}
+
+.transport-controls {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+.generator-controls, .pattern-controls, .track-selection {
+    display: flex;
+    flex-direction: column;
+}
