@@ -25,6 +25,22 @@ const muteStates = {
 const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const octaves = 8;
 
+function noteStringToValue(noteStr, key) {
+    if (!noteStr) return -1;
+    const octaveRegex = /\d+$/;
+    const octaveMatch = noteStr.match(octaveRegex);
+    if (!octaveMatch) return -1;
+
+    const octave = parseInt(octaveMatch[0], 10);
+    const noteName = noteStr.substring(0, noteStr.length - octaveMatch[0].length);
+
+    const noteIndex = Harmony.notes.indexOf(noteName);
+    if (noteIndex === -1) return -1;
+
+    const absoluteNoteNumber = octave * 12 + noteIndex;
+    return absoluteNoteNumber - key;
+}
+
 // --- Drum Pattern Templates ---
 const drumTemplates = [
     { name: 'House', pattern: { '808bd.raw': [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0], '808sd_base.raw': [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0], '808ch.raw': [0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0] } },
@@ -456,7 +472,8 @@ async function init() {
     document.getElementById('harmonize-button').addEventListener('click', () => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
-            const melody = synthPatterns[synthIndex].map(step => step ? step.note : -1);
+            const key = Harmony.notes.indexOf(document.getElementById('key-select').value);
+            const melody = synthPatterns[synthIndex].map(step => noteStringToValue(step ? step.note : null, key));
             const scale = Harmony.scales[document.getElementById('scale-select').value];
             const progression = Harmony.progressions[document.getElementById('progression-select').value];
             const harmony = Harmony.generateHarmony(melody, progression, scale);
@@ -472,7 +489,8 @@ async function init() {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
             const scale = Harmony.scales[document.getElementById('scale-select').value];
-            const pattern = synthPatterns[synthIndex].map(step => step ? step.note : -1);
+            const key = Harmony.notes.indexOf(document.getElementById('key-select').value);
+            const pattern = synthPatterns[synthIndex].map(step => noteStringToValue(step ? step.note : null, key));
             const mutatedPattern = MelodyGenerator.mutatePattern(pattern, scale, 0.2);
             applySynthPattern(synthIndex, mutatedPattern);
         }
@@ -481,7 +499,8 @@ async function init() {
     document.getElementById('mutate-rhythm-button').addEventListener('click', () => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
-            const pattern = synthPatterns[synthIndex].map(step => step ? step.note : -1);
+            const key = Harmony.notes.indexOf(document.getElementById('key-select').value);
+            const pattern = synthPatterns[synthIndex].map(step => noteStringToValue(step ? step.note : null, key));
             const mutatedPattern = MelodyGenerator.mutateRhythm(pattern, 0.2);
             applySynthPattern(synthIndex, mutatedPattern);
         }
