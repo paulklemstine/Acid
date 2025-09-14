@@ -14,6 +14,9 @@ const synthSequences = [];
 const synthPatterns = [[], [], [], []];
 let activeView = 'drums';
 let drumsVolume;
+let masterDelay;
+let masterDistortion;
+
 const muteStates = {
     drums: false,
     synth0: false,
@@ -53,7 +56,7 @@ function createAudioBuffer(arrayBuffer) {
 
 // --- Drum Machine ---
 async function loadSamples() {
-    drumsVolume = new Tone.Volume(0).toDestination();
+    drumsVolume = new Tone.Volume(0);
     const promises = samples808.map(async (sampleName) => {
         const path = sampleBasePath + sampleName;
         const response = await fetch(path);
@@ -133,7 +136,7 @@ function setupDrumSequencer() {
 function createSynths() {
     for (let i = 0; i < 4; i++) {
         const distortion = new Tone.Distortion(0.4);
-        synthVolumes[i] = new Tone.Volume(0).toDestination();
+        synthVolumes[i] = new Tone.Volume(0);
         synths[i] = new Tone.MonoSynth({
             oscillator: { type: "sawtooth" },
             envelope: { attack: 0.01, decay: 0.1, sustain: 0.2, release: 0.1 },
@@ -187,7 +190,6 @@ function shiftPattern(synthIndex, amount) {
 function createSynthSequencerGrid(synthIndex) {
     const gridContainer = document.querySelector('.piano-roll-grid');
     const keyboardContainer = document.querySelector('.keyboard');
-    const gridContainerParent = document.querySelector('.piano-roll-grid-container');
 
     gridContainer.innerHTML = '';
     keyboardContainer.innerHTML = '';
@@ -256,6 +258,12 @@ function setupKnobs() {
     });
     document.getElementById('global-vol-knob').addEventListener('input', e => {
         Tone.Destination.volume.value = -40 + (parseFloat(e.target.value) / 100) * 40;
+    });
+    document.getElementById('delay-knob').addEventListener('input', e => {
+        masterDelay.wet.value = parseFloat(e.target.value) / 100;
+    });
+    document.getElementById('fack-knob').addEventListener('input', e => {
+        masterDistortion.distortion = parseFloat(e.target.value) / 100;
     });
 
     for (let i = 0; i < 4; i++) {
@@ -381,15 +389,25 @@ function updateSongList() {
 
 // --- Main Init ---
 async function init() {
+    masterDistortion = new Tone.Distortion(0);
+    masterDelay = new Tone.FeedbackDelay("8n", 0);
+
     populateSelects();
     await loadSamples();
+    drumsVolume.connect(masterDistortion);
+
     createDrumSequencerGrid();
     randomizeDrumPattern();
     setupDrumSequencer();
+
     createSynths();
     for (let i=0; i<4; i++) {
+        synthVolumes[i].connect(masterDistortion);
         randomizeSynthPattern(i);
     }
+    masterDistortion.connect(masterDelay);
+    masterDelay.toDestination();
+
     setupSynthSequencers();
     setupKnobs();
     updateView();
