@@ -10,6 +10,8 @@ const players = {};
 let drumSequence;
 const synths = [];
 const synthVolumes = [];
+const synthDistortions = [];
+const synthDelays = [];
 const synthSequences = [];
 const synthPatterns = [[], [], [], []];
 let activeView = 'drums';
@@ -132,13 +134,16 @@ function setupDrumSequencer() {
 // --- Synthesizer (Piano Roll) ---
 function createSynths() {
     for (let i = 0; i < 4; i++) {
-        const distortion = new Tone.Distortion(0.4);
         synthVolumes[i] = new Tone.Volume(0).toDestination();
+        synthDistortions[i] = new Tone.Distortion(0.4);
+        synthDelays[i] = new Tone.FeedbackDelay("8n", 0.5).toDestination();
         synths[i] = new Tone.MonoSynth({
             oscillator: { type: "sawtooth" },
             envelope: { attack: 0.01, decay: 0.1, sustain: 0.2, release: 0.1 },
             filterEnvelope: { attack: 0.02, decay: 0.2, sustain: 0.5, release: 0.2, baseFrequency: 200, octaves: 4 }
-        }).connect(distortion).connect(synthVolumes[i]);
+        });
+        synths[i].chain(synthDistortions[i], synthVolumes[i]);
+        synths[i].connect(synthDelays[i]);
     }
 }
 
@@ -154,8 +159,9 @@ function applySynthPattern(synthIndex, pattern) {
     const key = Harmony.notes.indexOf(document.getElementById('key-select').value);
     synthPatterns[synthIndex] = pattern.map(noteValue => {
         if (noteValue === -1) return null;
-        const noteName = Harmony.notes[(key + noteValue) % 12];
-        const octave = Math.floor((key + noteValue) / 12);
+        const absoluteNote = key + noteValue;
+        const noteName = Harmony.notes[((absoluteNote % 12) + 12) % 12];
+        const octave = Math.floor(absoluteNote / 12);
         return { note: `${noteName}${octave}`, accent: false, slide: false };
     });
     createSynthSequencerGrid(synthIndex);
@@ -170,12 +176,24 @@ function shiftPattern(synthIndex, amount) {
     for (let i = 0; i < synthPatterns[synthIndex].length; i++) {
         const stepData = synthPatterns[synthIndex][i];
         if (stepData) {
-            const noteName = stepData.note.slice(0, -1);
-            const octave = parseInt(stepData.note.slice(-1));
+            const noteNameWithOctave = stepData.note;
+            const noteNameMatch = noteNameWithOctave.match(/[A-G]#?/);
+            const octaveMatch = noteNameWithOctave.match(/\d+$/);
+
+            if (!noteNameMatch || !octaveMatch) continue;
+
+            const noteName = noteNameMatch[0];
+            const octave = parseInt(octaveMatch[0]);
             const noteIndex = notes.indexOf(noteName);
-            const newNoteIndex = noteIndex + amount;
-            const newOctave = octave + Math.floor(newNoteIndex / 12);
-            const newNoteName = notes[newNoteIndex % 12];
+
+            if (noteIndex === -1) continue;
+
+            const absoluteNote = octave * 12 + noteIndex;
+            const newAbsoluteNote = absoluteNote + amount;
+            const newOctave = Math.floor(newAbsoluteNote / 12);
+            const newNoteIndex = ((newAbsoluteNote % 12) + 12) % 12;
+            const newNoteName = notes[newNoteIndex];
+
             if (newOctave >= 0 && newOctave < octaves) {
                 stepData.note = `${newNoteName}${newOctave}`;
             }
@@ -303,6 +321,35 @@ function setupKnobs() {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
             synths[synthIndex].filterEnvelope.sustain = 0.5 + (parseFloat(e.target.value) / 127) * 0.5;
+        }
+    });
+
+    document.getElementById('delay-time-knob').addEventListener('input', e => {
+        if (activeView.startsWith('synth')) {
+            const synthIndex = parseInt(activeView.replace('synth', ''));
+            synthDelays[synthIndex].delayTime.value = (parseFloat(e.target.value) / 100);
+        }
+    });
+
+    document.getElementById('delay-feedback-knob').addEventListener('input', e => {
+        if (activeView.startsWith('synth')) {
+            const synthIndex = parseInt(activeView.replace('synth', ''));
+            synthDelays[synthIndex].feedback.value = (parseFloat(e.target.value) / 100) * 0.9;
+        }
+    });
+
+    document.getElementById('knob-drive').addEventListener('input', e => {
+        if (activeView.startsWith('synth')) {
+            const synthIndex = parseInt(activeView.replace('synth', ''));
+            synthDistortions[synthIndex].distortion = (parseFloat(e.target.value) / 127);
+        }
+    });
+
+    document.getElementById('knob-wave').addEventListener('click', () => {
+        if (activeView.startsWith('synth')) {
+            const synthIndex = parseInt(activeView.replace('synth', ''));
+            const currentWave = synths[synthIndex].oscillator.type;
+            synths[synthIndex].oscillator.type = currentWave === 'sawtooth' ? 'square' : 'sawtooth';
         }
     });
 }
