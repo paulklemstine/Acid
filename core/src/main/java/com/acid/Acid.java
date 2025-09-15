@@ -169,6 +169,10 @@ public class Acid implements ApplicationListener {
         Statics.output.getSequencer().randomizeRhythm();
         Statics.output.getSequencer().randomizeAllSynths();
 
+        Output.muteState[1] = true;
+        Output.muteState[2] = true;
+        Output.muteState[3] = true;
+
         InputMultiplexer multiplexer = new InputMultiplexer();
         GestureListener gl = new GestureListener() {
 
@@ -1013,7 +1017,7 @@ public class Acid implements ApplicationListener {
 //        ((OrthographicCamera)stage.getCamera()).setToOrtho(false,Gdx.graphics.getHeight(),Gdx.graphics.getWidth());
 
 
-        mya = new KnobActor[Statics.NUM_SYNTHS][6];
+        mya = new KnobActor[Statics.NUM_SYNTHS][9];
         for (int i = 0; i < Statics.NUM_SYNTHS; i++) {
             mya[i][0] = new KnobActor("Tune", 0, i);
             table.addActor(mya[i][0]);
@@ -1027,6 +1031,12 @@ public class Acid implements ApplicationListener {
             table.addActor(mya[i][4]);
             mya[i][5] = new KnobActor("Acc", 5, i);
             table.addActor(mya[i][5]);
+            mya[i][6] = new KnobActor("Dist", 6, i);
+            table.addActor(mya[i][6]);
+            mya[i][7] = new KnobActor("Aux1", 7, i);
+            table.addActor(mya[i][7]);
+            mya[i][8] = new KnobActor("Aux2", 8, i);
+            table.addActor(mya[i][8]);
 
 
             //bottom row of knobs
@@ -1038,15 +1048,22 @@ public class Acid implements ApplicationListener {
             mya[i][3].setPosition(hj += 56, gh);
             mya[i][4].setPosition(hj += 56, gh);
             mya[i][5].setPosition(hj += 56, gh);
+
+            // new knobs position
+            int newKnobY = gh - 65;
+            int newKnobX = 130;
+            mya[i][6].setPosition(newKnobX, newKnobY);
+            mya[i][7].setPosition(newKnobX += 56, newKnobY);
+            mya[i][8].setPosition(newKnobX += 56, newKnobY);
         }
 
-        globalKnobs[0] = new KnobActor("bpm", 6, 0);
+        globalKnobs[0] = new KnobActor("bpm", 9, 0);
         table.addActor(globalKnobs[0]);
-        globalKnobs[1] = new KnobActor("Vol", 7, 0);
+        globalKnobs[1] = new KnobActor("Vol", 10, 0);
         table.addActor(globalKnobs[1]);
-        globalKnobs[2] = new KnobActor("Delay", 8, 0);
+        globalKnobs[2] = new KnobActor("Delay", 11, 0);
         table.addActor(globalKnobs[2]);
-        globalKnobs[3] = new KnobActor("Fack", 9, 0);
+        globalKnobs[3] = new KnobActor("Fack", 12, 0);
         table.addActor(globalKnobs[3]);
 
         globalKnobs[0].setPosition(40, 454);
@@ -1288,13 +1305,13 @@ public class Acid implements ApplicationListener {
             if (i < Statics.NUM_SYNTHS) {
                 // Vertical layout
                 selectionButton.setPosition(580, 460 - (i * 70));
-                KnobActor volKnob = new KnobActor(buttonText + " Vol", 10, i);
+                KnobActor volKnob = new KnobActor(buttonText + " Vol", 13, i);
                 volKnob.setPosition(580, 430 - (i * 70));
                 table.addActor(volKnob);
             } else {
                 // Drums
                 selectionButton.setPosition(580, 460 - (4 * 70));
-                KnobActor volKnob = new KnobActor(buttonText + " Vol", 11, 4);
+                KnobActor volKnob = new KnobActor(buttonText + " Vol", 14, 4);
                 volKnob.setPosition(580, 430 - (4 * 70));
                 table.addActor(volKnob);
             }
@@ -1889,7 +1906,7 @@ public class Acid implements ApplicationListener {
         stage.draw();
         for (int synthNum = 0; synthNum < Statics.NUM_SYNTHS; synthNum++) {
             if (KnobImpl.getControl(synthNum, Statics.output.getSequencer().step) != null)
-                for (int i = 0; i < 6; i++) {
+                for (int i = 0; i < 9; i++) {
                     if (sequencerView == synthNum) {
                         if (!KnobImpl.touched[i]) {
                             if (Statics.free) {
@@ -2020,7 +2037,7 @@ public class Acid implements ApplicationListener {
         }
 
         for (int i = 0; i < Statics.NUM_SYNTHS; i++) {
-            for (int j = 0; j < 6; j++) {
+            for (int j = 0; j < 9; j++) {
                 if (mya[i][j] != null) {
                     mya[i][j].setVisible(i == sequencerView);
                 }

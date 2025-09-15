@@ -22,7 +22,7 @@ public class KnobImpl {
         }
     }
 
-    static boolean[] touched = new boolean[12];
+    static boolean[] touched = new boolean[15];
 
     static boolean isTouched() {
         for (int i = 0; i < touched.length; i++) {
@@ -108,33 +108,32 @@ public class KnobImpl {
                 //accent
                 rotation = (float) ((BasslineSynthesizer) Statics.synths[synthIndex]).accent * 360f;
                 break;
-            case 6:
-
-                rotation = (float) Statics.output.getSequencer().bpm;
-                break;
-            case 7:
-                rotation = (float) Statics.output.getVolume() * 360f;
-                break;
-            case 8:
-                rotation = (float) Output.getDelay().getTime()/44100f * 360f;
-                break;
-            case 9:
-                rotation = (float) Output.getDelay().getFeedback() * 360f;
-                break;
-            case 10:
-                rotation = (float) ((BasslineSynthesizer) Statics.synths[synthIndex]).volume * 360f;
-                break;
-            case 11:
-                rotation = (float) ((RhythmSynthesizer) Statics.drums).volume * 360f;
-                break;
-            case 12: // Distortion
+            case 6: // Distortion
                 rotation = (float) ((((BasslineSynthesizer) Statics.synths[synthIndex]).distortion.getGain() - 1.0D) / 10.0D * 360f);
                 break;
-            case 13: // Aux1
+            case 7: // Aux1
                 rotation = (float) ((BasslineSynthesizer) Statics.synths[synthIndex]).aux1Amt * 360f;
                 break;
-            case 14: // Aux2
+            case 8: // Aux2
                 rotation = (float) ((BasslineSynthesizer) Statics.synths[synthIndex]).aux2Amt * 360f;
+                break;
+            case 9:
+                rotation = (float) Statics.output.getSequencer().bpm;
+                break;
+            case 10:
+                rotation = (float) Statics.output.getVolume() * 360f;
+                break;
+            case 11:
+                rotation = (float) Output.getDelay().getTime()/44100f * 360f;
+                break;
+            case 12:
+                rotation = (float) Output.getDelay().getFeedback() * 360f;
+                break;
+            case 13:
+                rotation = (float) ((BasslineSynthesizer) Statics.synths[synthIndex]).volume * 360f;
+                break;
+            case 14:
+                rotation = (float) ((RhythmSynthesizer) Statics.drums).volume * 360f;
                 break;
         }
         return rotation;
@@ -236,37 +235,37 @@ public class KnobImpl {
                 Statics.synths[synthIndex].controlChange(38, cc);
                 break;
             case 6:
+                Statics.synths[synthIndex].controlChange(BasslineSynthesizer.MSG_CC_DISTORTION_GAIN, cc);
+                break;
+            case 7:
+                Statics.synths[synthIndex].controlChange(BasslineSynthesizer.MSG_CC_AUX1_SEND, cc);
+                break;
+            case 8:
+                Statics.synths[synthIndex].controlChange(BasslineSynthesizer.MSG_CC_AUX2_SEND, cc);
+                break;
+            case 9:
                 //bpm
                 int bpm = (int)(percent(id, rotation) * 360f);
                 if (bpm >= 0 && bpm <= 360) {
                     Statics.output.getSequencer().setBpm(bpm);
                 }
                 break;
-            case 7:
+            case 10:
                 //volume
                 Statics.synths[synthIndex].controlChange(39, cc);
                 break;
-            case 8:
+            case 11:
                 //Delay time
                 Output.getDelay().controlChange(40, cc);
                 break;
-            case 9:
+            case 12:
                 Output.getDelay().controlChange(41, cc);
                 break;
-            case 10:
+            case 13:
                 Statics.synths[synthIndex].controlChange(BasslineSynthesizer.MSG_CC_SYNTH_VOLUME, cc);
                 break;
-            case 11:
-                ((RhythmSynthesizer) Statics.drums).controlChange(RhythmSynthesizer.MSG_CC_DRUM_VOLUME, cc);
-                break;
-            case 12:
-                Statics.synths[synthIndex].controlChange(BasslineSynthesizer.MSG_CC_DISTORTION_GAIN, cc);
-                break;
-            case 13:
-                Statics.synths[synthIndex].controlChange(BasslineSynthesizer.MSG_CC_AUX1_SEND, cc);
-                break;
             case 14:
-                Statics.synths[synthIndex].controlChange(BasslineSynthesizer.MSG_CC_AUX2_SEND, cc);
+                ((RhythmSynthesizer) Statics.drums).controlChange(RhythmSynthesizer.MSG_CC_DRUM_VOLUME, cc);
                 break;
         }
         KnobData.factory(synthIndex);
@@ -280,7 +279,7 @@ public class KnobImpl {
         double[] contrls = KnobImpl.getControls(synthIndex);
 
         for (int i = 0; i < 16; i++) {
-            for (int j = 0; j < 6; j++) {
+            for (int j = 0; j < 9; j++) {
                 KnobImpl.knobs[synthIndex][i][j] = contrls[j];
             }
         }
@@ -321,13 +320,13 @@ public class KnobImpl {
         vals[3] = Statics.synths[synthIndex].envMod;
         vals[4] = Statics.synths[synthIndex].decay;
         vals[5] = Statics.synths[synthIndex].accent;
-        vals[6] = Statics.output.getSequencer().bpm;
-        vals[7] = Output.volume;
-        vals[8] = Output.getDelay().getTime();
-        vals[9] = Output.getDelay().getFeedback();
-        vals[12] = ((BasslineSynthesizer) Statics.synths[synthIndex]).distortion.getGain();
-        vals[13] = ((BasslineSynthesizer) Statics.synths[synthIndex]).aux1Amt;
-        vals[14] = ((BasslineSynthesizer) Statics.synths[synthIndex]).aux2Amt;
+        vals[6] = ((BasslineSynthesizer) Statics.synths[synthIndex]).distortion.getGain();
+        vals[7] = ((BasslineSynthesizer) Statics.synths[synthIndex]).aux1Amt;
+        vals[8] = ((BasslineSynthesizer) Statics.synths[synthIndex]).aux2Amt;
+        vals[9] = Statics.output.getSequencer().bpm;
+        vals[10] = Output.volume;
+        vals[11] = Output.getDelay().getTime();
+        vals[12] = Output.getDelay().getFeedback();
         return vals;
     }
 
@@ -342,11 +341,11 @@ public class KnobImpl {
         Statics.synths[synthIndex].envMod = vals[3];
         Statics.synths[synthIndex].decay = vals[4];
         Statics.synths[synthIndex].accent = vals[5];
-        ((BasslineSynthesizer) Statics.synths[synthIndex]).distortion.setGain(vals[12]);
-        ((BasslineSynthesizer) Statics.synths[synthIndex]).aux1Amt = vals[13];
-        ((BasslineSynthesizer) Statics.synths[synthIndex]).aux2Amt = vals[14];
-        //Statics.output.getSequencer().setBpm(vals[6]);
-        //Statics.output.volume=vals[7];
+        ((BasslineSynthesizer) Statics.synths[synthIndex]).distortion.setGain(vals[6]);
+        ((BasslineSynthesizer) Statics.synths[synthIndex]).aux1Amt = vals[7];
+        ((BasslineSynthesizer) Statics.synths[synthIndex]).aux2Amt = vals[8];
+        //Statics.output.getSequencer().setBpm(vals[9]);
+        //Statics.output.volume=vals[10];
     }
 
     public static void setControls(double[] vals) {
@@ -360,11 +359,11 @@ public class KnobImpl {
         if (id == 3) Statics.synths[synthIndex].envMod = vals;
         if (id == 4) Statics.synths[synthIndex].decay = vals;
         if (id == 5) Statics.synths[synthIndex].accent = vals;
-        if (id == 12) ((BasslineSynthesizer) Statics.synths[synthIndex]).distortion.setGain(vals);
-        if (id == 13) ((BasslineSynthesizer) Statics.synths[synthIndex]).aux1Amt = vals;
-        if (id == 14) ((BasslineSynthesizer) Statics.synths[synthIndex]).aux2Amt = vals;
-        //Statics.output.getSequencer().setBpm(vals[6]);
-        //Statics.output.volume=vals[7];
+        if (id == 6) ((BasslineSynthesizer) Statics.synths[synthIndex]).distortion.setGain(vals);
+        if (id == 7) ((BasslineSynthesizer) Statics.synths[synthIndex]).aux1Amt = vals;
+        if (id == 8) ((BasslineSynthesizer) Statics.synths[synthIndex]).aux2Amt = vals;
+        //Statics.output.getSequencer().setBpm(vals[9]);
+        //Statics.output.volume=vals[10];
     }
 
     public static void setControls(double vals, int id) {
@@ -414,37 +413,13 @@ public class KnobImpl {
                 dy = 360f;
                 break;
             case 6:
-                dx = 0f;
-                dy = 360f;
-                break;
             case 7:
-                dx = 0f;
-                dy = 360f;
-                break;
             case 8:
-                dx = 0f;
-                dy = 360f;
-                break;
             case 9:
-                dx = 0f;
-                dy = 360f;
-                break;
             case 10:
-                dx = 0f;
-                dy = 360f;
-                break;
             case 11:
-                dx = 0f;
-                dy = 360f;
-                break;
             case 12:
-                dx = 0f;
-                dy = 360f;
-                break;
             case 13:
-                dx = 0f;
-                dy = 360f;
-                break;
             case 14:
                 dx = 0f;
                 dy = 360f;
