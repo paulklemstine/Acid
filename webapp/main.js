@@ -1,5 +1,10 @@
 console.log("main.js loaded");
 
+const context = new Tone.Context({
+    latencyHint: 'playback'
+});
+Tone.setContext(context);
+
 const sampleBasePath = 'assets/';
 const samples808 = [
     '808bd.raw', '808sd_base.raw', '808ch.raw', '808oh.raw',
@@ -620,12 +625,7 @@ document.addEventListener('DOMContentLoaded', () => {
     startButton.textContent = 'Start Audio';
     container.appendChild(startButton);
     startButton.addEventListener('click', async () => {
-        const context = new Tone.Context({
-            latencyHint: 'playback',
-            bufferSize: 16384
-        });
-        Tone.setContext(context);
-        await Tone.start();
+        await Tone.getContext().resume();
         startButton.textContent = 'Loading...';
         await init();
         container.style.display = 'none';
