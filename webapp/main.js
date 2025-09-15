@@ -156,10 +156,23 @@ function randomizeSynthPattern(synthIndex) {
 }
 
 function applySynthPattern(synthIndex, pattern) {
-    const key = Harmony.notes.indexOf(document.getElementById('key-select').value);
     synthPatterns[synthIndex] = pattern.map(noteValue => {
-        if (noteValue === -1) return null;
-        const absoluteNote = key + noteValue;
+        if (noteValue === -1 || noteValue === null) return null;
+
+        let absoluteNote;
+        if (typeof noteValue === 'string') {
+            const noteNameMatch = noteValue.match(/[A-G]#?/);
+            const octaveMatch = noteValue.match(/\d+$/);
+            if (!noteNameMatch || !octaveMatch) return null;
+            const noteName = noteNameMatch[0];
+            const octave = parseInt(octaveMatch[0], 10);
+            const noteIndex = Harmony.notes.indexOf(noteName);
+            if (noteIndex === -1) return null;
+            absoluteNote = octave * 12 + noteIndex;
+        } else {
+            absoluteNote = noteValue;
+        }
+
         const noteName = Harmony.notes[((absoluteNote % 12) + 12) % 12];
         const octave = Math.floor(absoluteNote / 12);
         return { note: `${noteName}${octave}`, accent: false, slide: false };
