@@ -12,11 +12,10 @@ import com.badlogic.gdx.scenes.scene2d.InputListener;
 
 public class SequenceActor extends Actor {
 
-    private float y2;
-    private float x2;
+    private float y2 = -1;
+    private float x2 = -1;
 
 
-    public boolean notePause = false;
     public boolean noteAccent = false;
     public boolean noteSlide = false;
 
@@ -29,16 +28,29 @@ public class SequenceActor extends Actor {
                                      int pointer, int button) {
                 int x1 = (int) (x / ((getWidth() / 16)));
                 int y1 = (int) (y / (getHeight() / 31)) - 16;
-                notePause = Statics.output.getSequencer().basslines[Statics.currentSynth].pause[x1];
-                noteSlide = Statics.output.getSequencer().basslines[Statics.currentSynth].slide[x1];
-                noteAccent = Statics.output.getSequencer().basslines[Statics.currentSynth].accent[x1];
-                ttouch(x1, y1);
+
+                if (x1 >= 0 && x1 < 16 && y1 >= -16 && y1 < 16) {
+                    if (x1 == x2 && y1 == y2) {
+                        // Toggle pause on tap
+                        Statics.output.getSequencer().basslines[Statics.currentSynth].pause[x1] = !Statics.output.getSequencer().basslines[Statics.currentSynth].pause[x1];
+                    } else {
+                        // Set note properties on new note
+                        Statics.output.getSequencer().basslines[Statics.currentSynth].note[x1] = (byte) y1;
+                        Statics.output.getSequencer().basslines[Statics.currentSynth].pause[x1] = false;
+                        Statics.output.getSequencer().basslines[Statics.currentSynth].accent[x1] = noteAccent;
+                        Statics.output.getSequencer().basslines[Statics.currentSynth].slide[x1] = noteSlide;
+                    }
+                }
+                x2 = x1;
+                y2 = y1;
                 return true;
             }
 
             public void touchUp(InputEvent event, float x, float y,
                                 int pointer, int button) {
-                //new SequencerData();
+                x2 = -1;
+                y2 = -1;
+                new SequencerData();
             }
 
             public void touchDragged(InputEvent event, float x, float y,
@@ -46,44 +58,18 @@ public class SequenceActor extends Actor {
                 int x1 = (int) (x / ((getWidth() / 16)));
                 int y1 = (int) (y / (getHeight() / 31)) - 16;
                 if (x1 != x2 || y1 != y2) {
-                    ttouch(x1, y1);
+                    if (x1 >= 0 && x1 < 16 && y1 >= -16 && y1 < 16) {
+                        // Set note properties on new note
+                        Statics.output.getSequencer().basslines[Statics.currentSynth].note[x1] = (byte) y1;
+                        Statics.output.getSequencer().basslines[Statics.currentSynth].pause[x1] = false;
+                        Statics.output.getSequencer().basslines[Statics.currentSynth].accent[x1] = noteAccent;
+                        Statics.output.getSequencer().basslines[Statics.currentSynth].slide[x1] = noteSlide;
+                        x2 = x1;
+                        y2 = y1;
+                    }
                 }
             }
         });
-    }
-
-    public void ttouch(int x1, int y1) {
-        if (x1 < 16 && x1 > -1) {
-            Statics.output.getSequencer().basslines[Statics.currentSynth].note[x1] = (byte) y1;
-            boolean special = false;
-            if (x1 == x2 && y1 == y2) {
-                if (notePause) {
-                    notePause = false;
-                } else if (!noteSlide) {
-                    noteSlide = true;
-                } else {
-                    notePause = true;
-                    noteAccent = !noteAccent;
-                    noteSlide = false;
-                }
-            } else {
-                special = true;
-            }
-
-
-            if (x1 != x2) {
-                notePause = Statics.output.getSequencer().basslines[Statics.currentSynth].pause[x1];
-                noteSlide = Statics.output.getSequencer().basslines[Statics.currentSynth].slide[x1];
-                noteAccent = Statics.output.getSequencer().basslines[Statics.currentSynth].accent[x1];
-            }
-            if (special && notePause) notePause = false;
-            Statics.output.getSequencer().basslines[Statics.currentSynth].pause[x1] = notePause;
-            Statics.output.getSequencer().basslines[Statics.currentSynth].slide[x1] = noteSlide;
-            Statics.output.getSequencer().basslines[Statics.currentSynth].accent[x1] = noteAccent;
-        }
-
-        x2 = x1;
-        y2 = y1;
     }
 
     @Override

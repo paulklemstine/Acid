@@ -1219,6 +1219,34 @@ public class Acid implements ApplicationListener {
                                           }
                                       });
 
+        final TextButton accentButton = new TextButton("Accent", skin);
+        accentButton.setChecked(false);
+        accentButton.setColor(accentButton.isChecked() ? Color.WHITE : Color.RED);
+        table.addActor(accentButton);
+        accentButton.setPosition(120f, 65);
+        accentButton.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                accentButton.setChecked(!accentButton.isChecked());
+                accentButton.setColor(accentButton.isChecked() ? Color.WHITE : Color.RED);
+                sequenceMatrix.noteAccent = accentButton.isChecked();
+                return true;
+            }
+        });
+
+        final TextButton slideButton = new TextButton("Slide", skin);
+        slideButton.setChecked(false);
+        slideButton.setColor(slideButton.isChecked() ? Color.WHITE : Color.RED);
+        table.addActor(slideButton);
+        slideButton.setPosition(180f, 65);
+        slideButton.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                slideButton.setChecked(!slideButton.isChecked());
+                slideButton.setColor(slideButton.isChecked() ? Color.WHITE : Color.RED);
+                sequenceMatrix.noteSlide = slideButton.isChecked();
+                return true;
+            }
+        });
+
 
         final TextButton prevStep = new TextButton(" < ", skin);
         table.addActor(prevStep);
@@ -2013,7 +2041,12 @@ public class Acid implements ApplicationListener {
             if (Output.muteState[i]) {
                 button.setColor(Color.GRAY);
             } else if (sequencerView == i) {
-                button.setColor(Color.RED);
+                if (Output.muteState[i]) {
+                    button.setColor(Color.DARK_GRAY);
+                } else {
+                    float r = (float) (Math.sin(System.currentTimeMillis() / 100.0) + 1.0) / 2.0f;
+                    button.setColor(new Color(0, r, 0, 1));
+                }
             } else {
                 button.setColor(Color.WHITE);
             }
