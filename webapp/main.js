@@ -139,14 +139,13 @@ function createSynths() {
     for (let i = 0; i < 4; i++) {
         synthVolumes[i] = new Tone.Volume(0).toDestination();
         synthDistortions[i] = new Tone.Distortion(0.4);
-        synthDelays[i] = new Tone.FeedbackDelay("8n", 0.5).toDestination();
+        synthDelays[i] = new Tone.FeedbackDelay("8n", 0.5);
         synths[i] = new Tone.MonoSynth({
             oscillator: { type: "sawtooth" },
             envelope: { attack: 0.01, decay: 0.1, sustain: 0.2, release: 0.1 },
             filterEnvelope: { attack: 0.02, decay: 0.2, sustain: 0.5, release: 0.2, baseFrequency: 200, octaves: 4 }
         });
-        synths[i].chain(synthDistortions[i], synthVolumes[i]);
-        synths[i].connect(synthDelays[i]);
+        synths[i].chain(synthDistortions[i], synthDelays[i], synthVolumes[i]);
     }
 }
 
