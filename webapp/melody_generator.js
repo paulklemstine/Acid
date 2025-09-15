@@ -3,7 +3,7 @@ const MelodyGenerator = {
     const melody = [];
     for (let i = 0; i < patternLength; i++) {
       const degree = chordProgression[(Math.floor(i / 4)) % chordProgression.length];
-      const chord = Harmony.getNotesInChord(0, scale, degree - 1, 3, 0);
+      const chord = Harmony.getNotesInChord(36, scale, degree - 1, 3, 0);
 
       const noteIndex = Math.floor(Math.random() * chord.length);
       melody[i] = chord[noteIndex];
@@ -20,13 +20,13 @@ const MelodyGenerator = {
     for (let i = 0; i < patternLength; i++) {
       if (i % 4 === 0) {
         const degree = chordProgression[Math.floor(i / 4) % chordProgression.length];
-        const note = Harmony.getFromScale(degree - 1, scale) - 12;
+        const note = Harmony.getFromScale(degree - 1, scale) + 24;
         bassline[i] = Math.max(note, 0);
       } else {
         if (Math.random() < 0.3) {
           const degree = chordProgression[Math.floor(i / 4) % chordProgression.length];
-          const chord = Harmony.getNotesInChord(0, scale, degree - 1, 3, 0);
-          const note = chord[Math.floor(Math.random() * chord.length)] - 12;
+          const chord = Harmony.getNotesInChord(24, scale, degree - 1, 3, 0);
+          const note = chord[Math.floor(Math.random() * chord.length)];
           bassline[i] = Math.max(note, 0);
         } else {
           bassline[i] = -1;

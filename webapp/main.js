@@ -620,6 +620,11 @@ document.addEventListener('DOMContentLoaded', () => {
     startButton.textContent = 'Start Audio';
     container.appendChild(startButton);
     startButton.addEventListener('click', async () => {
+        const context = new Tone.Context({
+            latencyHint: 'playback',
+            bufferSize: 16384
+        });
+        Tone.setContext(context);
         await Tone.start();
         startButton.textContent = 'Loading...';
         await init();
