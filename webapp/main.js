@@ -130,15 +130,19 @@ function setupDrumSequencer() {
 }
 
 // --- Synthesizer (Piano Roll) ---
+const distortion = [];
+const delay = [];
+
 function createSynths() {
     for (let i = 0; i < 4; i++) {
-        const distortion = new Tone.Distortion(0.4);
+        distortion[i] = new Tone.Distortion(0);
+        delay[i] = new Tone.PingPongDelay("4n", 0);
         synthVolumes[i] = new Tone.Volume(0).toDestination();
         synths[i] = new Tone.MonoSynth({
             oscillator: { type: "sawtooth" },
             envelope: { attack: 0.01, decay: 0.1, sustain: 0.2, release: 0.1 },
             filterEnvelope: { attack: 0.02, decay: 0.2, sustain: 0.5, release: 0.2, baseFrequency: 200, octaves: 4 }
-        }).connect(distortion).connect(synthVolumes[i]);
+        }).connect(distortion[i]).connect(delay[i]).connect(synthVolumes[i]);
     }
 }
 
@@ -303,6 +307,41 @@ function setupKnobs() {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
             synths[synthIndex].filterEnvelope.sustain = 0.5 + (parseFloat(e.target.value) / 127) * 0.5;
+        }
+    });
+    document.getElementById('knob-waveform').addEventListener('input', e => {
+        if (activeView.startsWith('synth')) {
+            const synthIndex = parseInt(activeView.replace('synth', ''));
+            const waveformTypes = ["sawtooth", "square", "triangle", "sine"];
+            synths[synthIndex].oscillator.type = waveformTypes[e.target.value];
+        }
+    });
+
+    document.getElementById('knob-distortion').addEventListener('input', e => {
+        if (activeView.startsWith('synth')) {
+            const synthIndex = parseInt(activeView.replace('synth', ''));
+            distortion[synthIndex].distortion = (parseFloat(e.target.value) / 127);
+        }
+    });
+
+    document.getElementById('knob-delay-mix').addEventListener('input', e => {
+        if (activeView.startsWith('synth')) {
+            const synthIndex = parseInt(activeView.replace('synth', ''));
+            delay[synthIndex].wet.value = (parseFloat(e.target.value) / 127);
+        }
+    });
+
+    document.getElementById('knob-delay-time').addEventListener('input', e => {
+        if (activeView.startsWith('synth')) {
+            const synthIndex = parseInt(activeView.replace('synth', ''));
+            delay[synthIndex].delayTime.value = (parseFloat(e.target.value) / 127) * 2;
+        }
+    });
+
+    document.getElementById('knob-delay-feedback').addEventListener('input', e => {
+        if (activeView.startsWith('synth')) {
+            const synthIndex = parseInt(activeView.replace('synth', ''));
+            delay[synthIndex].feedback.value = (parseFloat(e.target.value) / 127) * 0.9;
         }
     });
 }
