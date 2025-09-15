@@ -146,6 +146,16 @@ body {
     flex-grow: 1;
     display: grid;
     grid-template-columns: repeat(16, 1fr);
+    position: relative;
+}
+
+#slide-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
 }
 
 .piano-roll-grid .step {
@@ -188,21 +198,6 @@ body {
     box-sizing: border-box;
 }
 
-.step.active.slide {
-    position: relative;
-}
-
-.step.active.slide::after {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 2px;
-    background-color: #fff;
-    top: 50%;
-    left: 100%;
-    transform: translateY(-50%);
-    z-index: 10;
-}
 
 button {
     background-color: #555;

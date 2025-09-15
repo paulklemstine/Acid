@@ -25,6 +25,7 @@ const muteStates = {
 };
 let isAccentMode = false;
 let isSlideMode = false;
+let slideCanvas, slideCtx;
 
 const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const octaves = 8;
@@ -89,6 +90,7 @@ function applyDrumPattern(pattern) {
             }
         }
     }
+    drawSlideLines(synthIndex);
 }
 
 function createDrumSequencerGrid() {
@@ -219,12 +221,57 @@ function shiftPattern(synthIndex, amount) {
     createSynthSequencerGrid(synthIndex);
 }
 
+function drawSlideLines(synthIndex) {
+    if (!slideCanvas) return;
+    const grid = document.querySelector('.piano-roll-grid');
+    slideCanvas.width = grid.scrollWidth;
+    slideCanvas.height = grid.scrollHeight;
+    slideCtx.clearRect(0, 0, slideCanvas.width, slideCanvas.height);
+
+    const pattern = synthPatterns[synthIndex];
+    if (!pattern) return;
+
+    slideCtx.strokeStyle = '#fff';
+    slideCtx.lineWidth = 2;
+
+    for (let i = 0; i < pattern.length; i++) {
+        const stepData = pattern[i];
+        if (stepData && stepData.slide) {
+            const nextStepData = pattern[(i + 1) % 16];
+            if (nextStepData) {
+                const currentCell = document.querySelector(`.step[data-note='${stepData.note}'][data-step='${i}']`);
+                const nextCell = document.querySelector(`.step[data-note='${nextStepData.note}'][data-step='${(i + 1) % 16}']`);
+
+                if (currentCell && nextCell) {
+                    const rect1 = currentCell.getBoundingClientRect();
+                    const rect2 = nextCell.getBoundingClientRect();
+                    const gridRect = grid.getBoundingClientRect();
+
+                    const x1 = rect1.left - gridRect.left + rect1.width / 2 + grid.scrollLeft;
+                    const y1 = rect1.top - gridRect.top + rect1.height / 2 + grid.scrollTop;
+                    const x2 = rect2.left - gridRect.left + rect2.width / 2 + grid.scrollLeft;
+                    const y2 = rect2.top - gridRect.top + rect2.height / 2 + grid.scrollTop;
+
+                    slideCtx.beginPath();
+                    slideCtx.moveTo(x1, y1);
+                    slideCtx.lineTo(x2, y2);
+                    slideCtx.stroke();
+                }
+            }
+        }
+    }
+}
+
 function createSynthSequencerGrid(synthIndex) {
     const gridContainer = document.querySelector('.piano-roll-grid');
     const keyboardContainer = document.querySelector('.keyboard');
     const gridContainerParent = document.querySelector('.piano-roll-grid-container');
 
-    gridContainer.innerHTML = '';
+    gridContainer.innerHTML = '<canvas id="slide-canvas"></canvas>';
+    slideCanvas = document.getElementById('slide-canvas');
+    if (slideCanvas) {
+        slideCtx = slideCanvas.getContext('2d');
+    }
     keyboardContainer.innerHTML = '';
     for (let octave = octaves - 1; octave >= 0; octave--) {
         for (const note of notes.slice().reverse()) {
@@ -267,6 +314,7 @@ function createSynthSequencerGrid(synthIndex) {
                         if (isAccentMode) cell.classList.add('accent');
                         if (isSlideMode) cell.classList.add('slide');
                     }
+                    drawSlideLines(synthIndex);
                 });
                 gridContainer.appendChild(cell);
             }
