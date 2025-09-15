@@ -640,7 +640,6 @@ async function init() {
         }
     });
     document.getElementById('down-button').addEventListener('click', () => {
-.
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
             shiftPattern(synthIndex, -1);
