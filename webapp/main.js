@@ -159,8 +159,9 @@ function applySynthPattern(synthIndex, pattern) {
     const key = Harmony.notes.indexOf(document.getElementById('key-select').value);
     synthPatterns[synthIndex] = pattern.map(noteValue => {
         if (noteValue === -1) return null;
-        const noteName = Harmony.notes[(key + noteValue) % 12];
-        const octave = Math.floor((key + noteValue) / 12);
+        const absoluteNote = key + noteValue;
+        const noteName = Harmony.notes[((absoluteNote % 12) + 12) % 12];
+        const octave = Math.floor(absoluteNote / 12);
         return { note: `${noteName}${octave}`, accent: false, slide: false };
     });
     createSynthSequencerGrid(synthIndex);
