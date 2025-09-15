@@ -14,6 +14,7 @@ const synthSequences = [];
 const synthPatterns = [[], [], [], []];
 let activeView = 'drums';
 let drumsVolume;
+let delay, aux1, aux2;
 const muteStates = {
     drums: false,
     synth0: false,
@@ -54,6 +55,7 @@ function createAudioBuffer(arrayBuffer) {
 // --- Drum Machine ---
 async function loadSamples() {
     drumsVolume = new Tone.Volume(0).toDestination();
+    drumsVolume.connect(delay).connect(aux1).connect(aux2);
     const promises = samples808.map(async (sampleName) => {
         const path = sampleBasePath + sampleName;
         const response = await fetch(path);
@@ -132,13 +134,13 @@ function setupDrumSequencer() {
 // --- Synthesizer (Piano Roll) ---
 function createSynths() {
     for (let i = 0; i < 4; i++) {
-        const distortion = new Tone.Distortion(0.4);
+        synthDistortions[i] = new Tone.Distortion(0.4);
         synthVolumes[i] = new Tone.Volume(0).toDestination();
         synths[i] = new Tone.MonoSynth({
             oscillator: { type: "sawtooth" },
             envelope: { attack: 0.01, decay: 0.1, sustain: 0.2, release: 0.1 },
             filterEnvelope: { attack: 0.02, decay: 0.2, sustain: 0.5, release: 0.2, baseFrequency: 200, octaves: 4 }
-        }).connect(distortion).connect(synthVolumes[i]);
+        }).connect(synthDistortions[i]).connect(synthVolumes[i]).connect(delay).connect(aux1).connect(aux2);
     }
 }
 
@@ -305,6 +307,14 @@ function setupKnobs() {
             synths[synthIndex].filterEnvelope.sustain = 0.5 + (parseFloat(e.target.value) / 127) * 0.5;
         }
     });
+
+    document.getElementById('knob-aux1').addEventListener('input', e => {
+        aux1.wet.value = (parseFloat(e.target.value) / 100);
+    });
+
+    document.getElementById('knob-aux2').addEventListener('input', e => {
+        aux2.wet.value = (parseFloat(e.target.value) / 100);
+    });
 }
 
 
@@ -381,9 +391,11 @@ function updateSongList() {
 
 // --- Main Init ---
 async function init() {
+    delay = new Tone.FeedbackDelay("8n", 0.5).toDestination();
+    aux1 = new Tone.Reverb().toDestination();
+    aux2 = new Tone.Chorus().toDestination().start();
     populateSelects();
     await loadSamples();
-    createDrumSequencerGrid();
     randomizeDrumPattern();
     setupDrumSequencer();
     createSynths();
