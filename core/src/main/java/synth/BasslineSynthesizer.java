@@ -37,7 +37,7 @@ public class BasslineSynthesizer
     private final ADREnvelope aeg;
     private final double aegLevel = 0.6D;
     private final ADREnvelope feg;
-    private final Distortion distortion;
+    public final Distortion distortion;
     private int tmp;
     public boolean waveSquare = false;
     private static final double[] MIDI_NOTES = new double[127];
@@ -52,11 +52,14 @@ public class BasslineSynthesizer
     public static final int MSG_CC_ACCENT = 38;
     public static final int MSG_CC_VOLUME = 39;
     public static final int MSG_CC_SYNTH_VOLUME = 40;
+    public static final int MSG_CC_DISTORTION_GAIN = 42;
+    public static final int MSG_CC_AUX1_SEND = 43;
+    public static final int MSG_CC_AUX2_SEND = 44;
     private double out;
     private double aux1;
-    private double aux1Amt;
+    public double aux1Amt;
     private double aux2;
-    private double aux2Amt;
+    public double aux2Amt;
 
     public BasslineSynthesizer() {
         this.decimator = new Decimator();
@@ -233,6 +236,25 @@ public class BasslineSynthesizer
                 if (newValue >= 0d && newValue <= 2d) {
                     this.volume = newValue;
                 }
+                break;
+            case MSG_CC_DISTORTION_GAIN:
+                newValue = value / 127.0D;
+                if (newValue >= 0d && newValue <= 1d) {
+                    this.distortion.setGain(1.0D + newValue * 10.0D);
+                }
+                break;
+            case MSG_CC_AUX1_SEND:
+                newValue = value / 127.0D;
+                if (newValue >= 0d && newValue <= 1d) {
+                    this.aux1Amt = newValue;
+                }
+                break;
+            case MSG_CC_AUX2_SEND:
+                newValue = value / 127.0D;
+                if (newValue >= 0d && newValue <= 1d) {
+                    this.aux2Amt = newValue;
+                }
+                break;
         }
     }
 

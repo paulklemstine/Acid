@@ -3,6 +3,7 @@
  public class Distortion
  {
    private double gain;
+   private double ratio;
    private double makeup;
    private Decimator decimator;
    private double prev;
@@ -32,12 +33,13 @@
  
    public final void setGain(double ratio)
    {
+     this.ratio = ratio;
      this.makeup = (ratio * 0.9D + 0.1D);
      this.gain = (1.0D / ratio);
    }
  
    public final double getGain() {
-     return this.gain;
+     return this.ratio;
    }
  
    private final double clip(double x)

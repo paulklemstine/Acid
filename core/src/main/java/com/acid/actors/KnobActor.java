@@ -36,13 +36,14 @@ public class KnobActor extends Actor {
         this.addListener(new InputListener() {
             private float distx;
             private float disty;
+            private float startRotation;
 
             public boolean touchDown(InputEvent event, float x, float y,
                                      int pointer, int button) {
                 distx = x;
                 disty = y;
+                startRotation = KnobImpl.getRotation(synthIndex, id);
                 KnobImpl.touchDown(synthIndex, id);
-//                ccpos = (int) ((int) ((KnobImpl.getRotation(id) * (127f / 360f) + 127 + 127 / 2) % 127) - 0);
                 return true;
             }
 
@@ -53,10 +54,8 @@ public class KnobActor extends Actor {
 
             public void touchDragged(InputEvent event, float x, float y,
                                      int pointer) {
-                // (ShapeRenderingActor.this).rotate((distx - x));
-                // ccpos = (int) ((int) ((KnobImpl.getRotation(id) * (127f / 360f) + 127 + 127 / 2) % 127) - 0);
-
-                KnobImpl.touchDragged(synthIndex, id, (distx - x) + (disty - y));
+                float newRotation = startRotation - ((distx - x) + (disty - y));
+                KnobImpl.touchDragged(synthIndex, id, newRotation);
             }
         });
     }
