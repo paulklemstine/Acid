@@ -177,7 +177,9 @@ function applySynthPattern(synthIndex, pattern) {
 
         const noteName = Harmony.notes[((absoluteNote % 12) + 12) % 12];
         const octave = Math.floor(absoluteNote / 12);
-        return { note: `${noteName}${octave}`, accent: false, slide: false };
+        const accent = Math.random() > 0.8;
+        const slide = Math.random() > 0.9;
+        return { note: `${noteName}${octave}`, accent: accent, slide: slide };
     });
     createSynthSequencerGrid(synthIndex);
 }
@@ -492,11 +494,6 @@ async function init() {
                     synthVolumes[synthIndex].mute = muteStates[trackId];
                 }
                 button.classList.toggle('muted', muteStates[trackId]);
-                if (muteStates[trackId]) {
-                    button.classList.remove('selected');
-                } else if (activeView === trackId) {
-                    button.classList.add('selected');
-                }
             }, 500);
         });
         button.addEventListener('mouseup', () => {
@@ -506,9 +503,7 @@ async function init() {
              activeView = button.id;
              updateView();
              document.querySelectorAll('.track-selector').forEach(b => b.classList.remove('selected'));
-             if (!button.classList.contains('muted')) {
-                button.classList.add('selected');
-             }
+             button.classList.add('selected');
         });
     });
 

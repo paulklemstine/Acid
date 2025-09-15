@@ -45,6 +45,16 @@ body {
     animation: none;
 }
 
+@keyframes flashing-red-green {
+    0% { background-color: #0f0; }
+    50% { background-color: #f00; }
+    100% { background-color: #0f0; }
+}
+
+.track-selector.selected.muted {
+    animation: flashing-red-green 1s infinite;
+}
+
 @keyframes flashing-green {
     0% { background-color: #0f0; }
     50% { background-color: #0a0; }

@@ -2039,14 +2039,17 @@ public class Acid implements ApplicationListener {
         for (int i = 0; i < selectionButtons.size(); i++) {
             TextButton button = selectionButtons.get(i);
             if (Output.muteState[i]) {
-                button.setColor(Color.GRAY);
-            } else if (sequencerView == i) {
-                if (Output.muteState[i]) {
-                    button.setColor(Color.DARK_GRAY);
-                } else {
+                if (sequencerView == i) {
+                    // Flashing green/red
                     float r = (float) (Math.sin(System.currentTimeMillis() / 100.0) + 1.0) / 2.0f;
-                    button.setColor(new Color(0, r, 0, 1));
+                    button.setColor(new Color(r, 1 - r, 0, 1));
+                } else {
+                    button.setColor(Color.GRAY);
                 }
+            } else if (sequencerView == i) {
+                // Flashing green
+                float r = (float) (Math.sin(System.currentTimeMillis() / 100.0) + 1.0) / 2.0f;
+                button.setColor(new Color(0, r, 0, 1));
             } else {
                 button.setColor(Color.WHITE);
             }
