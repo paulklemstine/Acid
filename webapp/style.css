@@ -79,11 +79,6 @@ body {
     margin-bottom: 5px;
 }
 
-.synth-knobs label {
-    display: inline-block;
-    width: 80px;
-}
-
 #sequence-matrix, #drum-matrix {
     width: 100%;
     background-color: #444;

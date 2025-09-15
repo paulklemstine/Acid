@@ -36,7 +36,9 @@ const Harmony = {
   },
 
   getFromScale(i, scale) {
-    return scale[i % scale.length] + 12 * Math.floor(i / scale.length);
+    const len = scale.length;
+    const note = scale[((i % len) + len) % len];
+    return note + 12 * Math.floor(i / len);
   },
 
   getNotesInChord(key, scale, degree, type = 3, inversion = 0) {
