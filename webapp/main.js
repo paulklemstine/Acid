@@ -14,7 +14,7 @@ const synthDistortions = [];
 const synthDelays = [];
 const synthSequences = [];
 const synthPatterns = [[], [], [], []];
-let activeView = 'drums';
+let activeView = 'synth0';
 let drumsVolume;
 const muteStates = {
     drums: false,
@@ -513,6 +513,7 @@ async function init() {
     setupKnobs();
     updateView();
     updateSongList();
+    document.getElementById('synth0').classList.add('selected');
 
     document.getElementById('randomize-button').addEventListener('click', () => {
         if (activeView === 'drums') randomizeDrumPattern();
@@ -639,6 +640,7 @@ async function init() {
         }
     });
     document.getElementById('down-button').addEventListener('click', () => {
+.
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
             shiftPattern(synthIndex, -1);
