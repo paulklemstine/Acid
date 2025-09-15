@@ -42,6 +42,17 @@ body {
 
 .track-selector.muted {
     background-color: #f00;
+    animation: none;
+}
+
+@keyframes flashing-green {
+    0% { background-color: #0f0; }
+    50% { background-color: #0a0; }
+    100% { background-color: #0f0; }
+}
+
+.track-selector.selected {
+    animation: flashing-green 1s infinite;
 }
 
 .right-panel {
@@ -162,6 +173,27 @@ body {
     box-shadow: 0 0 5px #fff;
 }
 
+.step.active.accent {
+    border: 2px solid #ff0; /* Yellow border for accent */
+    box-sizing: border-box;
+}
+
+.step.active.slide {
+    position: relative;
+}
+
+.step.active.slide::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background-color: #fff;
+    top: 50%;
+    left: 100%;
+    transform: translateY(-50%);
+    z-index: 10;
+}
+
 button {
     background-color: #555;
     color: #eee;
@@ -173,6 +205,10 @@ button {
 
 button:hover {
     background-color: #666;
+}
+
+button.active {
+    background-color: #ff8c00;
 }
 
 select {

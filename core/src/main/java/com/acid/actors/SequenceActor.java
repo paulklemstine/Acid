@@ -50,7 +50,6 @@ public class SequenceActor extends Actor {
                                 int pointer, int button) {
                 x2 = -1;
                 y2 = -1;
-                new SequencerData();
             }
 
             public void touchDragged(InputEvent event, float x, float y,

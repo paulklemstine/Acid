@@ -23,6 +23,8 @@ const muteStates = {
     synth2: false,
     synth3: false,
 };
+let isAccentMode = false;
+let isSlideMode = false;
 
 const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const octaves = 8;
@@ -238,22 +240,30 @@ function createSynthSequencerGrid(synthIndex) {
                 const stepData = synthPatterns[synthIndex][step];
                 if (stepData && stepData.note === noteName) {
                     cell.classList.add('active');
+                    if (stepData.accent) cell.classList.add('accent');
+                    if (stepData.slide) cell.classList.add('slide');
                 }
                 cell.addEventListener('click', () => {
-                    cell.classList.toggle('active');
-                    if (cell.classList.contains('active')) {
-                        synthPatterns[synthIndex][step] = { note: noteName, accent: false, slide: false };
-                    } else {
+                    const stepData = synthPatterns[synthIndex][step];
+                    if (stepData && stepData.note === noteName) {
+                        // Note exists, so remove it
                         synthPatterns[synthIndex][step] = null;
-                    }
-                    for(let o = octaves - 1; o >= 0; o--) {
-                        for (const n of notes.slice().reverse()) {
-                            const otherNoteName = `${n}${o}`;
-                            if (otherNoteName !== noteName) {
+                        cell.classList.remove('active', 'accent', 'slide');
+                    } else {
+                        // Note does not exist, or a different note exists in this step.
+                        // Deactivate other notes in this step first.
+                        for (let o = octaves - 1; o >= 0; o--) {
+                            for (const n of notes.slice().reverse()) {
+                                const otherNoteName = `${n}${o}`;
                                 const otherCell = document.querySelector(`.step[data-note='${otherNoteName}'][data-step='${step}']`);
-                                if (otherCell) otherCell.classList.remove('active');
+                                if (otherCell) otherCell.classList.remove('active', 'accent', 'slide');
                             }
                         }
+                        // Add the new note
+                        synthPatterns[synthIndex][step] = { note: noteName, accent: isAccentMode, slide: isSlideMode };
+                        cell.classList.add('active');
+                        if (isAccentMode) cell.classList.add('accent');
+                        if (isSlideMode) cell.classList.add('slide');
                     }
                 });
                 gridContainer.appendChild(cell);
@@ -482,6 +492,11 @@ async function init() {
                     synthVolumes[synthIndex].mute = muteStates[trackId];
                 }
                 button.classList.toggle('muted', muteStates[trackId]);
+                if (muteStates[trackId]) {
+                    button.classList.remove('selected');
+                } else if (activeView === trackId) {
+                    button.classList.add('selected');
+                }
             }, 500);
         });
         button.addEventListener('mouseup', () => {
@@ -490,6 +505,10 @@ async function init() {
         button.addEventListener('click', () => {
              activeView = button.id;
              updateView();
+             document.querySelectorAll('.track-selector').forEach(b => b.classList.remove('selected'));
+             if (!button.classList.contains('muted')) {
+                button.classList.add('selected');
+             }
         });
     });
 
@@ -624,6 +643,16 @@ async function init() {
             localStorage.removeItem(songName);
             updateSongList();
         }
+    });
+
+    document.getElementById('accent-button').addEventListener('click', (e) => {
+        isAccentMode = !isAccentMode;
+        e.target.classList.toggle('active', isAccentMode);
+    });
+
+    document.getElementById('slide-button').addEventListener('click', (e) => {
+        isSlideMode = !isSlideMode;
+        e.target.classList.toggle('active', isSlideMode);
     });
 }
 
