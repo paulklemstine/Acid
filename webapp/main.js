@@ -175,12 +175,24 @@ function shiftPattern(synthIndex, amount) {
     for (let i = 0; i < synthPatterns[synthIndex].length; i++) {
         const stepData = synthPatterns[synthIndex][i];
         if (stepData) {
-            const noteName = stepData.note.slice(0, -1);
-            const octave = parseInt(stepData.note.slice(-1));
+            const noteNameWithOctave = stepData.note;
+            const noteNameMatch = noteNameWithOctave.match(/[A-G]#?/);
+            const octaveMatch = noteNameWithOctave.match(/\d+$/);
+
+            if (!noteNameMatch || !octaveMatch) continue;
+
+            const noteName = noteNameMatch[0];
+            const octave = parseInt(octaveMatch[0]);
             const noteIndex = notes.indexOf(noteName);
-            const newNoteIndex = noteIndex + amount;
-            const newOctave = octave + Math.floor(newNoteIndex / 12);
-            const newNoteName = notes[newNoteIndex % 12];
+
+            if (noteIndex === -1) continue;
+
+            const absoluteNote = octave * 12 + noteIndex;
+            const newAbsoluteNote = absoluteNote + amount;
+            const newOctave = Math.floor(newAbsoluteNote / 12);
+            const newNoteIndex = ((newAbsoluteNote % 12) + 12) % 12;
+            const newNoteName = notes[newNoteIndex];
+
             if (newOctave >= 0 && newOctave < octaves) {
                 stepData.note = `${newNoteName}${newOctave}`;
             }
@@ -314,7 +326,7 @@ function setupKnobs() {
     document.getElementById('delay-time-knob').addEventListener('input', e => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
-            synthDelays[synthIndex].delayTime.value = (parseFloat(e.target.value) / 100) * 2;
+            synthDelays[synthIndex].delayTime.value = (parseFloat(e.target.value) / 100);
         }
     });
 
