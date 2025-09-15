@@ -10,6 +10,8 @@ const players = {};
 let drumSequence;
 const synths = [];
 const synthVolumes = [];
+const synthDistortions = [];
+const synthDelays = [];
 const synthSequences = [];
 const synthPatterns = [[], [], [], []];
 let activeView = 'drums';
@@ -132,13 +134,16 @@ function setupDrumSequencer() {
 // --- Synthesizer (Piano Roll) ---
 function createSynths() {
     for (let i = 0; i < 4; i++) {
-        const distortion = new Tone.Distortion(0.4);
         synthVolumes[i] = new Tone.Volume(0).toDestination();
+        synthDistortions[i] = new Tone.Distortion(0.4);
+        synthDelays[i] = new Tone.FeedbackDelay("8n", 0.5).toDestination();
         synths[i] = new Tone.MonoSynth({
             oscillator: { type: "sawtooth" },
             envelope: { attack: 0.01, decay: 0.1, sustain: 0.2, release: 0.1 },
             filterEnvelope: { attack: 0.02, decay: 0.2, sustain: 0.5, release: 0.2, baseFrequency: 200, octaves: 4 }
-        }).connect(distortion).connect(synthVolumes[i]);
+        });
+        synths[i].chain(synthDistortions[i], synthVolumes[i]);
+        synths[i].connect(synthDelays[i]);
     }
 }
 
@@ -303,6 +308,35 @@ function setupKnobs() {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
             synths[synthIndex].filterEnvelope.sustain = 0.5 + (parseFloat(e.target.value) / 127) * 0.5;
+        }
+    });
+
+    document.getElementById('delay-time-knob').addEventListener('input', e => {
+        if (activeView.startsWith('synth')) {
+            const synthIndex = parseInt(activeView.replace('synth', ''));
+            synthDelays[synthIndex].delayTime.value = (parseFloat(e.target.value) / 100) * 2;
+        }
+    });
+
+    document.getElementById('delay-feedback-knob').addEventListener('input', e => {
+        if (activeView.startsWith('synth')) {
+            const synthIndex = parseInt(activeView.replace('synth', ''));
+            synthDelays[synthIndex].feedback.value = (parseFloat(e.target.value) / 100) * 0.9;
+        }
+    });
+
+    document.getElementById('knob-drive').addEventListener('input', e => {
+        if (activeView.startsWith('synth')) {
+            const synthIndex = parseInt(activeView.replace('synth', ''));
+            synthDistortions[synthIndex].distortion = (parseFloat(e.target.value) / 127);
+        }
+    });
+
+    document.getElementById('knob-wave').addEventListener('click', () => {
+        if (activeView.startsWith('synth')) {
+            const synthIndex = parseInt(activeView.replace('synth', ''));
+            const currentWave = synths[synthIndex].oscillator.type;
+            synths[synthIndex].oscillator.type = currentWave === 'sawtooth' ? 'square' : 'sawtooth';
         }
     });
 }
