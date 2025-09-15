@@ -53,7 +53,7 @@ const Harmony = {
     for (let i = 0; i < melody.length; i++) {
         if (melody[i] !== -1) {
             const degree = chordProgression[Math.floor(i / 4) % chordProgression.length];
-            const chord = this.getNotesInChord(0, scale, degree - 1, 3, 0);
+            const chord = this.getNotesInChord(36, scale, degree - 1, 3, 0);
 
             let harmonyNote = -1;
             for (let j = 0; j < chord.length; j++) {
