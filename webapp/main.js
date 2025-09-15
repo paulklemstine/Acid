@@ -90,7 +90,6 @@ function applyDrumPattern(pattern) {
             }
         }
     }
-    drawSlideLines(synthIndex);
 }
 
 function createDrumSequencerGrid() {
