@@ -23,6 +23,9 @@ const muteStates = {
     synth2: false,
     synth3: false,
 };
+let isAccentMode = false;
+let isSlideMode = false;
+let slideCanvas, slideCtx;
 
 const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const octaves = 8;
@@ -175,7 +178,9 @@ function applySynthPattern(synthIndex, pattern) {
 
         const noteName = Harmony.notes[((absoluteNote % 12) + 12) % 12];
         const octave = Math.floor(absoluteNote / 12);
-        return { note: `${noteName}${octave}`, accent: false, slide: false };
+        const accent = Math.random() > 0.8;
+        const slide = Math.random() > 0.9;
+        return { note: `${noteName}${octave}`, accent: accent, slide: slide };
     });
     createSynthSequencerGrid(synthIndex);
 }
@@ -215,12 +220,57 @@ function shiftPattern(synthIndex, amount) {
     createSynthSequencerGrid(synthIndex);
 }
 
+function drawSlideLines(synthIndex) {
+    if (!slideCanvas) return;
+    const grid = document.querySelector('.piano-roll-grid');
+    slideCanvas.width = grid.scrollWidth;
+    slideCanvas.height = grid.scrollHeight;
+    slideCtx.clearRect(0, 0, slideCanvas.width, slideCanvas.height);
+
+    const pattern = synthPatterns[synthIndex];
+    if (!pattern) return;
+
+    slideCtx.strokeStyle = '#fff';
+    slideCtx.lineWidth = 2;
+
+    for (let i = 0; i < pattern.length; i++) {
+        const stepData = pattern[i];
+        if (stepData && stepData.slide) {
+            const nextStepData = pattern[(i + 1) % 16];
+            if (nextStepData) {
+                const currentCell = document.querySelector(`.step[data-note='${stepData.note}'][data-step='${i}']`);
+                const nextCell = document.querySelector(`.step[data-note='${nextStepData.note}'][data-step='${(i + 1) % 16}']`);
+
+                if (currentCell && nextCell) {
+                    const rect1 = currentCell.getBoundingClientRect();
+                    const rect2 = nextCell.getBoundingClientRect();
+                    const gridRect = grid.getBoundingClientRect();
+
+                    const x1 = rect1.left - gridRect.left + rect1.width / 2 + grid.scrollLeft;
+                    const y1 = rect1.top - gridRect.top + rect1.height / 2 + grid.scrollTop;
+                    const x2 = rect2.left - gridRect.left + rect2.width / 2 + grid.scrollLeft;
+                    const y2 = rect2.top - gridRect.top + rect2.height / 2 + grid.scrollTop;
+
+                    slideCtx.beginPath();
+                    slideCtx.moveTo(x1, y1);
+                    slideCtx.lineTo(x2, y2);
+                    slideCtx.stroke();
+                }
+            }
+        }
+    }
+}
+
 function createSynthSequencerGrid(synthIndex) {
     const gridContainer = document.querySelector('.piano-roll-grid');
     const keyboardContainer = document.querySelector('.keyboard');
     const gridContainerParent = document.querySelector('.piano-roll-grid-container');
 
-    gridContainer.innerHTML = '';
+    gridContainer.innerHTML = '<canvas id="slide-canvas"></canvas>';
+    slideCanvas = document.getElementById('slide-canvas');
+    if (slideCanvas) {
+        slideCtx = slideCanvas.getContext('2d');
+    }
     keyboardContainer.innerHTML = '';
     for (let octave = octaves - 1; octave >= 0; octave--) {
         for (const note of notes.slice().reverse()) {
@@ -238,23 +288,32 @@ function createSynthSequencerGrid(synthIndex) {
                 const stepData = synthPatterns[synthIndex][step];
                 if (stepData && stepData.note === noteName) {
                     cell.classList.add('active');
+                    if (stepData.accent) cell.classList.add('accent');
+                    if (stepData.slide) cell.classList.add('slide');
                 }
                 cell.addEventListener('click', () => {
-                    cell.classList.toggle('active');
-                    if (cell.classList.contains('active')) {
-                        synthPatterns[synthIndex][step] = { note: noteName, accent: false, slide: false };
-                    } else {
+                    const stepData = synthPatterns[synthIndex][step];
+                    if (stepData && stepData.note === noteName) {
+                        // Note exists, so remove it
                         synthPatterns[synthIndex][step] = null;
-                    }
-                    for(let o = octaves - 1; o >= 0; o--) {
-                        for (const n of notes.slice().reverse()) {
-                            const otherNoteName = `${n}${o}`;
-                            if (otherNoteName !== noteName) {
+                        cell.classList.remove('active', 'accent', 'slide');
+                    } else {
+                        // Note does not exist, or a different note exists in this step.
+                        // Deactivate other notes in this step first.
+                        for (let o = octaves - 1; o >= 0; o--) {
+                            for (const n of notes.slice().reverse()) {
+                                const otherNoteName = `${n}${o}`;
                                 const otherCell = document.querySelector(`.step[data-note='${otherNoteName}'][data-step='${step}']`);
-                                if (otherCell) otherCell.classList.remove('active');
+                                if (otherCell) otherCell.classList.remove('active', 'accent', 'slide');
                             }
                         }
+                        // Add the new note
+                        synthPatterns[synthIndex][step] = { note: noteName, accent: isAccentMode, slide: isSlideMode };
+                        cell.classList.add('active');
+                        if (isAccentMode) cell.classList.add('accent');
+                        if (isSlideMode) cell.classList.add('slide');
                     }
+                    drawSlideLines(synthIndex);
                 });
                 gridContainer.appendChild(cell);
             }
@@ -490,6 +549,8 @@ async function init() {
         button.addEventListener('click', () => {
              activeView = button.id;
              updateView();
+             document.querySelectorAll('.track-selector').forEach(b => b.classList.remove('selected'));
+             button.classList.add('selected');
         });
     });
 
@@ -624,6 +685,16 @@ async function init() {
             localStorage.removeItem(songName);
             updateSongList();
         }
+    });
+
+    document.getElementById('accent-button').addEventListener('click', (e) => {
+        isAccentMode = !isAccentMode;
+        e.target.classList.toggle('active', isAccentMode);
+    });
+
+    document.getElementById('slide-button').addEventListener('click', (e) => {
+        isSlideMode = !isSlideMode;
+        e.target.classList.toggle('active', isSlideMode);
     });
 }
 

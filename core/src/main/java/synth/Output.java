@@ -137,6 +137,19 @@ public class Output implements Runnable {
                 }
 
 
+                boolean allSynthsMuted = true;
+                for (int j = 0; j < Statics.NUM_SYNTHS; j++) {
+                    if (!muteState[j]) {
+                        allSynthsMuted = false;
+                        break;
+                    }
+                }
+
+                if (allSynthsMuted) {
+                    delay.mute();
+                    reverb.mute();
+                }
+
                 double[] del = delay.output();
                 left += del[0];
                 right += del[1];

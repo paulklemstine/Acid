@@ -162,11 +162,14 @@ public class PatternGenerator {
         }
         java.util.Collections.sort(notes);
         int noteIndex = 0;
-        for (int i = 0; i_real < arpeggiatedPattern.length; i++) {
+        int i_real = 0;
+        for (int i = 0; i < pattern.length && i_real < arpeggiatedPattern.length; i++) {
             if (pattern[i] != 0) {
                 for (int j = 0; j < octaves; j++) {
-                    arpeggiatedPattern[i_real] = notes.get(noteIndex % notes.size()) + (12 * j);
-                    i_real++;
+                    if (i_real < arpeggiatedPattern.length) {
+                        arpeggiatedPattern[i_real] = notes.get(noteIndex % notes.size()) + (12 * j);
+                        i_real++;
+                    }
                 }
                 noteIndex++;
             }

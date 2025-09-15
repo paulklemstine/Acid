@@ -29,7 +29,6 @@ public class BasslineSynthesizer
     public double accent;
     private double vol_i;
     private double gain_i;
-    public double volume = 1.0;
     private static final double DECAY_MAX = 0.125D;
     private static final double DECAY_MIN = 20.0D;
     private static final int coeffOptimization = 16;
@@ -39,7 +38,6 @@ public class BasslineSynthesizer
     private final ADREnvelope feg;
     private final Distortion distortion;
     private int tmp;
-    public boolean waveSquare = false;
     private static final double[] MIDI_NOTES = new double[127];
     public static final int MSG_NOTE_ON = 30;
     public static final int MSG_NOTE_OFF = 31;
@@ -51,7 +49,6 @@ public class BasslineSynthesizer
     public static final int MSG_CC_DECAY = 37;
     public static final int MSG_CC_ACCENT = 38;
     public static final int MSG_CC_VOLUME = 39;
-    public static final int MSG_CC_SYNTH_VOLUME = 40;
     private double out;
     private double aux1;
     private double aux1Amt;
@@ -83,6 +80,10 @@ public class BasslineSynthesizer
         this.feg.setSamplingFrequency(this.SAMPLING_FREQUENCY / 16.0D);
         randomize();
     }
+
+    public boolean waveSquare = false;
+    public double volume = 1.0;
+    public static final int MSG_CC_SYNTH_VOLUME = 40;
 
     public void randomize() {
         if (Math.random() > 0.5D) {
@@ -134,7 +135,7 @@ public class BasslineSynthesizer
                 this.osc.setFrequency(this.frequency * this.tune);
             }
 
-            this.out = (this.distortion.distort(this.filter.filter(this.osc.tick() * this.aeg.tick())) * 1.66D) * this.volume;
+            this.out = (this.distortion.distort(this.filter.filter(this.osc.tick() * this.aeg.tick())) * 1.66D);
             return this.out;
         }
 
@@ -227,12 +228,6 @@ public class BasslineSynthesizer
                 if (newValue >= 0d && newValue <= 1d) {
                     this.accent = (newValue);
                 }
-                break;
-            case MSG_CC_SYNTH_VOLUME:
-                newValue = value / 127.0D;
-                if (newValue >= 0d && newValue <= 2d) {
-                    this.volume = newValue;
-                }
         }
     }
 
@@ -277,4 +272,3 @@ public class BasslineSynthesizer
             MIDI_NOTES[(int) i] = (8.1757989156D * Math.pow(2.0D, i / 12.0D));
     }
 }
-

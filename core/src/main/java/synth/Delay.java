@@ -86,6 +86,13 @@ public class Delay {
         return feedback;
     }
 
+    public void mute() {
+        for (int i = 0; i < this.length; i++) {
+            this.buffer_l[i] = 0;
+            this.buffer_r[i] = 0;
+        }
+    }
+
     public double[] output() {
         this.wpos += 1;
         this.rpos += this.rdelta;

@@ -49,6 +49,9 @@ public class SequencerData extends InstrumentData {
     }
 
     public static void render(ShapeRenderer renderer1, float skipx, float skipy, int synthIndex) {
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        Gdx.gl.glLineWidth(3);
         renderer1.begin(ShapeRenderer.ShapeType.Line);
         for (int i = 0; i < 16; i++) {
             if (Statics.output.getSequencer().basslines[synthIndex].pause[i]) {
@@ -88,6 +91,7 @@ public class SequencerData extends InstrumentData {
             }
         }
         renderer1.end();
+        Gdx.gl.glLineWidth(1);
 
         renderer1.begin(ShapeRenderer.ShapeType.Filled);
         for (int i = 0; i < 16; i++) {
@@ -96,26 +100,17 @@ public class SequencerData extends InstrumentData {
             }
             if (Statics.output.getSequencer().basslines[synthIndex].accent[i]) {
                 renderer1.setColor(ColorHelper.rainbowInverse());
+                renderer1.circle(i * skipx + skipx / 2, (Statics.output.getSequencer().basslines[synthIndex].note[i] + 16) * skipy + skipy / 2, Math.min(skipx, skipy) / 2);
+                renderer1.setColor(Color.BLACK);
+                renderer1.circle(i * skipx + skipx / 2, (Statics.output.getSequencer().basslines[synthIndex].note[i] + 16) * skipy + skipy / 2, Math.min(skipx, skipy) / 3);
+
             } else {
                 renderer1.setColor(ColorHelper.rainbowLight());
-            }
-
-            if (Statics.output.getSequencer().basslines[synthIndex].accent[i]) {
-//                    if (i==0||!Statics.output.getSequencer().bassline.slide[i-1])
-                float cx = Math.min(skipx, skipy);
-                renderer1
-                        .rect(
-                                i * skipx + ((skipx - cx) / 2),
-                                (Statics.output.getSequencer().basslines[synthIndex].note[i] + 16)
-                                        * skipy, cx,
-                                cx);
-//                        renderer1.circle(i * skipx + skipx / 2, (Statics.output.getSequencer().bassline.note[i] + 16) * skipy + skipy / 2, Math.min(skipx, skipy) / 2);
-
-            } else {
                 renderer1.circle(i * skipx + skipx / 2, (Statics.output.getSequencer().basslines[synthIndex].note[i] + 16) * skipy + skipy / 2, Math.min(skipx, skipy) / 2);
             }
         }
         renderer1.end();
+        Gdx.gl.glDisable(GL20.GL_BLEND);
     }
 
     public static void render(ShapeRenderer renderer1, float skipx, float skipy) {
