@@ -10,6 +10,7 @@ const players = {};
 let drumSequence;
 const synths = [];
 const synthVolumes = [];
+const synthDistortions = [];
 const synthSequences = [];
 const synthPatterns = [[], [], [], []];
 let activeView = 'drums';
