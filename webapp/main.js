@@ -268,8 +268,8 @@ function drawSlideLines(synthIndex) {
         let y1 = noteRow1 * cellHeight + cellHeight / 2;
 
         // Apply the final vertical and horizontal offsets requested by the user
-        y1 += 54 * cellHeight;
-        x1 += cellWidth;
+        y1 += 90 * cellHeight;
+        x1 -= cellWidth;
 
         const nextStepData = pattern[(i + 1) % 16];
         if (!nextStepData) continue;
