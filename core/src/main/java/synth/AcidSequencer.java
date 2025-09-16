@@ -33,6 +33,73 @@ public class AcidSequencer {
         this.rhythm = createRhythm(this.patternLength);
     }
 
+    public void generateEuclideanRhythm() {
+        this.rhythm = new int[7][16];
+        // BD
+        this.rhythm[0] = toIntArray(generateEuclideanRhythmPattern(16, 4));
+        // SD
+        this.rhythm[1] = toIntArray(generateEuclideanRhythmPattern(16, 4));
+        // CH
+        this.rhythm[2] = toIntArray(generateEuclideanRhythmPattern(16, 8));
+        // OH
+        this.rhythm[3] = toIntArray(generateEuclideanRhythmPattern(16, 2));
+    }
+
+    private static boolean[] generateEuclideanRhythmPattern(int steps, int pulses) {
+        if (pulses > steps || pulses <= 0 || steps <= 0) {
+            return new boolean[steps];
+        }
+
+        java.util.ArrayList<Integer> pattern = new java.util.ArrayList<>();
+        java.util.ArrayList<Integer> counts = new java.util.ArrayList<>();
+        java.util.ArrayList<Integer> remainders = new java.util.ArrayList<>();
+        int divisor = steps - pulses;
+        remainders.add(pulses);
+        int level = 0;
+
+        while (true) {
+            counts.add(divisor / remainders.get(level));
+            remainders.add(divisor % remainders.get(level));
+            divisor = remainders.get(level);
+            level++;
+            if (remainders.get(level) <= 1) {
+                break;
+            }
+        }
+        counts.add(divisor);
+
+        build(level, counts, remainders, pattern);
+
+        boolean[] result = new boolean[steps];
+        for (int i = 0; i < pattern.size(); i++) {
+            result[i] = pattern.get(pattern.size() - 1 - i) == 1;
+        }
+        return result;
+    }
+
+    private static void build(int level, java.util.ArrayList<Integer> counts, java.util.ArrayList<Integer> remainders, java.util.ArrayList<Integer> pattern) {
+        if (level > -1) {
+            for (int i = 0; i < counts.get(level); i++) {
+                build(level - 1, counts, remainders, pattern);
+            }
+            if (remainders.get(level) != 0) {
+                build(level - 2, counts, remainders, pattern);
+            }
+        } else if (level == -1) {
+            pattern.add(0);
+        } else if (level == -2) {
+            pattern.add(1);
+        }
+    }
+
+    private int[] toIntArray(boolean[] a) {
+        int[] res = new int[a.length];
+        for(int i = 0; i < a.length; i++) {
+            res[i] = a[i] ? 1 : 0;
+        }
+        return res;
+    }
+
     public void randomizeSequence(int index, int[] scale) {
 //        if (!Statics.drumsSelected) {
         double[] basicCoeffs = {0.5D, 0.5D, 0.5D, 0.5D};

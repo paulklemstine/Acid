@@ -38,15 +38,22 @@
                 <button id="mutate-rhythm-button">Mutate Rhythm</button>
                 <button id="mutate-accents-button">Mutate Accents</button>
                 <button id="mutate-slides-button">Mutate Slides</button>
-                <button>Arpeggiate</button>
+                <button id="arpeggiate-button">Arpeggiate</button>
+                <select id="arpeggiate-direction-select">
+                    <option>up</option>
+                    <option>down</option>
+                    <option>up-down</option>
+                </select>
                 <button>Transpose</button>
-                <button>Gen Drums</button>
+                <button id="gen-drums-button">Gen Drums</button>
+                <button id="gen-euclidean-button">Gen Euclidean</button>
                 <label for="key-select">Key:</label>
                 <select id="key-select"></select>
                 <label for="scale-select">Scale:</label>
                 <select id="scale-select"></select>
                 <label for="progression-select">Progression:</label>
                 <select id="progression-select"></select>
+                <button id="random-progression-button">Random</button>
             </div>
         </aside>
         <main class="main-content">
@@ -76,8 +83,6 @@
              <div class="transport-controls">
                 <button>Rec</button>
                 <button>Free</button>
-                <button id="accent-button">Accent</button>
-                <button id="slide-button">Slide</button>
                 <button id="play-pause-button">||</button>
                 <div class="song-position">
                     <button>&lt;</button>
@@ -116,6 +121,8 @@
                 <button id="down-button">Down</button>
                 <button id="oct-up-button">Oct Up</button>
                 <button id="oct-down-button">Oct Down</button>
+                <button id="seq-oct-up-button">Seq Oct Up</button>
+                <button id="seq-oct-down-button">Seq Oct Down</button>
             </div>
         </aside>
     </div>

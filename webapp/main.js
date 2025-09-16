@@ -23,12 +23,12 @@ const muteStates = {
     synth2: false,
     synth3: false,
 };
-let isAccentMode = false;
-let isSlideMode = false;
 let slideCanvas, slideCtx;
+const octaveOffsets = [0, 0, 0, 0];
 
 const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const octaves = 8;
+const displayOctaves = 3;
 
 // --- Drum Pattern Templates ---
 const drumTemplates = [
@@ -159,18 +159,26 @@ function randomizeSynthPattern(synthIndex) {
 
 function applySynthPattern(synthIndex, pattern) {
     synthPatterns[synthIndex] = pattern.map(noteValue => {
-        if (noteValue === -1 || noteValue === null) return null;
+        const isPaused = noteValue === -1 || noteValue === null;
 
         let absoluteNote;
-        if (typeof noteValue === 'string') {
+        if (isPaused) {
+            absoluteNote = 48; // Default to C4 for paused notes
+        } else if (typeof noteValue === 'string') {
             const noteNameMatch = noteValue.match(/[A-G]#?/);
             const octaveMatch = noteValue.match(/\d+$/);
-            if (!noteNameMatch || !octaveMatch) return null;
-            const noteName = noteNameMatch[0];
-            const octave = parseInt(octaveMatch[0], 10);
-            const noteIndex = Harmony.notes.indexOf(noteName);
-            if (noteIndex === -1) return null;
-            absoluteNote = octave * 12 + noteIndex;
+            if (!noteNameMatch || !octaveMatch) {
+                 absoluteNote = 48;
+            } else {
+                const noteName = noteNameMatch[0];
+                const octave = parseInt(octaveMatch[0], 10);
+                const noteIndex = Harmony.notes.indexOf(noteName);
+                if (noteIndex === -1) {
+                    absoluteNote = 48;
+                } else {
+                    absoluteNote = octave * 12 + noteIndex;
+                }
+            }
         } else {
             absoluteNote = noteValue;
         }
@@ -179,20 +187,20 @@ function applySynthPattern(synthIndex, pattern) {
         const octave = Math.floor(absoluteNote / 12);
         const accent = Math.random() > 0.8;
         const slide = Math.random() > 0.9;
-        return { note: `${noteName}${octave}`, accent: accent, slide: slide };
+        return { note: `${noteName}${octave}`, accent: accent, slide: slide, pause: isPaused };
     });
     createSynthSequencerGrid(synthIndex);
 }
 
 function clearSynthPattern(synthIndex) {
-    synthPatterns[synthIndex] = [];
-    createSynthSequencerGrid(synthIndex);
+    const pattern = Array(16).fill(-1);
+    applySynthPattern(synthIndex, pattern);
 }
 
 function shiftPattern(synthIndex, amount) {
     for (let i = 0; i < synthPatterns[synthIndex].length; i++) {
         const stepData = synthPatterns[synthIndex][i];
-        if (stepData) {
+        if (stepData && !stepData.pause) {
             const noteNameWithOctave = stepData.note;
             const noteNameMatch = noteNameWithOctave.match(/[A-G]#?/);
             const octaveMatch = noteNameWithOctave.match(/\d+$/);
@@ -222,6 +230,8 @@ function shiftPattern(synthIndex, amount) {
 function drawSlideLines(synthIndex) {
     if (!slideCanvas) return;
     const grid = document.querySelector('.piano-roll-grid');
+    if (!grid) return;
+
     slideCanvas.width = grid.scrollWidth;
     slideCanvas.height = grid.scrollHeight;
     slideCtx.clearRect(0, 0, slideCanvas.width, slideCanvas.height);
@@ -229,34 +239,75 @@ function drawSlideLines(synthIndex) {
     const pattern = synthPatterns[synthIndex];
     if (!pattern) return;
 
-    slideCtx.strokeStyle = '#fff';
-    slideCtx.lineWidth = 2;
+    const octaveOffset = octaveOffsets[synthIndex];
+    const cellHeight = grid.scrollHeight / (displayOctaves * 12);
+    const cellWidth = grid.scrollWidth / 16;
+    const startOctave = 4 + octaveOffset;
+    const highestOctave = startOctave + displayOctaves - 1;
 
     for (let i = 0; i < pattern.length; i++) {
         const stepData = pattern[i];
-        if (stepData && stepData.slide) {
-            const nextStepData = pattern[(i + 1) % 16];
-            if (nextStepData) {
-                const currentCell = document.querySelector(`.step[data-note='${stepData.note}'][data-step='${i}']`);
-                const nextCell = document.querySelector(`.step[data-note='${nextStepData.note}'][data-step='${(i + 1) % 16}']`);
-
-                if (currentCell && nextCell) {
-                    const rect1 = currentCell.getBoundingClientRect();
-                    const rect2 = nextCell.getBoundingClientRect();
-                    const gridRect = grid.getBoundingClientRect();
-
-                    const x1 = rect1.left - gridRect.left + rect1.width / 2 + grid.scrollLeft;
-                    const y1 = rect1.top - gridRect.top + rect1.height / 2 + grid.scrollTop;
-                    const x2 = rect2.left - gridRect.left + rect2.width / 2 + grid.scrollLeft;
-                    const y2 = rect2.top - gridRect.top + rect2.height / 2 + grid.scrollTop;
-
-                    slideCtx.beginPath();
-                    slideCtx.moveTo(x1, y1);
-                    slideCtx.lineTo(x2, y2);
-                    slideCtx.stroke();
-                }
-            }
+        if (!stepData || stepData.pause || !stepData.slide) {
+            continue;
         }
+
+        const noteNameMatch1 = stepData.note.match(/[A-G]#?/);
+        const octaveMatch1 = stepData.note.match(/\d+$/);
+        if (!noteNameMatch1 || !octaveMatch1) continue;
+
+        const noteName1 = noteNameMatch1[0];
+        const octave1 = parseInt(octaveMatch1[0], 10);
+        const noteIndex1 = notes.indexOf(noteName1);
+
+        if (octave1 < startOctave || octave1 > highestOctave) {
+            continue; // Don't draw slides starting from off-screen notes
+        }
+
+        const noteRow1 = (highestOctave - octave1) * 12 + (11 - noteIndex1);
+        let x1 = i * cellWidth + cellWidth / 2;
+        let y1 = noteRow1 * cellHeight + cellHeight / 2;
+
+        // Apply the final vertical offset for the start of the slide
+        y1 += 54 * cellHeight;
+
+        // The end of the slide should connect directly to the next note without offset
+
+        const nextStepData = pattern[(i + 1) % 16];
+        if (!nextStepData) continue;
+
+        const noteNameMatch2 = nextStepData.note.match(/[A-G]#?/);
+        const octaveMatch2 = nextStepData.note.match(/\d+$/);
+        if (!noteNameMatch2 || !octaveMatch2) continue;
+
+        const noteName2 = noteNameMatch2[0];
+        const octave2 = parseInt(octaveMatch2[0], 10);
+        const noteIndex2 = notes.indexOf(noteName2);
+
+        const noteRow2 = (highestOctave - octave2) * 12 + (11 - noteIndex2);
+        const x2 = ((i + 1) % 16) * cellWidth + cellWidth / 2;
+        const y2 = noteRow2 * cellHeight + cellHeight / 2;
+
+        // Create a "fancy" gradient for the fill
+        const gradient = slideCtx.createLinearGradient(x1, y1, x2, y2);
+        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0.1)');
+        slideCtx.fillStyle = gradient;
+        slideCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+        slideCtx.lineWidth = 1;
+
+        // Draw a curved shape for the slide
+        const width = cellWidth / 2;
+        const controlX = (x1 + x2) / 2;
+        const controlY = (y1 + y2) / 2 + (x2 - x1) * 0.3; // Control point for a nice arc
+
+        slideCtx.beginPath();
+        slideCtx.moveTo(x1 - width / 2, y1);
+        slideCtx.quadraticCurveTo(controlX, controlY, x2 - width / 2, y2);
+        slideCtx.lineTo(x2 + width / 2, y2);
+        slideCtx.quadraticCurveTo(controlX, controlY, x1 + width / 2, y1);
+        slideCtx.closePath();
+        slideCtx.fill();
+        slideCtx.stroke();
     }
 }
 
@@ -271,7 +322,11 @@ function createSynthSequencerGrid(synthIndex) {
         slideCtx = slideCanvas.getContext('2d');
     }
     keyboardContainer.innerHTML = '';
-    for (let octave = octaves - 1; octave >= 0; octave--) {
+    const octaveOffset = octaveOffsets[synthIndex];
+    const startOctave = 4 + octaveOffset;
+
+    for (let octave = startOctave + displayOctaves - 1; octave >= startOctave; octave--) {
+        if (octave < 0 || octave >= octaves) continue;
         for (const note of notes.slice().reverse()) {
             const noteName = `${note}${octave}`;
             const key = document.createElement('div');
@@ -285,20 +340,16 @@ function createSynthSequencerGrid(synthIndex) {
                 cell.dataset.note = noteName;
                 cell.dataset.step = step;
                 const stepData = synthPatterns[synthIndex][step];
-                if (stepData && stepData.note === noteName) {
+                if (stepData && !stepData.pause && stepData.note === noteName) {
                     cell.classList.add('active');
                     if (stepData.accent) cell.classList.add('accent');
                     if (stepData.slide) cell.classList.add('slide');
                 }
                 cell.addEventListener('click', () => {
                     const stepData = synthPatterns[synthIndex][step];
-                    if (stepData && stepData.note === noteName) {
-                        // Note exists, so remove it
-                        synthPatterns[synthIndex][step] = null;
-                        cell.classList.remove('active', 'accent', 'slide');
-                    } else {
-                        // Note does not exist, or a different note exists in this step.
-                        // Deactivate other notes in this step first.
+
+                    if (stepData.pause) {
+                        // Step was paused. Create a new note.
                         for (let o = octaves - 1; o >= 0; o--) {
                             for (const n of notes.slice().reverse()) {
                                 const otherNoteName = `${n}${o}`;
@@ -306,11 +357,42 @@ function createSynthSequencerGrid(synthIndex) {
                                 if (otherCell) otherCell.classList.remove('active', 'accent', 'slide');
                             }
                         }
-                        // Add the new note
-                        synthPatterns[synthIndex][step] = { note: noteName, accent: isAccentMode, slide: isSlideMode };
+                        stepData.note = noteName;
+                        stepData.pause = false;
+                        stepData.accent = false;
+                        stepData.slide = false;
                         cell.classList.add('active');
-                        if (isAccentMode) cell.classList.add('accent');
-                        if (isSlideMode) cell.classList.add('slide');
+                    } else {
+                        // Step was not paused.
+                        if (stepData.note === noteName) {
+                            // Clicked on the active note. Cycle it.
+                            if (!stepData.accent && !stepData.slide) {
+                                stepData.accent = true;
+                                cell.classList.add('accent');
+                            } else if (stepData.accent && !stepData.slide) {
+                                stepData.accent = false;
+                                stepData.slide = true;
+                                cell.classList.remove('accent');
+                                cell.classList.add('slide');
+                            } else if (!stepData.accent && stepData.slide) {
+                                stepData.accent = true;
+                                cell.classList.add('accent');
+                            } else {
+                                stepData.pause = true;
+                                stepData.accent = false;
+                                stepData.slide = false;
+                                cell.classList.remove('active', 'accent', 'slide');
+                            }
+                        } else {
+                            // Clicked on a different note in the same step. Move the note.
+                            const oldCell = document.querySelector(`.step.active[data-step='${step}']`);
+                            if (oldCell) oldCell.classList.remove('active', 'accent', 'slide');
+
+                            stepData.note = noteName;
+                            stepData.accent = false;
+                            stepData.slide = false;
+                            cell.classList.add('active');
+                        }
                     }
                     drawSlideLines(synthIndex);
                 });
@@ -324,7 +406,7 @@ function setupSynthSequencers() {
     for (let i = 0; i < 4; i++) {
         synthSequences[i] = new Tone.Sequence((time, step) => {
             const stepData = synthPatterns[i][step];
-            if (stepData) {
+            if (stepData && !stepData.pause) {
                 synths[i].portamento = stepData.slide ? 0.05 : 0;
                 const velocity = stepData.accent ? 1.0 : 0.7;
                 synths[i].triggerAttackRelease(stepData.note, "16n", time, velocity);
@@ -497,6 +579,48 @@ function updateSongList() {
     });
 }
 
+function generateEuclideanRhythm(steps, pulses) {
+    steps = Math.round(steps);
+    pulses = Math.round(pulses);
+    if(pulses > steps || pulses == 0 || steps == 0) {
+        return new Array();
+    }
+    let pattern = [];
+    let counts = [];
+    let remainders = [];
+    let divisor = steps - pulses;
+    remainders.push(pulses);
+    let level = 0;
+    while(true) {
+        counts.push(Math.floor(divisor / remainders[level]));
+        remainders.push(divisor % remainders[level]);
+        divisor = remainders[level];
+        level += 1;
+        if (remainders[level] <= 1) {
+            break;
+        }
+    }
+    counts.push(divisor);
+
+    const build = function(level) {
+        if (level > -1) {
+            for (var i=0; i < counts[level]; i++) {
+                build(level-1);
+            }
+            if (remainders[level] != 0) {
+                build(level-2);
+            }
+        } else if (level == -1) {
+            pattern.push(0);
+        } else if (level == -2) {
+            pattern.push(1);
+        }
+    };
+
+    build(level);
+    return pattern.reverse();
+}
+
 // --- Main Init ---
 async function init() {
     populateSelects();
@@ -615,6 +739,16 @@ async function init() {
         }
     });
 
+    document.getElementById('arpeggiate-button').addEventListener('click', () => {
+        if (activeView.startsWith('synth')) {
+            const synthIndex = parseInt(activeView.replace('synth', ''));
+            const pattern = synthPatterns[synthIndex];
+            const direction = document.getElementById('arpeggiate-direction-select').value;
+            const arpeggiatedPattern = MelodyGenerator.arpeggiate(pattern, 1, direction);
+            applySynthPattern(synthIndex, arpeggiatedPattern);
+        }
+    });
+
     document.getElementById('mutate-slides-button').addEventListener('click', () => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
@@ -630,6 +764,22 @@ async function init() {
         }
     });
     document.getElementById('clear-drums-button').addEventListener('click', clearDrumPattern);
+
+    document.getElementById('gen-drums-button').addEventListener('click', () => {
+        if (activeView === 'drums') randomizeDrumPattern();
+    });
+
+    document.getElementById('gen-euclidean-button').addEventListener('click', () => {
+        if (activeView === 'drums') {
+            const pattern = {
+                '808bd.raw': generateEuclideanRhythm(16, 4),
+                '808sd_base.raw': generateEuclideanRhythm(16, 4),
+                '808ch.raw': generateEuclideanRhythm(16, 8),
+                '808oh.raw': generateEuclideanRhythm(16, 2),
+            };
+            applyDrumPattern(pattern);
+        }
+    });
 
     document.getElementById('up-button').addEventListener('click', () => {
         if (activeView.startsWith('synth')) {
@@ -653,6 +803,22 @@ async function init() {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
             shiftPattern(synthIndex, -12);
+        }
+    });
+
+    document.getElementById('seq-oct-up-button').addEventListener('click', () => {
+        if (activeView.startsWith('synth')) {
+            const synthIndex = parseInt(activeView.replace('synth', ''));
+            octaveOffsets[synthIndex]++;
+            createSynthSequencerGrid(synthIndex);
+        }
+    });
+
+    document.getElementById('seq-oct-down-button').addEventListener('click', () => {
+        if (activeView.startsWith('synth')) {
+            const synthIndex = parseInt(activeView.replace('synth', ''));
+            octaveOffsets[synthIndex]--;
+            createSynthSequencerGrid(synthIndex);
         }
     });
 
@@ -686,14 +852,10 @@ async function init() {
         }
     });
 
-    document.getElementById('accent-button').addEventListener('click', (e) => {
-        isAccentMode = !isAccentMode;
-        e.target.classList.toggle('active', isAccentMode);
-    });
-
-    document.getElementById('slide-button').addEventListener('click', (e) => {
-        isSlideMode = !isSlideMode;
-        e.target.classList.toggle('active', isSlideMode);
+    document.getElementById('random-progression-button').addEventListener('click', () => {
+        const progressionSelect = document.getElementById('progression-select');
+        const randomIndex = Math.floor(Math.random() * progressionSelect.options.length);
+        progressionSelect.selectedIndex = randomIndex;
     });
 }
 
