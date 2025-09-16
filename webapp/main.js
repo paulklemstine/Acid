@@ -265,7 +265,10 @@ function drawSlideLines(synthIndex) {
 
         const noteRow1 = (highestOctave - octave1) * 12 + (11 - noteIndex1);
         const x1 = i * cellWidth + cellWidth / 2;
-        const y1 = noteRow1 * cellHeight + cellHeight / 2;
+        let y1 = noteRow1 * cellHeight + cellHeight / 2;
+
+        // Apply the final vertical offset requested by the user
+        y1 += 9 * cellHeight;
 
         const nextStepData = pattern[(i + 1) % 16];
         if (!nextStepData) continue;
