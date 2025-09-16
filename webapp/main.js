@@ -230,6 +230,8 @@ function shiftPattern(synthIndex, amount) {
 function drawSlideLines(synthIndex) {
     if (!slideCanvas) return;
     const grid = document.querySelector('.piano-roll-grid');
+    if (!grid) return;
+
     slideCanvas.width = grid.scrollWidth;
     slideCanvas.height = grid.scrollHeight;
     slideCtx.clearRect(0, 0, slideCanvas.width, slideCanvas.height);
@@ -243,41 +245,53 @@ function drawSlideLines(synthIndex) {
     const cellHeight = grid.scrollHeight / (displayOctaves * 12);
     const cellWidth = grid.scrollWidth / 16;
     const startOctave = 4 + octaveOffset;
+    const highestOctave = startOctave + displayOctaves - 1;
 
     for (let i = 0; i < pattern.length; i++) {
         const stepData = pattern[i];
-        if (stepData && !stepData.pause && stepData.slide) {
-
-            const noteNameMatch1 = stepData.note.match(/[A-G]#?/);
-            const octaveMatch1 = stepData.note.match(/\d+$/);
-            const noteName1 = noteNameMatch1[0];
-            const octave1 = parseInt(octaveMatch1[0]);
-            const noteIndex1 = notes.indexOf(noteName1);
-            const noteRow1 = (startOctave + displayOctaves - 1 - octave1) * 12 + (11 - noteIndex1);
-            const x1 = i * cellWidth + cellWidth / 2;
-            const y1 = noteRow1 * cellHeight + cellHeight / 2;
-
-            const nextStepData = pattern[(i + 1) % 16];
-            const noteNameMatch2 = nextStepData.note.match(/[A-G]#?/);
-            const octaveMatch2 = nextStepData.note.match(/\d+$/);
-            const noteName2 = noteNameMatch2[0];
-            const octave2 = parseInt(octaveMatch2[0]);
-            const noteIndex2 = notes.indexOf(noteName2);
-            const noteRow2 = (startOctave + displayOctaves - 1 - octave2) * 12 + (11 - noteIndex2);
-            const x2 = ((i + 1) % 16) * cellWidth + cellWidth / 2;
-            const y2 = noteRow2 * cellHeight + cellHeight / 2;
-
-            if (octave1 >= startOctave && octave1 < startOctave + displayOctaves) {
-                const radius = cellHeight / 2;
-                slideCtx.beginPath();
-                slideCtx.moveTo(x1, y1 - radius);
-                slideCtx.lineTo(x1, y1 + radius);
-                slideCtx.lineTo(x2, y2 + radius);
-                slideCtx.lineTo(x2, y2 - radius);
-                slideCtx.closePath();
-                slideCtx.fill();
-            }
+        if (!stepData || stepData.pause || !stepData.slide) {
+            continue;
         }
+
+        const noteNameMatch1 = stepData.note.match(/[A-G]#?/);
+        const octaveMatch1 = stepData.note.match(/\d+$/);
+        if (!noteNameMatch1 || !octaveMatch1) continue;
+
+        const noteName1 = noteNameMatch1[0];
+        const octave1 = parseInt(octaveMatch1[0], 10);
+        const noteIndex1 = notes.indexOf(noteName1);
+
+        if (octave1 < startOctave || octave1 > highestOctave) {
+            continue; // Don't draw slides starting from off-screen notes
+        }
+
+        const noteRow1 = (highestOctave - octave1) * 12 + (11 - noteIndex1);
+        const x1 = i * cellWidth + cellWidth / 2;
+        const y1 = noteRow1 * cellHeight + cellHeight / 2;
+
+        const nextStepData = pattern[(i + 1) % 16];
+        if (!nextStepData) continue;
+
+        const noteNameMatch2 = nextStepData.note.match(/[A-G]#?/);
+        const octaveMatch2 = nextStepData.note.match(/\d+$/);
+        if (!noteNameMatch2 || !octaveMatch2) continue;
+
+        const noteName2 = noteNameMatch2[0];
+        const octave2 = parseInt(octaveMatch2[0], 10);
+        const noteIndex2 = notes.indexOf(noteName2);
+
+        const noteRow2 = (highestOctave - octave2) * 12 + (11 - noteIndex2);
+        const x2 = ((i + 1) % 16) * cellWidth + cellWidth / 2;
+        const y2 = noteRow2 * cellHeight + cellHeight / 2;
+
+        const radius = cellHeight / 2;
+        slideCtx.beginPath();
+        slideCtx.moveTo(x1, y1 - radius);
+        slideCtx.lineTo(x1, y1 + radius);
+        slideCtx.lineTo(x2, y2 + radius);
+        slideCtx.lineTo(x2, y2 - radius);
+        slideCtx.closePath();
+        slideCtx.fill();
     }
 }
 
