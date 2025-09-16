@@ -46,63 +46,50 @@ public class AcidSequencer {
     }
 
     private static boolean[] generateEuclideanRhythmPattern(int steps, int pulses) {
-        if (pulses > steps || pulses < 0 || steps <= 0) {
-            boolean[] p = new boolean[steps];
-            java.util.Arrays.fill(p, false);
-            return p;
-        }
-        if (pulses == 0) {
-            boolean[] p = new boolean[steps];
-            java.util.Arrays.fill(p, false);
-            return p;
+        if (pulses > steps || pulses <= 0 || steps <= 0) {
+            return new boolean[steps];
         }
 
-        java.util.ArrayList<java.util.ArrayList<Integer>> patterns = new java.util.ArrayList<>();
-        for (int i = 0; i < pulses; i++) {
-            java.util.ArrayList<Integer> p = new java.util.ArrayList<>();
-            p.add(1);
-            patterns.add(p);
-        }
-        for (int i = 0; i < steps - pulses; i++) {
-            java.util.ArrayList<Integer> p = new java.util.ArrayList<>();
-            p.add(0);
-            patterns.add(p);
-        }
+        java.util.ArrayList<Integer> pattern = new java.util.ArrayList<>();
+        java.util.ArrayList<Integer> counts = new java.util.ArrayList<>();
+        java.util.ArrayList<Integer> remainders = new java.util.ArrayList<>();
+        int divisor = steps - pulses;
+        remainders.add(pulses);
+        int level = 0;
 
-        int l;
-        while ((l = patterns.size()) > 1) {
-            int toRemove = -1;
-            int firstSize = patterns.get(0).size();
-            for(int i = 1; i < l; i++) {
-                if(patterns.get(i).size() < firstSize) {
-                    toRemove = i -1;
-                    break;
-                }
+        while (true) {
+            counts.add(divisor / remainders.get(level));
+            remainders.add(divisor % remainders.get(level));
+            divisor = remainders.get(level);
+            level++;
+            if (remainders.get(level) <= 1) {
+                break;
             }
-            if(toRemove == -1) toRemove = l - 2;
-
-            java.util.ArrayList<java.util.ArrayList<Integer>> newPatterns = new java.util.ArrayList<>();
-            for(int i = 0; i < l; i++) {
-                if(i <= toRemove) {
-                    patterns.get(i).addAll(patterns.get(i+toRemove+1));
-                    newPatterns.add(patterns.get(i));
-                } else if(i > toRemove*2+1) {
-                    newPatterns.add(patterns.get(i));
-                }
-            }
-            patterns = newPatterns;
         }
+        counts.add(divisor);
+
+        build(level, counts, remainders, pattern);
 
         boolean[] result = new boolean[steps];
-        int index = 0;
-        if (patterns.size() > 0) {
-            for (int val : patterns.get(0)) {
-                if (index < steps) {
-                    result[index++] = (val == 1);
-                }
-            }
+        for (int i = 0; i < pattern.size(); i++) {
+            result[i] = pattern.get(pattern.size() - 1 - i) == 1;
         }
         return result;
+    }
+
+    private static void build(int level, java.util.ArrayList<Integer> counts, java.util.ArrayList<Integer> remainders, java.util.ArrayList<Integer> pattern) {
+        if (level > -1) {
+            for (int i = 0; i < counts.get(level); i++) {
+                build(level - 1, counts, remainders, pattern);
+            }
+            if (remainders.get(level) != 0) {
+                build(level - 2, counts, remainders, pattern);
+            }
+        } else if (level == -1) {
+            pattern.add(0);
+        } else if (level == -2) {
+            pattern.add(1);
+        }
     }
 
     private int[] toIntArray(boolean[] a) {

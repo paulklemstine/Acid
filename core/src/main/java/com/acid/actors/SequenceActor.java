@@ -17,8 +17,6 @@ public class SequenceActor extends Actor {
     private float x2 = -1;
 
 
-    public boolean noteAccent = false;
-    public boolean noteSlide = false;
     public int octaveOffset = 0;
 
 
@@ -34,25 +32,30 @@ public class SequenceActor extends Actor {
                 if (x1 >= 0 && x1 < 16 && y1 >= -16 && y1 < 16) {
                     boolean isNoteAtStep = !Statics.output.getSequencer().basslines[Statics.currentSynth].pause[x1];
                     byte noteAtStep = Statics.output.getSequencer().basslines[Statics.currentSynth].note[x1];
+                    boolean accentAtStep = Statics.output.getSequencer().basslines[Statics.currentSynth].accent[x1];
+                    boolean slideAtStep = Statics.output.getSequencer().basslines[Statics.currentSynth].slide[x1];
 
                     if (isNoteAtStep && noteAtStep == y1) {
-                        // Tapped on an existing note.
-                        if (noteAccent) {
-                            Statics.output.getSequencer().basslines[Statics.currentSynth].accent[x1] = !Statics.output.getSequencer().basslines[Statics.currentSynth].accent[x1];
-                        } else if (noteSlide) {
-                            Statics.output.getSequencer().basslines[Statics.currentSynth].slide[x1] = !Statics.output.getSequencer().basslines[Statics.currentSynth].slide[x1];
-                        } else {
-                            // No mode active, toggle pause (delete the note).
+                        // Tapped on an existing note, cycle through states
+                        if (!accentAtStep && !slideAtStep) { // State 1: Note only -> State 2: Add Accent
+                            Statics.output.getSequencer().basslines[Statics.currentSynth].accent[x1] = true;
+                        } else if (accentAtStep && !slideAtStep) { // State 2: Accent only -> State 3: Add Slide, remove Accent
+                            Statics.output.getSequencer().basslines[Statics.currentSynth].accent[x1] = false;
+                            Statics.output.getSequencer().basslines[Statics.currentSynth].slide[x1] = true;
+                        } else if (!accentAtStep && slideAtStep) { // State 3: Slide only -> State 4: Add Accent
+                            Statics.output.getSequencer().basslines[Statics.currentSynth].accent[x1] = true;
+                        } else { // State 4: Accent and Slide -> State 5: Pause
                             Statics.output.getSequencer().basslines[Statics.currentSynth].pause[x1] = true;
+                            Statics.output.getSequencer().basslines[Statics.currentSynth].accent[x1] = false;
+                            Statics.output.getSequencer().basslines[Statics.currentSynth].slide[x1] = false;
                         }
                     } else {
                         // Tapped on an empty spot or a different note in the same column.
-                        // Create or move the note.
+                        // Create a new note in state 1.
                         Statics.output.getSequencer().basslines[Statics.currentSynth].note[x1] = (byte) y1;
                         Statics.output.getSequencer().basslines[Statics.currentSynth].pause[x1] = false;
-                        // When creating a new note, it should have accent/slide if the mode is on.
-                        Statics.output.getSequencer().basslines[Statics.currentSynth].accent[x1] = noteAccent;
-                        Statics.output.getSequencer().basslines[Statics.currentSynth].slide[x1] = noteSlide;
+                        Statics.output.getSequencer().basslines[Statics.currentSynth].accent[x1] = false;
+                        Statics.output.getSequencer().basslines[Statics.currentSynth].slide[x1] = false;
                     }
                 }
                 x2 = x1;
@@ -75,8 +78,8 @@ public class SequenceActor extends Actor {
                         // Set note properties on new note
                         Statics.output.getSequencer().basslines[Statics.currentSynth].note[x1] = (byte) y1;
                         Statics.output.getSequencer().basslines[Statics.currentSynth].pause[x1] = false;
-                        Statics.output.getSequencer().basslines[Statics.currentSynth].accent[x1] = noteAccent;
-                        Statics.output.getSequencer().basslines[Statics.currentSynth].slide[x1] = noteSlide;
+                        Statics.output.getSequencer().basslines[Statics.currentSynth].accent[x1] = false;
+                        Statics.output.getSequencer().basslines[Statics.currentSynth].slide[x1] = false;
                         x2 = x1;
                         y2 = y1;
                     }

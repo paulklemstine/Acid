@@ -68,7 +68,6 @@ public class Acid implements ApplicationListener {
     int songPosition = 0;
     int maxSongPosition = 0;
     int minSongPosition = 0;
-    private BitmapFont font;
     private Stage stage;
     private LightActor mutateLight = null;
     private float newZoom;
@@ -117,6 +116,8 @@ public class Acid implements ApplicationListener {
     private TextButton generateDrumsButton;
     private TextButton transposeButton;
     private TextButton generateEuclideanButton;
+    private TextButton arpeggiateButton;
+    private SelectBox<String> arpeggiateDirectionSelectBox;
 
     public Acid(SDCard androidSDCard) {
         Statics.sdcard=androidSDCard.getPath();
@@ -1220,35 +1221,6 @@ public class Acid implements ApplicationListener {
                                           }
                                       });
 
-        final TextButton accentButton = new TextButton("Accent", skin);
-        accentButton.setChecked(false);
-        accentButton.setColor(accentButton.isChecked() ? Color.WHITE : Color.RED);
-        table.addActor(accentButton);
-        accentButton.setPosition(120f, 65);
-        accentButton.addListener(new InputListener() {
-            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                accentButton.setChecked(!accentButton.isChecked());
-                accentButton.setColor(accentButton.isChecked() ? Color.WHITE : Color.RED);
-                sequenceMatrix.noteAccent = accentButton.isChecked();
-                return true;
-            }
-        });
-
-        final TextButton slideButton = new TextButton("Slide", skin);
-        slideButton.setChecked(false);
-        slideButton.setColor(slideButton.isChecked() ? Color.WHITE : Color.RED);
-        table.addActor(slideButton);
-        slideButton.setPosition(180f, 65);
-        slideButton.addListener(new InputListener() {
-            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                slideButton.setChecked(!slideButton.isChecked());
-                slideButton.setColor(slideButton.isChecked() ? Color.WHITE : Color.RED);
-                sequenceMatrix.noteSlide = slideButton.isChecked();
-                return true;
-            }
-        });
-
-
         final TextButton prevStep = new TextButton(" < ", skin);
         table.addActor(prevStep);
         prevStep.setPosition(35f, 145);
@@ -1527,7 +1499,7 @@ public class Acid implements ApplicationListener {
         generatorTable.add(mutateSlidesButton);
         generatorTable.row();
 
-        TextButton arpeggiateButton = new TextButton("Arpeggiate", skin);
+        arpeggiateButton = new TextButton("Arpeggiate", skin);
         arpeggiateButton.addListener(new InputListener() {
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 if (sequencerView < Statics.NUM_SYNTHS) {
@@ -1535,13 +1507,17 @@ public class Acid implements ApplicationListener {
                     for (int i = 0; i < 16; i++) {
                         pattern[i] = Statics.output.getSequencer().basslines[sequencerView].note[i];
                     }
-                    int[] arpeggiatedPattern = PatternGenerator.arpeggiate(pattern, 1, "up");
+                    String direction = arpeggiateDirectionSelectBox.getSelected();
+                    int[] arpeggiatedPattern = PatternGenerator.arpeggiate(pattern, 1, direction);
                     PatternGenerator.applySynthPattern(arpeggiatedPattern, sequencerView);
                 }
                 return true;
             }
         });
         generatorTable.add(arpeggiateButton);
+        arpeggiateDirectionSelectBox = new SelectBox<String>(skin);
+        arpeggiateDirectionSelectBox.setItems("up", "down", "up-down");
+        generatorTable.add(arpeggiateDirectionSelectBox);
         generatorTable.row();
 
         transposeButton = new TextButton("Transpose", skin);
@@ -2119,6 +2095,8 @@ public class Acid implements ApplicationListener {
         progressionSelectBox.setVisible(isSynthView);
         generateDrumsButton.setVisible(!isSynthView);
         generateEuclideanButton.setVisible(!isSynthView);
+        arpeggiateButton.setVisible(isSynthView);
+        arpeggiateDirectionSelectBox.setVisible(isSynthView);
     }
 
     private void startSaving(FileHandle selected) {
