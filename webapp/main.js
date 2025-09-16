@@ -267,9 +267,10 @@ function drawSlideLines(synthIndex) {
         let x1 = i * cellWidth + cellWidth / 2;
         let y1 = noteRow1 * cellHeight + cellHeight / 2;
 
-        // Apply the final vertical and horizontal offsets requested by the user
-        y1 += 90 * cellHeight;
-        x1 -= cellWidth;
+        // Apply the final vertical offset for the start of the slide
+        y1 += 54 * cellHeight;
+
+        // The end of the slide should connect directly to the next note without offset
 
         const nextStepData = pattern[(i + 1) % 16];
         if (!nextStepData) continue;
