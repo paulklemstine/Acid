@@ -72,25 +72,24 @@ public class SequencerData extends InstrumentData {
         renderer1.end();
 
         // Draw slides
-        Gdx.gl.glLineWidth(3);
-        renderer1.begin(ShapeRenderer.ShapeType.Line);
+        renderer1.begin(ShapeRenderer.ShapeType.Filled);
         for (int i = 0; i < 16; i++) {
             if (Statics.output.getSequencer().basslines[synthIndex].slide[i]) {
-                if (Statics.output.getSequencer().basslines[synthIndex].accent[i]) {
-                    renderer1.setColor(ColorHelper.rainbowInverse());
-                } else {
-                    renderer1.setColor(ColorHelper.rainbowLight());
-                }
+                Color c = Statics.output.getSequencer().basslines[synthIndex].accent[i] ? ColorHelper.rainbowInverse() : ColorHelper.rainbowLight();
+                renderer1.setColor(c.r, c.g, c.b, 0.5f);
 
+                float radius = Math.min(skipx, skipy) / 2;
+                float x1 = i * skipx + skipx / 2;
                 float y1 = (Statics.output.getSequencer().basslines[synthIndex].note[i] - (octaveOffset * 12) + 16) * skipy + skipy / 2;
                 int nextNoteIndex = (i + 1) % 16;
+                float x2 = (i + 1) * skipx + skipx / 2;
                 float y2 = (Statics.output.getSequencer().basslines[synthIndex].note[nextNoteIndex] - (octaveOffset * 12) + 16) * skipy + skipy / 2;
 
-                renderer1.line((i) * skipx + skipx / 2, y1, (i + 1) * skipx + skipx / 2, y2);
+                renderer1.triangle(x1, y1 - radius, x1, y1 + radius, x2, y2 + radius);
+                renderer1.triangle(x1, y1 - radius, x2, y2 + radius, x2, y2 - radius);
             }
         }
         renderer1.end();
-        Gdx.gl.glLineWidth(1);
 
         Gdx.gl.glDisable(GL20.GL_BLEND);
     }

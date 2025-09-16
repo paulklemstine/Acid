@@ -237,8 +237,7 @@ function drawSlideLines(synthIndex) {
     const pattern = synthPatterns[synthIndex];
     if (!pattern) return;
 
-    slideCtx.strokeStyle = '#fff';
-    slideCtx.lineWidth = 2;
+    slideCtx.fillStyle = 'rgba(255, 255, 255, 0.5)';
 
     const octaveOffset = octaveOffsets[synthIndex];
     const cellHeight = grid.scrollHeight / (displayOctaves * 12);
@@ -267,11 +266,15 @@ function drawSlideLines(synthIndex) {
 
                 const x2 = ((i + 1) % 16) * cellWidth + cellWidth / 2;
                 const y2 = noteRow * cellHeight + cellHeight / 2;
+                const radius = cellHeight / 2;
 
                 slideCtx.beginPath();
-                slideCtx.moveTo(x1, y1);
-                slideCtx.lineTo(x2, y2);
-                slideCtx.stroke();
+                slideCtx.moveTo(x1, y1 - radius);
+                slideCtx.lineTo(x1, y1 + radius);
+                slideCtx.lineTo(x2, y2 + radius);
+                slideCtx.lineTo(x2, y2 - radius);
+                slideCtx.closePath();
+                slideCtx.fill();
             }
         }
     }
