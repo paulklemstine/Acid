@@ -247,27 +247,28 @@ function drawSlideLines(synthIndex) {
     for (let i = 0; i < pattern.length; i++) {
         const stepData = pattern[i];
         if (stepData && !stepData.pause && stepData.slide) {
-            const currentCell = document.querySelector(`.step.active[data-note='${stepData.note}'][data-step='${i}']`);
-            if (currentCell) {
-                const rect1 = currentCell.getBoundingClientRect();
-                const gridRect = grid.getBoundingClientRect();
 
-                const x1 = rect1.left - gridRect.left + rect1.width / 2 + grid.scrollLeft;
-                const y1 = rect1.top - gridRect.top + rect1.height / 2 + grid.scrollTop;
+            const noteNameMatch1 = stepData.note.match(/[A-G]#?/);
+            const octaveMatch1 = stepData.note.match(/\d+$/);
+            const noteName1 = noteNameMatch1[0];
+            const octave1 = parseInt(octaveMatch1[0]);
+            const noteIndex1 = notes.indexOf(noteName1);
+            const noteRow1 = (startOctave + displayOctaves - 1 - octave1) * 12 + (11 - noteIndex1);
+            const x1 = i * cellWidth + cellWidth / 2;
+            const y1 = noteRow1 * cellHeight + cellHeight / 2;
 
-                const nextStepData = pattern[(i + 1) % 16];
-                const noteNameMatch = nextStepData.note.match(/[A-G]#?/);
-                const octaveMatch = nextStepData.note.match(/\d+$/);
-                const noteName = noteNameMatch[0];
-                const octave = parseInt(octaveMatch[0]);
-                const noteIndex = notes.indexOf(noteName);
+            const nextStepData = pattern[(i + 1) % 16];
+            const noteNameMatch2 = nextStepData.note.match(/[A-G]#?/);
+            const octaveMatch2 = nextStepData.note.match(/\d+$/);
+            const noteName2 = noteNameMatch2[0];
+            const octave2 = parseInt(octaveMatch2[0]);
+            const noteIndex2 = notes.indexOf(noteName2);
+            const noteRow2 = (startOctave + displayOctaves - 1 - octave2) * 12 + (11 - noteIndex2);
+            const x2 = ((i + 1) % 16) * cellWidth + cellWidth / 2;
+            const y2 = noteRow2 * cellHeight + cellHeight / 2;
 
-                const noteRow = (startOctave + displayOctaves - 1 - octave) * 12 + (11 - noteIndex);
-
-                const x2 = ((i + 1) % 16) * cellWidth + cellWidth / 2;
-                const y2 = noteRow * cellHeight + cellHeight / 2;
+            if (octave1 >= startOctave && octave1 < startOctave + displayOctaves) {
                 const radius = cellHeight / 2;
-
                 slideCtx.beginPath();
                 slideCtx.moveTo(x1, y1 - radius);
                 slideCtx.lineTo(x1, y1 + radius);
@@ -292,7 +293,6 @@ function createSynthSequencerGrid(synthIndex) {
     }
     keyboardContainer.innerHTML = '';
     const octaveOffset = octaveOffsets[synthIndex];
-    const displayOctaves = 3;
     const startOctave = 4 + octaveOffset;
 
     for (let octave = startOctave + displayOctaves - 1; octave >= startOctave; octave--) {

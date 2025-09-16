@@ -121,7 +121,7 @@ public class PatternGenerator {
             if (Math.random() < mutationRate) {
                 // Mutate this note
                 int randomNoteFromScale = scale[(int) (Math.random() * scale.length)];
-                int octave = (int) (Math.random() * 3) + 2; // C3 to C5
+                int octave = (int) (Math.random() * 2) + 2; // C4 to C5
                 mutatedPattern[i] = randomNoteFromScale + (12 * octave);
             }
         }

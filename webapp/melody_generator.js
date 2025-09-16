@@ -3,7 +3,7 @@ const MelodyGenerator = {
     const melody = [];
     for (let i = 0; i < patternLength; i++) {
       const degree = chordProgression[(Math.floor(i / 4)) % chordProgression.length];
-      const chord = Harmony.getNotesInChord(36, scale, degree - 1, 3, 0);
+      const chord = Harmony.getNotesInChord(48, scale, degree - 1, 3, 0);
 
       const noteIndex = Math.floor(Math.random() * chord.length);
       melody[i] = chord[noteIndex];
@@ -41,7 +41,7 @@ const MelodyGenerator = {
     for (let i = 0; i < mutatedPattern.length; i++) {
         if (Math.random() < mutationRate) {
             const randomNoteFromScale = scale[Math.floor(Math.random() * scale.length)];
-            const octave = Math.floor(Math.random() * 3) + 2;
+            const octave = Math.floor(Math.random() * 2) + 3;
             mutatedPattern[i] = randomNoteFromScale + (12 * octave);
         }
     }
