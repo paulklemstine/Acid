@@ -239,8 +239,6 @@ function drawSlideLines(synthIndex) {
     const pattern = synthPatterns[synthIndex];
     if (!pattern) return;
 
-    slideCtx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-
     const octaveOffset = octaveOffsets[synthIndex];
     const cellHeight = grid.scrollHeight / (displayOctaves * 12);
     const cellWidth = grid.scrollWidth / 16;
@@ -267,7 +265,10 @@ function drawSlideLines(synthIndex) {
 
         const noteRow1 = (highestOctave - octave1) * 12 + (11 - noteIndex1);
         const x1 = i * cellWidth + cellWidth / 2;
-        const y1 = noteRow1 * cellHeight + cellHeight / 2;
+        let y1 = noteRow1 * cellHeight + cellHeight / 2;
+
+        // Apply the vertical offset requested by the user
+        y1 += 10 * cellHeight;
 
         const nextStepData = pattern[(i + 1) % 16];
         if (!nextStepData) continue;
@@ -284,14 +285,27 @@ function drawSlideLines(synthIndex) {
         const x2 = ((i + 1) % 16) * cellWidth + cellWidth / 2;
         const y2 = noteRow2 * cellHeight + cellHeight / 2;
 
-        const radius = cellHeight / 2;
+        // Create a "fancy" gradient for the fill
+        const gradient = slideCtx.createLinearGradient(x1, y1, x2, y2);
+        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0.1)');
+        slideCtx.fillStyle = gradient;
+        slideCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+        slideCtx.lineWidth = 1;
+
+        // Draw a curved shape for the slide
+        const width = cellWidth / 2;
+        const controlX = (x1 + x2) / 2;
+        const controlY = (y1 + y2) / 2 + (x2 - x1) * 0.3; // Control point for a nice arc
+
         slideCtx.beginPath();
-        slideCtx.moveTo(x1, y1 - radius);
-        slideCtx.lineTo(x1, y1 + radius);
-        slideCtx.lineTo(x2, y2 + radius);
-        slideCtx.lineTo(x2, y2 - radius);
+        slideCtx.moveTo(x1 - width / 2, y1);
+        slideCtx.quadraticCurveTo(controlX, controlY, x2 - width / 2, y2);
+        slideCtx.lineTo(x2 + width / 2, y2);
+        slideCtx.quadraticCurveTo(controlX, controlY, x1 + width / 2, y1);
         slideCtx.closePath();
         slideCtx.fill();
+        slideCtx.stroke();
     }
 }
 
