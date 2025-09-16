@@ -48,7 +48,7 @@ public class SequencerData extends InstrumentData {
         this(Statics.currentSynth);
     }
 
-    public static void render(ShapeRenderer renderer1, float skipx, float skipy, int synthIndex) {
+    public static void render(ShapeRenderer renderer1, float skipx, float skipy, int synthIndex, int octaveOffset) {
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         Gdx.gl.glLineWidth(3);
@@ -67,25 +67,25 @@ public class SequencerData extends InstrumentData {
                 if (i < 15) {
                     renderer1
                             .line((i) * skipx + skipx / 2,
-                                    (Statics.output.getSequencer().basslines[synthIndex].note[i] + 16)
+                                    (Statics.output.getSequencer().basslines[synthIndex].note[i] - (octaveOffset * 12) + 16)
                                             * skipy + skipy / 2,
                                     (i + 1) * skipx + skipx / 2,
-                                    (Statics.output.getSequencer().basslines[synthIndex].note[(i + 1) % 16] + 16)
+                                    (Statics.output.getSequencer().basslines[synthIndex].note[(i + 1) % 16] - (octaveOffset * 12) + 16)
                                             * skipy + skipy / 2);
                 } else {
                     renderer1
                             .line((i) * skipx + skipx / 2,
-                                    (Statics.output.getSequencer().basslines[synthIndex].note[i] + 16)
+                                    (Statics.output.getSequencer().basslines[synthIndex].note[i] - (octaveOffset * 12) + 16)
                                             * skipy + skipy / 2,
                                     (i + 1) * skipx,
-                                    (Statics.output.getSequencer().basslines[synthIndex].note[(i + 1) % 16] + 16)
+                                    (Statics.output.getSequencer().basslines[synthIndex].note[(i + 1) % 16] - (octaveOffset * 12) + 16)
                                             * skipy + skipy / 2);
                     renderer1
                             .line(skipx / 2,
-                                    (Statics.output.getSequencer().basslines[synthIndex].note[0] + 16)
+                                    (Statics.output.getSequencer().basslines[synthIndex].note[0] - (octaveOffset * 12) + 16)
                                             * skipy + skipy / 2,
                                     0,
-                                    (Statics.output.getSequencer().basslines[synthIndex].note[15] + 16)
+                                    (Statics.output.getSequencer().basslines[synthIndex].note[15] - (octaveOffset * 12) + 16)
                                             * skipy + skipy / 2);
                 }
             }
@@ -100,13 +100,13 @@ public class SequencerData extends InstrumentData {
             }
             if (Statics.output.getSequencer().basslines[synthIndex].accent[i]) {
                 renderer1.setColor(ColorHelper.rainbowInverse());
-                renderer1.circle(i * skipx + skipx / 2, (Statics.output.getSequencer().basslines[synthIndex].note[i] + 16) * skipy + skipy / 2, Math.min(skipx, skipy) / 2);
+                renderer1.circle(i * skipx + skipx / 2, (Statics.output.getSequencer().basslines[synthIndex].note[i] - (octaveOffset * 12) + 16) * skipy + skipy / 2, Math.min(skipx, skipy) / 2);
                 renderer1.setColor(Color.BLACK);
-                renderer1.circle(i * skipx + skipx / 2, (Statics.output.getSequencer().basslines[synthIndex].note[i] + 16) * skipy + skipy / 2, Math.min(skipx, skipy) / 3);
+                renderer1.circle(i * skipx + skipx / 2, (Statics.output.getSequencer().basslines[synthIndex].note[i] - (octaveOffset * 12) + 16) * skipy + skipy / 2, Math.min(skipx, skipy) / 3);
 
             } else {
                 renderer1.setColor(ColorHelper.rainbowLight());
-                renderer1.circle(i * skipx + skipx / 2, (Statics.output.getSequencer().basslines[synthIndex].note[i] + 16) * skipy + skipy / 2, Math.min(skipx, skipy) / 2);
+                renderer1.circle(i * skipx + skipx / 2, (Statics.output.getSequencer().basslines[synthIndex].note[i] - (octaveOffset * 12) + 16) * skipy + skipy / 2, Math.min(skipx, skipy) / 2);
             }
         }
         renderer1.end();
@@ -114,7 +114,7 @@ public class SequencerData extends InstrumentData {
     }
 
     public static void render(ShapeRenderer renderer1, float skipx, float skipy) {
-        render(renderer1, skipx, skipy, Statics.currentSynth);
+        render(renderer1, skipx, skipy, Statics.currentSynth, 0);
     }
 
     public static SequencerData peekStack(int synthIndex) {
@@ -176,7 +176,7 @@ public class SequencerData extends InstrumentData {
         renderer.getProjectionMatrix().setToOrtho2D(0, 0, w, h);
         float skipx = ((float) w / 16f);
         float skipy = ((float) h / 31f);
-        render(renderer, skipx, skipy, this.synthIndex);
+        render(renderer, skipx, skipy, this.synthIndex, 0);
         renderer.begin(ShapeRenderer.ShapeType.Line);
         renderer.setColor(ColorHelper.rainbowInverse());
         for (int i = 0; i < 5; i++) {

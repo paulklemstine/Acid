@@ -33,6 +33,86 @@ public class AcidSequencer {
         this.rhythm = createRhythm(this.patternLength);
     }
 
+    public void generateEuclideanRhythm() {
+        this.rhythm = new int[7][16];
+        // BD
+        this.rhythm[0] = toIntArray(generateEuclideanRhythmPattern(16, 4));
+        // SD
+        this.rhythm[1] = toIntArray(generateEuclideanRhythmPattern(16, 4));
+        // CH
+        this.rhythm[2] = toIntArray(generateEuclideanRhythmPattern(16, 8));
+        // OH
+        this.rhythm[3] = toIntArray(generateEuclideanRhythmPattern(16, 2));
+    }
+
+    private static boolean[] generateEuclideanRhythmPattern(int steps, int pulses) {
+        if (pulses > steps || pulses < 0 || steps <= 0) {
+            boolean[] p = new boolean[steps];
+            java.util.Arrays.fill(p, false);
+            return p;
+        }
+        if (pulses == 0) {
+            boolean[] p = new boolean[steps];
+            java.util.Arrays.fill(p, false);
+            return p;
+        }
+
+        java.util.ArrayList<java.util.ArrayList<Integer>> patterns = new java.util.ArrayList<>();
+        for (int i = 0; i < pulses; i++) {
+            java.util.ArrayList<Integer> p = new java.util.ArrayList<>();
+            p.add(1);
+            patterns.add(p);
+        }
+        for (int i = 0; i < steps - pulses; i++) {
+            java.util.ArrayList<Integer> p = new java.util.ArrayList<>();
+            p.add(0);
+            patterns.add(p);
+        }
+
+        int l;
+        while ((l = patterns.size()) > 1) {
+            int toRemove = -1;
+            int firstSize = patterns.get(0).size();
+            for(int i = 1; i < l; i++) {
+                if(patterns.get(i).size() < firstSize) {
+                    toRemove = i -1;
+                    break;
+                }
+            }
+            if(toRemove == -1) toRemove = l - 2;
+
+            java.util.ArrayList<java.util.ArrayList<Integer>> newPatterns = new java.util.ArrayList<>();
+            for(int i = 0; i < l; i++) {
+                if(i <= toRemove) {
+                    patterns.get(i).addAll(patterns.get(i+toRemove+1));
+                    newPatterns.add(patterns.get(i));
+                } else if(i > toRemove*2+1) {
+                    newPatterns.add(patterns.get(i));
+                }
+            }
+            patterns = newPatterns;
+        }
+
+        boolean[] result = new boolean[steps];
+        int index = 0;
+        if (patterns.size() > 0) {
+            for (int val : patterns.get(0)) {
+                if (index < steps) {
+                    result[index++] = (val == 1);
+                }
+            }
+        }
+        return result;
+    }
+
+    private int[] toIntArray(boolean[] a) {
+        int[] res = new int[a.length];
+        for(int i = 0; i < a.length; i++) {
+            res[i] = a[i] ? 1 : 0;
+        }
+        return res;
+    }
+
     public void randomizeSequence(int index, int[] scale) {
 //        if (!Statics.drumsSelected) {
         double[] basicCoeffs = {0.5D, 0.5D, 0.5D, 0.5D};

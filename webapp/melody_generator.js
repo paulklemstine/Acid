@@ -81,5 +81,62 @@ const MelodyGenerator = {
         }
     }
     return mutatedPattern;
+  },
+
+  arpeggiate(pattern, octaves, direction) {
+    let notes = pattern
+      .map(step => (step ? step.note : null))
+      .filter(note => note !== null);
+
+    let uniqueNotes = [...new Set(notes)].map(noteName => {
+        const noteNameMatch = noteName.match(/[A-G]#?/);
+        const octaveMatch = noteName.match(/\d+$/);
+        if (!noteNameMatch || !octaveMatch) return null;
+        const note = noteNameMatch[0];
+        const octave = parseInt(octaveMatch[0]);
+        const noteIndex = Harmony.notes.indexOf(note);
+        return octave * 12 + noteIndex;
+    }).filter(note => note !== null);
+
+    if (uniqueNotes.length === 0) {
+      return Array(16).fill(-1);
+    }
+
+    uniqueNotes.sort((a, b) => a - b);
+
+    const arpNotes = [];
+    if (direction.toLowerCase() === 'up') {
+      for (let o = 0; o < octaves; o++) {
+        for (const note of uniqueNotes) {
+          arpNotes.push(note + (12 * o));
+        }
+      }
+    } else if (direction.toLowerCase() === 'down') {
+      for (let o = 0; o < octaves; o++) {
+        for (let i = uniqueNotes.length - 1; i >= 0; i--) {
+          arpNotes.push(uniqueNotes[i] + (12 * o));
+        }
+      }
+    } else { // "up-down"
+      for (let o = 0; o < octaves; o++) {
+        for (const note of uniqueNotes) {
+          arpNotes.push(note + (12 * o));
+        }
+        for (let i = uniqueNotes.length - 2; i > 0; i--) {
+          arpNotes.push(uniqueNotes[i] + (12 * o));
+        }
+      }
+    }
+
+    if (arpNotes.length === 0) {
+        return Array(16).fill(-1);
+    }
+
+    const arpeggiatedPattern = [];
+    for (let i = 0; i < 16; i++) {
+      arpeggiatedPattern[i] = arpNotes[i % arpNotes.length];
+    }
+
+    return arpeggiatedPattern;
   }
 };

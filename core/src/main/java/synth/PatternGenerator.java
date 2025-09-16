@@ -153,27 +153,52 @@ public class PatternGenerator {
     }
 
     public static int[] arpeggiate(int[] pattern, int octaves, String direction) {
-        int[] arpeggiatedPattern = new int[pattern.length];
         java.util.ArrayList<Integer> notes = new java.util.ArrayList<Integer>();
         for (int i = 0; i < pattern.length; i++) {
             if (pattern[i] != 0 && !notes.contains(pattern[i])) {
                 notes.add(pattern[i]);
             }
         }
+
+        if (notes.isEmpty()) {
+            return new int[16]; // Return empty pattern if no notes
+        }
+
         java.util.Collections.sort(notes);
-        int noteIndex = 0;
-        int i_real = 0;
-        for (int i = 0; i < pattern.length && i_real < arpeggiatedPattern.length; i++) {
-            if (pattern[i] != 0) {
-                for (int j = 0; j < octaves; j++) {
-                    if (i_real < arpeggiatedPattern.length) {
-                        arpeggiatedPattern[i_real] = notes.get(noteIndex % notes.size()) + (12 * j);
-                        i_real++;
-                    }
+
+        java.util.ArrayList<Integer> arpNotes = new java.util.ArrayList<Integer>();
+        if (direction.equalsIgnoreCase("up")) {
+            for (int o = 0; o < octaves; o++) {
+                for (int note : notes) {
+                    arpNotes.add(note + (12 * o));
                 }
-                noteIndex++;
+            }
+        } else if (direction.equalsIgnoreCase("down")) {
+            for (int o = 0; o < octaves; o++) {
+                for (int i = notes.size() - 1; i >= 0; i--) {
+                    arpNotes.add(notes.get(i) + (12 * o));
+                }
+            }
+        } else { // "up-down"
+            for (int o = 0; o < octaves; o++) {
+                for (int note : notes) {
+                    arpNotes.add(note + (12 * o));
+                }
+                for (int i = notes.size() - 2; i > 0; i--) {
+                    arpNotes.add(notes.get(i) + (12 * o));
+                }
             }
         }
+
+        if (arpNotes.isEmpty()) {
+            return new int[16]; // Return empty pattern if no notes to arpeggiate
+        }
+
+        int[] arpeggiatedPattern = new int[16];
+        for (int i = 0; i < 16; i++) {
+            arpeggiatedPattern[i] = arpNotes.get(i % arpNotes.size());
+        }
+
         return arpeggiatedPattern;
     }
 }

@@ -116,6 +116,7 @@ public class Acid implements ApplicationListener {
     private TextButton mutateButton;
     private TextButton generateDrumsButton;
     private TextButton transposeButton;
+    private TextButton generateEuclideanButton;
 
     public Acid(SDCard androidSDCard) {
         Statics.sdcard=androidSDCard.getPath();
@@ -274,9 +275,9 @@ public class Acid implements ApplicationListener {
 
         Gdx.input.setInputProcessor(multiplexer);
 
-        font = new BitmapFont(Gdx.app.getFiles().getFileHandle("data/font.fnt",
+        Statics.font = new BitmapFont(Gdx.app.getFiles().getFileHandle("data/font.fnt",
                 FileType.Internal), false);
-        font.getData().setScale(.7f);
+        Statics.font.getData().setScale(.7f);
         Statics.output.start();
         Statics.synths = new BasslineSynthesizer[Statics.NUM_SYNTHS];
         for (int i = 0; i < Statics.NUM_SYNTHS; i++) {
@@ -1055,7 +1056,7 @@ public class Acid implements ApplicationListener {
         globalKnobs[3].setPosition(85, 398);
 
 
-        drumMatrix = new DrumActor(4, new String[]{"BD", "SD", "CH", "OH"}, font);
+        drumMatrix = new DrumActor(4, new String[]{"BD", "SD", "CH", "OH"}, Statics.font);
         table.addActor(drumMatrix);
         drumMatrix.setScale(drumsSynthScale);
         drumMatrix.setPosition(130, 178);
@@ -1581,6 +1582,16 @@ public class Acid implements ApplicationListener {
         generatorTable.add(generateDrumsButton);
         generatorTable.row();
 
+        generateEuclideanButton = new TextButton("Gen Euclidean", skin);
+        generateEuclideanButton.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                Statics.output.getSequencer().generateEuclideanRhythm();
+                return true;
+            }
+        });
+        generatorTable.add(generateEuclideanButton);
+        generatorTable.row();
+
         generatorTable.add(new Label("Key:", skin));
         generatorTable.row();
         keySelectBox = new SelectBox<String>(skin);
@@ -1600,6 +1611,15 @@ public class Acid implements ApplicationListener {
         progressionSelectBox = new SelectBox<String>(skin);
         progressionSelectBox.setItems("Pop", "Pachelbel", "Jazz", "Blues", "Pop Punk", "Andalusian", "50s");
         generatorTable.add(progressionSelectBox);
+
+        TextButton randomProgressionButton = new TextButton("Random", skin);
+        randomProgressionButton.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                progressionSelectBox.setSelectedIndex((int)(Math.random() * progressionSelectBox.getItems().size));
+                return true;
+            }
+        });
+        generatorTable.add(randomProgressionButton);
         generatorTable.row();
 
         Table rightTable = new Table(skin);
@@ -1672,6 +1692,26 @@ public class Acid implements ApplicationListener {
             public boolean touchDown(InputEvent event, float x, float y,
                                      int pointer, int button) {
                 shiftPattern(-12);
+                return true;
+            }
+        });
+        rightTable.row();
+        TextButton seqOctUpButton = new TextButton("Seq Oct Up", skin);
+        rightTable.add(seqOctUpButton);
+        seqOctUpButton.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y,
+                                     int pointer, int button) {
+                sequenceMatrix.octaveOffset++;
+                return true;
+            }
+        });
+        rightTable.row();
+        TextButton seqOctDownButton = new TextButton("Seq Oct Down", skin);
+        rightTable.add(seqOctDownButton);
+        seqOctDownButton.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y,
+                                     int pointer, int button) {
+                sequenceMatrix.octaveOffset--;
                 return true;
             }
         });
@@ -2078,6 +2118,7 @@ public class Acid implements ApplicationListener {
         scaleSelectBox.setVisible(isSynthView);
         progressionSelectBox.setVisible(isSynthView);
         generateDrumsButton.setVisible(!isSynthView);
+        generateEuclideanButton.setVisible(!isSynthView);
     }
 
     private void startSaving(FileHandle selected) {

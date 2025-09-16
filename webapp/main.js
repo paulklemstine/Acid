@@ -292,10 +292,20 @@ function createSynthSequencerGrid(synthIndex) {
                 }
                 cell.addEventListener('click', () => {
                     const stepData = synthPatterns[synthIndex][step];
+
                     if (stepData && stepData.note === noteName) {
-                        // Note exists, so remove it
-                        synthPatterns[synthIndex][step] = null;
-                        cell.classList.remove('active', 'accent', 'slide');
+                        // Note exists.
+                        if (isAccentMode) {
+                            stepData.accent = !stepData.accent;
+                            cell.classList.toggle('accent');
+                        } else if (isSlideMode) {
+                            stepData.slide = !stepData.slide;
+                            cell.classList.toggle('slide');
+                        } else {
+                            // No mode active, remove the note.
+                            synthPatterns[synthIndex][step] = null;
+                            cell.classList.remove('active', 'accent', 'slide');
+                        }
                     } else {
                         // Note does not exist, or a different note exists in this step.
                         // Deactivate other notes in this step first.
@@ -497,6 +507,50 @@ function updateSongList() {
     });
 }
 
+function generateEuclideanRhythm(steps, pulses) {
+    if (pulses > steps || pulses < 0 || steps <= 0) {
+        return new Array(steps).fill(0);
+    }
+    if (pulses === 0) {
+        return new Array(steps).fill(0);
+    }
+
+    let patterns = [];
+    for (let i = 0; i < pulses; i++) {
+        patterns.push([1]);
+    }
+    for (let i = 0; i < steps - pulses; i++) {
+        patterns.push([0]);
+    }
+
+    while (patterns.length > 1) {
+        let toRemove = -1;
+        const firstSize = patterns[0].length;
+        for (let i = 1; i < patterns.length; i++) {
+            if (patterns[i].length < firstSize) {
+                toRemove = i - 1;
+                break;
+            }
+        }
+        if (toRemove === -1) {
+            toRemove = patterns.length - 2;
+        }
+
+        const newPatterns = [];
+        for (let i = 0; i < patterns.length; i++) {
+            if (i <= toRemove) {
+                patterns[i] = patterns[i].concat(patterns[i + toRemove + 1]);
+                newPatterns.push(patterns[i]);
+            } else if (i > toRemove * 2 + 1) {
+                newPatterns.push(patterns[i]);
+            }
+        }
+        patterns = newPatterns;
+    }
+
+    return patterns.length > 0 ? patterns[0] : new Array(steps).fill(0);
+}
+
 // --- Main Init ---
 async function init() {
     populateSelects();
@@ -615,6 +669,15 @@ async function init() {
         }
     });
 
+    document.getElementById('arpeggiate-button').addEventListener('click', () => {
+        if (activeView.startsWith('synth')) {
+            const synthIndex = parseInt(activeView.replace('synth', ''));
+            const pattern = synthPatterns[synthIndex];
+            const arpeggiatedPattern = MelodyGenerator.arpeggiate(pattern, 1, "up");
+            applySynthPattern(synthIndex, arpeggiatedPattern);
+        }
+    });
+
     document.getElementById('mutate-slides-button').addEventListener('click', () => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
@@ -630,6 +693,22 @@ async function init() {
         }
     });
     document.getElementById('clear-drums-button').addEventListener('click', clearDrumPattern);
+
+    document.getElementById('gen-drums-button').addEventListener('click', () => {
+        if (activeView === 'drums') randomizeDrumPattern();
+    });
+
+    document.getElementById('gen-euclidean-button').addEventListener('click', () => {
+        if (activeView === 'drums') {
+            const pattern = {
+                '808bd.raw': generateEuclideanRhythm(16, 4),
+                '808sd_base.raw': generateEuclideanRhythm(16, 4),
+                '808ch.raw': generateEuclideanRhythm(16, 8),
+                '808oh.raw': generateEuclideanRhythm(16, 2),
+            };
+            applyDrumPattern(pattern);
+        }
+    });
 
     document.getElementById('up-button').addEventListener('click', () => {
         if (activeView.startsWith('synth')) {
@@ -694,6 +773,12 @@ async function init() {
     document.getElementById('slide-button').addEventListener('click', (e) => {
         isSlideMode = !isSlideMode;
         e.target.classList.toggle('active', isSlideMode);
+    });
+
+    document.getElementById('random-progression-button').addEventListener('click', () => {
+        const progressionSelect = document.getElementById('progression-select');
+        const randomIndex = Math.floor(Math.random() * progressionSelect.options.length);
+        progressionSelect.selectedIndex = randomIndex;
     });
 }
 
