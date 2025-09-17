@@ -691,42 +691,71 @@ function isInstrumentClaimedByOther(instrument) {
 }
 
 function initPeer() {
-    peer = new Peer();
+    try {
+        peer = new Peer();
 
-    peer.on('open', id => {
-        myPeerId = id;
-        console.log('My peer ID is: ' + myPeerId);
-    });
+        peer.on('open', id => {
+            myPeerId = id;
+            console.log('My peer ID is: ' + myPeerId);
+        });
 
-    peer.on('connection', conn => {
-        console.log(`Incoming connection from ${conn.peer}`);
-        setupConnection(conn);
-    });
+        peer.on('error', err => {
+            console.error('PeerJS error:', err);
+            alert(`PeerJS error: ${err.type}`);
+            if (err.type === 'peer-unavailable') {
+                const joinButton = document.getElementById('join-room-button');
+                if (joinButton) {
+                    joinButton.textContent = 'Join Room';
+                    joinButton.disabled = false;
+                }
+                const roomIdInput = document.getElementById('room-id-input');
+                if (roomIdInput) {
+                    roomIdInput.disabled = false;
+                }
+            }
+        });
 
-    document.getElementById('create-room-button').addEventListener('click', () => {
-        hostId = myPeerId;
-        document.getElementById('room-id-display').textContent = `Room ID: ${myPeerId}`;
-        document.getElementById('join-room-button').disabled = true;
-        document.getElementById('room-id-input').disabled = true;
-    });
+        peer.on('connection', conn => {
+            console.log(`Incoming connection from ${conn.peer}`);
+            setupConnection(conn);
+        });
 
-    document.getElementById('join-room-button').addEventListener('click', () => {
-        const roomIdInput = document.getElementById('room-id-input');
-        const roomId = roomIdInput.value;
-        if (!roomId) {
-            alert('Please enter a Room ID.');
-            return;
-        }
+        document.getElementById('create-room-button').addEventListener('click', () => {
+            if (!myPeerId) {
+                alert('Still connecting to the peer server. Please wait a moment.');
+                return;
+            }
+            hostId = myPeerId;
+            document.getElementById('room-id-display').textContent = `Room ID: ${myPeerId}`;
+            document.getElementById('join-room-button').disabled = true;
+            document.getElementById('room-id-input').disabled = true;
+        });
 
-        const joinButton = document.getElementById('join-room-button');
-        joinButton.textContent = 'Connecting...';
-        joinButton.disabled = true;
-        roomIdInput.disabled = true;
+        document.getElementById('join-room-button').addEventListener('click', () => {
+            if (!myPeerId) {
+                alert('Still connecting to the peer server. Please wait a moment.');
+                return;
+            }
+            const roomIdInput = document.getElementById('room-id-input');
+            const roomId = roomIdInput.value;
+            if (!roomId) {
+                alert('Please enter a Room ID.');
+                return;
+            }
 
-        const conn = peer.connect(roomId);
-        hostId = roomId;
-        setupConnection(conn);
-    });
+            const joinButton = document.getElementById('join-room-button');
+            joinButton.textContent = 'Connecting...';
+            joinButton.disabled = true;
+            roomIdInput.disabled = true;
+
+            const conn = peer.connect(roomId);
+            hostId = roomId;
+            setupConnection(conn);
+        });
+    } catch (e) {
+        console.error('Failed to initialize PeerJS:', e);
+        alert('Failed to initialize multiplayer functionality. PeerJS might be blocked or unavailable.');
+    }
 }
 
 function setupConnection(conn) {
