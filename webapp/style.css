@@ -40,6 +40,36 @@ body {
     flex-direction: column;
 }
 
+.track-controls {
+    display: flex;
+    align-items: center;
+}
+
+.instrument-claim {
+    margin-left: 10px;
+}
+
+.claimed {
+    opacity: 0.5;
+}
+
+.lobby-controls {
+    display: flex;
+    align-items: center;
+}
+
+.lobby-controls input {
+    background-color: #444;
+    color: #eee;
+    border: 1px solid #777;
+    padding: 5px;
+}
+
+#room-id-display {
+    margin-left: 10px;
+    font-weight: bold;
+}
+
 .track-selector.muted {
     background-color: #f00;
     animation: none;

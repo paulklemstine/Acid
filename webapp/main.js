@@ -1,5 +1,11 @@
 console.log("main.js loaded");
 
+let peer = null;
+let hostId = null;
+const conns = [];
+let myPeerId = null;
+let claimedInstruments = {};
+
 const sampleBasePath = 'assets/';
 const samples808 = [
     '808bd.raw', '808sd_base.raw', '808ch.raw', '808oh.raw',
@@ -107,7 +113,11 @@ function createDrumSequencerGrid() {
             step.classList.add('step');
             step.dataset.step = i;
             step.dataset.track = sampleName;
-            step.addEventListener('click', () => step.classList.toggle('active'));
+            step.addEventListener('click', () => {
+                if (isInstrumentClaimedByOther('drums')) return;
+                step.classList.toggle('active');
+                broadcast({ type: 'drum_pattern', pattern: getDrumPattern() });
+            });
             track.appendChild(step);
         }
         container.appendChild(track);
@@ -115,12 +125,16 @@ function createDrumSequencerGrid() {
 }
 
 function randomizeDrumPattern() {
+    if (isInstrumentClaimedByOther('drums')) return;
     const template = drumTemplates[Math.floor(Math.random() * drumTemplates.length)].pattern;
     applyDrumPattern(template);
+    broadcast({ type: 'drum_pattern', pattern: getDrumPattern() });
 }
 
 function clearDrumPattern() {
+    if (isInstrumentClaimedByOther('drums')) return;
     document.querySelectorAll('#drum-matrix .step').forEach(step => step.classList.remove('active'));
+    broadcast({ type: 'drum_pattern', pattern: getDrumPattern() });
 }
 
 function setupDrumSequencer() {
@@ -190,6 +204,7 @@ function applySynthPattern(synthIndex, pattern) {
         return { note: `${noteName}${octave}`, accent: accent, slide: slide, pause: isPaused };
     });
     createSynthSequencerGrid(synthIndex);
+    broadcast({ type: 'synth_pattern', synthIndex: synthIndex, pattern: synthPatterns[synthIndex] });
 }
 
 function clearSynthPattern(synthIndex) {
@@ -225,6 +240,7 @@ function shiftPattern(synthIndex, amount) {
         }
     }
     createSynthSequencerGrid(synthIndex);
+    broadcast({ type: 'synth_pattern', synthIndex: synthIndex, pattern: synthPatterns[synthIndex] });
 }
 
 function drawSlideLines(synthIndex) {
@@ -346,6 +362,7 @@ function createSynthSequencerGrid(synthIndex) {
                     if (stepData.slide) cell.classList.add('slide');
                 }
                 cell.addEventListener('click', () => {
+                    if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
                     const stepData = synthPatterns[synthIndex][step];
 
                     if (stepData.pause) {
@@ -394,6 +411,7 @@ function createSynthSequencerGrid(synthIndex) {
                             cell.classList.add('active');
                         }
                     }
+                    broadcast({ type: 'synth_pattern', synthIndex: synthIndex, pattern: synthPatterns[synthIndex] });
                     drawSlideLines(synthIndex);
                 });
                 gridContainer.appendChild(cell);
@@ -424,85 +442,111 @@ function setupSynthSequencers() {
 function setupKnobs() {
     document.getElementById('bpm-knob').addEventListener('input', e => {
         Tone.Transport.bpm.value = parseFloat(e.target.value);
+        broadcast({ type: 'knob', id: 'bpm-knob', value: e.target.value });
     });
     document.getElementById('global-vol-knob').addEventListener('input', e => {
         Tone.Destination.volume.value = -40 + (parseFloat(e.target.value) / 100) * 40;
+        broadcast({ type: 'knob', id: 'global-vol-knob', value: e.target.value });
     });
 
     for (let i = 0; i < 4; i++) {
         document.getElementById(`synth${i}-vol-knob`).addEventListener('input', e => {
+            if (isInstrumentClaimedByOther(`synth${i}`)) return;
             synthVolumes[i].volume.value = -40 + (parseFloat(e.target.value) / 100) * 40;
+            broadcast({ type: 'knob', id: `synth${i}-vol-knob`, value: e.target.value });
         });
     }
     document.getElementById('drums-vol-knob').addEventListener('input', e => {
+        if (isInstrumentClaimedByOther('drums')) return;
         drumsVolume.volume.value = -40 + (parseFloat(e.target.value) / 100) * 40;
+        broadcast({ type: 'knob', id: 'drums-vol-knob', value: e.target.value });
     });
 
     document.getElementById('knob-tune').addEventListener('input', e => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
+            if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
             synths[synthIndex].oscillator.detune.value = (parseFloat(e.target.value) - 64) * 100;
+            broadcast({ type: 'knob', id: 'knob-tune', value: e.target.value });
         }
     });
     document.getElementById('knob-cutoff').addEventListener('input', e => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
+            if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
             synths[synthIndex].filter.frequency.value = (parseFloat(e.target.value) / 127) * 5000 + 200;
+            broadcast({ type: 'knob', id: 'knob-cutoff', value: e.target.value });
         }
     });
     document.getElementById('knob-resonance').addEventListener('input', e => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
+            if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
             synths[synthIndex].filter.Q.value = (parseFloat(e.target.value) / 127) * 20;
+            broadcast({ type: 'knob', id: 'knob-resonance', value: e.target.value });
         }
     });
     document.getElementById('knob-env-mod').addEventListener('input', e => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
+            if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
             synths[synthIndex].filterEnvelope.octaves = (parseFloat(e.target.value) / 127) * 10;
+            broadcast({ type: 'knob', id: 'knob-env-mod', value: e.target.value });
         }
     });
     document.getElementById('knob-decay').addEventListener('input', e => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
+            if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
             const decay = (parseFloat(e.target.value) / 127) * 0.5 + 0.01;
             synths[synthIndex].filterEnvelope.decay = decay;
             synths[synthIndex].envelope.decay = decay;
+            broadcast({ type: 'knob', id: 'knob-decay', value: e.target.value });
         }
     });
     document.getElementById('knob-accent').addEventListener('input', e => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
+            if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
             synths[synthIndex].filterEnvelope.sustain = 0.5 + (parseFloat(e.target.value) / 127) * 0.5;
+            broadcast({ type: 'knob', id: 'knob-accent', value: e.target.value });
         }
     });
 
     document.getElementById('delay-time-knob').addEventListener('input', e => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
+            if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
             synthDelays[synthIndex].delayTime.value = (parseFloat(e.target.value) / 100);
+            broadcast({ type: 'knob', id: 'delay-time-knob', value: e.target.value });
         }
     });
 
     document.getElementById('delay-feedback-knob').addEventListener('input', e => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
+            if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
             synthDelays[synthIndex].feedback.value = (parseFloat(e.target.value) / 100) * 0.9;
+            broadcast({ type: 'knob', id: 'delay-feedback-knob', value: e.target.value });
         }
     });
 
     document.getElementById('knob-drive').addEventListener('input', e => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
+            if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
             synthDistortions[synthIndex].distortion = (parseFloat(e.target.value) / 127);
+            broadcast({ type: 'knob', id: 'knob-drive', value: e.target.value });
         }
     });
 
     document.getElementById('knob-wave').addEventListener('click', () => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
+            if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
             const currentWave = synths[synthIndex].oscillator.type;
             synths[synthIndex].oscillator.type = currentWave === 'sawtooth' ? 'square' : 'sawtooth';
+            broadcast({ type: 'knob', id: 'knob-wave', value: synths[synthIndex].oscillator.type });
         }
     });
 }
@@ -549,9 +593,16 @@ function populateSelects() {
 // --- Song Management ---
 function getAppState() {
     const drumPattern = getDrumPattern();
+    const claimedInstruments = {};
+    document.querySelectorAll('.instrument-claim').forEach(cb => {
+        if (cb.checked) {
+            claimedInstruments[cb.dataset.instrument] = true;
+        }
+    });
     return {
         drumPattern,
         synthPatterns,
+        claimedInstruments,
     };
 }
 
@@ -561,6 +612,20 @@ function loadAppState(state) {
         synthPatterns[i] = state.synthPatterns[i] || [];
         if (activeView === `synth${i}`) {
             createSynthSequencerGrid(i);
+        }
+    }
+    if (state.claimedInstruments) {
+        for (const instrument in state.claimedInstruments) {
+            const checkbox = document.querySelector(`.instrument-claim[data-instrument='${instrument}']`);
+            if (checkbox) {
+                checkbox.disabled = true;
+                checkbox.checked = true;
+            }
+            const button = document.getElementById(instrument);
+            if (button) {
+                button.disabled = true;
+                button.classList.add('claimed');
+            }
         }
     }
 }
@@ -621,6 +686,112 @@ function generateEuclideanRhythm(steps, pulses) {
     return pattern.reverse();
 }
 
+function isInstrumentClaimedByOther(instrument) {
+    return claimedInstruments[instrument] && claimedInstruments[instrument] !== myPeerId;
+}
+
+function initPeer() {
+    peer = new Peer();
+
+    peer.on('open', id => {
+        myPeerId = id;
+        console.log('My peer ID is: ' + myPeerId);
+    });
+
+    peer.on('connection', conn => {
+        console.log(`Incoming connection from ${conn.peer}`);
+        setupConnection(conn);
+    });
+
+    document.getElementById('create-room-button').addEventListener('click', () => {
+        hostId = myPeerId;
+        document.getElementById('room-id-display').textContent = `Room ID: ${myPeerId}`;
+        document.getElementById('join-room-button').disabled = true;
+        document.getElementById('room-id-input').disabled = true;
+    });
+
+    document.getElementById('join-room-button').addEventListener('click', () => {
+        const roomId = document.getElementById('room-id-input').value;
+        if (roomId) {
+            const conn = peer.connect(roomId);
+            hostId = roomId;
+            setupConnection(conn);
+        }
+    });
+}
+
+function setupConnection(conn) {
+    conns.push(conn);
+
+    conn.on('data', data => {
+        console.log('Received data:', data);
+        if (data.type === 'state') {
+            loadAppState(data.state);
+        } else if (data.type === 'drum_pattern') {
+            applyDrumPattern(data.pattern);
+        } else if (data.type === 'synth_pattern') {
+            applySynthPattern(data.synthIndex, data.pattern);
+        } else if (data.type === 'knob') {
+            const knob = document.getElementById(data.id);
+            if (knob) {
+                knob.value = data.value;
+                knob.dispatchEvent(new Event('input'));
+            }
+        } else if (data.type === 'play_pause') {
+            if (Tone.Transport.state !== data.state) {
+                if (data.state === 'started') {
+                    Tone.Transport.start();
+                } else {
+                    Tone.Transport.pause();
+                }
+            }
+        } else if (data.type === 'instrument_claim') {
+            claimedInstruments[data.instrument] = conn.peer;
+            const button = document.getElementById(data.instrument);
+            if (button) {
+                button.disabled = true;
+                button.classList.add('claimed');
+            }
+            const checkbox = document.querySelector(`.instrument-claim[data-instrument='${data.instrument}']`);
+            if (checkbox) {
+                checkbox.disabled = true;
+                checkbox.checked = true;
+            }
+        } else if (data.type === 'instrument_unclaim') {
+            delete claimedInstruments[data.instrument];
+            const checkbox = document.querySelector(`.instrument-claim[data-instrument='${data.instrument}']`);
+            if (checkbox) {
+                checkbox.disabled = false;
+                checkbox.checked = false;
+            }
+            const button = document.getElementById(data.instrument);
+            if (button) {
+                button.disabled = false;
+                button.classList.remove('claimed');
+            }
+        } else if (data.type === 'track_select') {
+            activeView = data.track;
+            updateView();
+            document.querySelectorAll('.track-selector').forEach(b => b.classList.remove('selected'));
+            document.getElementById(activeView)?.classList.add('selected');
+        }
+    });
+
+    conn.on('open', () => {
+        console.log(`Connection to ${conn.peer} opened.`);
+        if (myPeerId === hostId) {
+            const state = getAppState();
+            conn.send({ type: 'state', state });
+        }
+    });
+}
+
+function broadcast(data) {
+    conns.forEach(conn => {
+        conn.send(data);
+    });
+}
+
 // --- Main Init ---
 async function init() {
     populateSelects();
@@ -638,16 +809,24 @@ async function init() {
     updateSongList();
 
     document.getElementById('randomize-button').addEventListener('click', () => {
-        if (activeView === 'drums') randomizeDrumPattern();
-        else if (activeView.startsWith('synth')) {
+        if (activeView === 'drums') {
+            if (isInstrumentClaimedByOther('drums')) return;
+            randomizeDrumPattern();
+        } else if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
+            if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
             randomizeSynthPattern(synthIndex);
         }
     });
 
     document.getElementById('play-pause-button').addEventListener('click', () => {
-        if (Tone.Transport.state === 'started') Tone.Transport.pause();
-        else Tone.Transport.start();
+        if (Tone.Transport.state === 'started') {
+            Tone.Transport.pause();
+            broadcast({ type: 'play_pause', state: 'paused' });
+        } else {
+            Tone.Transport.start();
+            broadcast({ type: 'play_pause', state: 'started' });
+        }
     });
 
     document.querySelectorAll('.track-selector').forEach(button => {
@@ -674,12 +853,14 @@ async function init() {
              updateView();
              document.querySelectorAll('.track-selector').forEach(b => b.classList.remove('selected'));
              button.classList.add('selected');
+             broadcast({ type: 'track_select', track: activeView });
         });
     });
 
     document.getElementById('gen-mel-button').addEventListener('click', () => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
+            if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
             const scale = Harmony.scales[document.getElementById('scale-select').value];
             const progression = Harmony.progressions[document.getElementById('progression-select').value];
             const melody = MelodyGenerator.generateMelody(progression, scale, 16);
@@ -690,6 +871,7 @@ async function init() {
     document.getElementById('gen-bass-button').addEventListener('click', () => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
+            if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
             const scale = Harmony.scales[document.getElementById('scale-select').value];
             const progression = Harmony.progressions[document.getElementById('progression-select').value];
             const bassline = MelodyGenerator.generateBassline(progression, scale, 16);
@@ -700,12 +882,14 @@ async function init() {
     document.getElementById('harmonize-button').addEventListener('click', () => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
+            if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
             const melody = synthPatterns[synthIndex].map(step => step ? step.note : -1);
             const scale = Harmony.scales[document.getElementById('scale-select').value];
             const progression = Harmony.progressions[document.getElementById('progression-select').value];
             const harmony = Harmony.generateHarmony(melody, progression, scale);
             for (let i = 0; i < 4; i++) {
                 if (i !== synthIndex) {
+                    if (isInstrumentClaimedByOther(`synth${i}`)) continue;
                     applySynthPattern(i, harmony);
                 }
             }
@@ -715,6 +899,7 @@ async function init() {
     document.getElementById('mutate-button').addEventListener('click', () => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
+            if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
             const scale = Harmony.scales[document.getElementById('scale-select').value];
             const pattern = synthPatterns[synthIndex].map(step => step ? step.note : -1);
             const mutatedPattern = MelodyGenerator.mutatePattern(pattern, scale, 0.2);
@@ -725,6 +910,7 @@ async function init() {
     document.getElementById('mutate-rhythm-button').addEventListener('click', () => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
+            if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
             const pattern = synthPatterns[synthIndex].map(step => step ? step.note : -1);
             const mutatedPattern = MelodyGenerator.mutateRhythm(pattern, 0.2);
             applySynthPattern(synthIndex, mutatedPattern);
@@ -734,14 +920,17 @@ async function init() {
     document.getElementById('mutate-accents-button').addEventListener('click', () => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
+            if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
             synthPatterns[synthIndex] = MelodyGenerator.mutateAccents(synthPatterns[synthIndex], 0.2);
             createSynthSequencerGrid(synthIndex);
+            broadcast({ type: 'synth_pattern', synthIndex: synthIndex, pattern: synthPatterns[synthIndex] });
         }
     });
 
     document.getElementById('arpeggiate-button').addEventListener('click', () => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
+            if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
             const pattern = synthPatterns[synthIndex];
             const direction = document.getElementById('arpeggiate-direction-select').value;
             const arpeggiatedPattern = MelodyGenerator.arpeggiate(pattern, 1, direction);
@@ -752,25 +941,35 @@ async function init() {
     document.getElementById('mutate-slides-button').addEventListener('click', () => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
+            if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
             synthPatterns[synthIndex] = MelodyGenerator.mutateSlides(synthPatterns[synthIndex], 0.2);
             createSynthSequencerGrid(synthIndex);
+            broadcast({ type: 'synth_pattern', synthIndex: synthIndex, pattern: synthPatterns[synthIndex] });
         }
     });
 
     document.getElementById('clear-synth-button').addEventListener('click', () => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
+            if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
             clearSynthPattern(synthIndex);
         }
     });
-    document.getElementById('clear-drums-button').addEventListener('click', clearDrumPattern);
+    document.getElementById('clear-drums-button').addEventListener('click', () => {
+        if (isInstrumentClaimedByOther('drums')) return;
+        clearDrumPattern();
+    });
 
     document.getElementById('gen-drums-button').addEventListener('click', () => {
-        if (activeView === 'drums') randomizeDrumPattern();
+        if (activeView === 'drums') {
+            if (isInstrumentClaimedByOther('drums')) return;
+            randomizeDrumPattern();
+        }
     });
 
     document.getElementById('gen-euclidean-button').addEventListener('click', () => {
         if (activeView === 'drums') {
+            if (isInstrumentClaimedByOther('drums')) return;
             const pattern = {
                 '808bd.raw': generateEuclideanRhythm(16, 4),
                 '808sd_base.raw': generateEuclideanRhythm(16, 4),
@@ -778,30 +977,35 @@ async function init() {
                 '808oh.raw': generateEuclideanRhythm(16, 2),
             };
             applyDrumPattern(pattern);
+            broadcast({ type: 'drum_pattern', pattern: pattern });
         }
     });
 
     document.getElementById('up-button').addEventListener('click', () => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
+            if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
             shiftPattern(synthIndex, 1);
         }
     });
     document.getElementById('down-button').addEventListener('click', () => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
+            if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
             shiftPattern(synthIndex, -1);
         }
     });
     document.getElementById('oct-up-button').addEventListener('click', () => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
+            if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
             shiftPattern(synthIndex, 12);
         }
     });
     document.getElementById('oct-down-button').addEventListener('click', () => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
+            if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
             shiftPattern(synthIndex, -12);
         }
     });
@@ -809,6 +1013,7 @@ async function init() {
     document.getElementById('seq-oct-up-button').addEventListener('click', () => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
+            if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
             octaveOffsets[synthIndex]++;
             createSynthSequencerGrid(synthIndex);
         }
@@ -817,6 +1022,7 @@ async function init() {
     document.getElementById('seq-oct-down-button').addEventListener('click', () => {
         if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
+            if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
             octaveOffsets[synthIndex]--;
             createSynthSequencerGrid(synthIndex);
         }
@@ -857,6 +1063,27 @@ async function init() {
         const randomIndex = Math.floor(Math.random() * progressionSelect.options.length);
         progressionSelect.selectedIndex = randomIndex;
     });
+
+    document.querySelectorAll('.instrument-claim').forEach(checkbox => {
+        checkbox.addEventListener('change', e => {
+            const instrument = e.target.dataset.instrument;
+            if (e.target.checked) {
+                broadcast({ type: 'instrument_claim', instrument: instrument });
+                claimedInstruments[instrument] = myPeerId;
+                document.querySelectorAll('.instrument-claim').forEach(cb => {
+                    if (cb !== e.target) {
+                        cb.disabled = true;
+                    }
+                });
+            } else {
+                broadcast({ type: 'instrument_unclaim', instrument: instrument });
+                delete claimedInstruments[instrument];
+                document.querySelectorAll('.instrument-claim').forEach(cb => {
+                    cb.disabled = false;
+                });
+            }
+        });
+    });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -867,6 +1094,7 @@ document.addEventListener('DOMContentLoaded', () => {
     startButton.addEventListener('click', async () => {
         await Tone.start();
         startButton.textContent = 'Loading...';
+        initPeer();
         await init();
         container.style.display = 'none';
     });

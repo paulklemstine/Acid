@@ -20,6 +20,12 @@
                 <button>In</button>
                 <button>Out</button>
             </div>
+            <div class="lobby-controls">
+                <input type="text" id="room-id-input" placeholder="Enter Room ID">
+                <button id="join-room-button">Join Room</button>
+                <button id="create-room-button">Create Room</button>
+                <div id="room-id-display"></div>
+            </div>
         </header>
         <aside class="left-panel">
             <div class="global-knobs">
@@ -103,15 +109,30 @@
         </main>
         <aside class="right-panel">
             <div class="track-selection">
-                <button class="track-selector" id="synth0">S1</button>
+                <div class="track-controls">
+                    <button class="track-selector" id="synth0">S1</button>
+                    <input type="checkbox" class="instrument-claim" data-instrument="synth0">
+                </div>
                 <div><label>S1 Vol</label><input type="range" id="synth0-vol-knob" min="0" max="100" value="80"></div>
-                <button class="track-selector" id="synth1">S2</button>
+                <div class="track-controls">
+                    <button class="track-selector" id="synth1">S2</button>
+                    <input type="checkbox" class="instrument-claim" data-instrument="synth1">
+                </div>
                 <div><label>S2 Vol</label><input type="range" id="synth1-vol-knob" min="0" max="100" value="80"></div>
-                <button class="track-selector" id="synth2">S3</button>
+                <div class="track-controls">
+                    <button class="track-selector" id="synth2">S3</button>
+                    <input type="checkbox" class="instrument-claim" data-instrument="synth2">
+                </div>
                 <div><label>S3 Vol</label><input type="range" id="synth2-vol-knob" min="0" max="100" value="80"></div>
-                <button class="track-selector" id="synth3">S4</button>
+                <div class="track-controls">
+                    <button class="track-selector" id="synth3">S4</button>
+                    <input type="checkbox" class="instrument-claim" data-instrument="synth3">
+                </div>
                 <div><label>S4 Vol</label><input type="range" id="synth3-vol-knob" min="0" max="100" value="80"></div>
-                <button class="track-selector" id="drums">D</button>
+                <div class="track-controls">
+                    <button class="track-selector" id="drums">D</button>
+                    <input type="checkbox" class="instrument-claim" data-instrument="drums">
+                </div>
                 <div><label>D Vol</label><input type="range" id="drums-vol-knob" min="0" max="100" value="80"></div>
             </div>
             <div class="pattern-controls">
@@ -126,6 +147,7 @@
             </div>
         </aside>
     </div>
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/15.3.3/Tone.min.js"></script>
     <script src="harmony.js"></script>
     <script src="melody_generator.js"></script>
