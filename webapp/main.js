@@ -68,11 +68,17 @@ async function loadSamples() {
     const promises = samples808.map(async (sampleName) => {
         const path = sampleBasePath + sampleName;
         const response = await fetch(path);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch sample: ${path}`);
+        }
         const arrayBuffer = await response.arrayBuffer();
         const audioBuffer = createAudioBuffer(arrayBuffer);
         players[sampleName] = new Tone.Player(audioBuffer).connect(drumsVolume);
     });
-    await Promise.all(promises);
+    await Promise.all(promises).catch(err => {
+        console.error("Error loading samples:", err);
+        throw err; // Re-throw to be caught by the outer try...catch
+    });
 }
 
 function getDrumPattern() {
@@ -615,6 +621,7 @@ function loadAppState(state) {
         }
     }
     if (state.claimedInstruments) {
+        claimedInstruments = state.claimedInstruments;
         for (const instrument in state.claimedInstruments) {
             const checkbox = document.querySelector(`.instrument-claim[data-instrument='${instrument}']`);
             if (checkbox) {
@@ -628,6 +635,7 @@ function loadAppState(state) {
             }
         }
     }
+    checkAllInstrumentsAssigned();
 }
 
 function updateSongList() {
@@ -688,6 +696,21 @@ function generateEuclideanRhythm(steps, pulses) {
 
 function isInstrumentClaimedByOther(instrument) {
     return claimedInstruments[instrument] && claimedInstruments[instrument] !== myPeerId;
+}
+
+function checkAllInstrumentsAssigned() {
+    const playPauseButton = document.getElementById('play-pause-button');
+    const allAssigned = Object.keys(claimedInstruments).length === 5;
+    playPauseButton.disabled = !allAssigned;
+}
+
+function updatePlayPauseButton() {
+    const playPauseButton = document.getElementById('play-pause-button');
+    if (Tone.Transport.state === 'started') {
+        playPauseButton.textContent = '||';
+    } else {
+        playPauseButton.textContent = '▶';
+    }
 }
 
 function initPeer() {
@@ -782,6 +805,7 @@ function setupConnection(conn) {
                 } else {
                     Tone.Transport.pause();
                 }
+                    updatePlayPauseButton();
             }
         } else if (data.type === 'instrument_claim') {
             claimedInstruments[data.instrument] = conn.peer;
@@ -795,6 +819,7 @@ function setupConnection(conn) {
                 checkbox.disabled = true;
                 checkbox.checked = true;
             }
+            checkAllInstrumentsAssigned();
         } else if (data.type === 'instrument_unclaim') {
             delete claimedInstruments[data.instrument];
             const checkbox = document.querySelector(`.instrument-claim[data-instrument='${data.instrument}']`);
@@ -807,6 +832,7 @@ function setupConnection(conn) {
                 button.disabled = false;
                 button.classList.remove('claimed');
             }
+            checkAllInstrumentsAssigned();
         } else if (data.type === 'track_select') {
             activeView = data.track;
             updateView();
@@ -876,6 +902,8 @@ async function init() {
         }
     });
 
+    updatePlayPauseButton();
+
     document.getElementById('play-pause-button').addEventListener('click', () => {
         if (Tone.Transport.state === 'started') {
             Tone.Transport.pause();
@@ -884,6 +912,7 @@ async function init() {
             Tone.Transport.start();
             broadcast({ type: 'play_pause', state: 'started' });
         }
+        updatePlayPauseButton();
     });
 
     document.querySelectorAll('.track-selector').forEach(button => {
@@ -1127,20 +1156,14 @@ async function init() {
             if (e.target.checked) {
                 broadcast({ type: 'instrument_claim', instrument: instrument });
                 claimedInstruments[instrument] = myPeerId;
-                document.querySelectorAll('.instrument-claim').forEach(cb => {
-                    if (cb !== e.target) {
-                        cb.disabled = true;
-                    }
-                });
             } else {
                 broadcast({ type: 'instrument_unclaim', instrument: instrument });
                 delete claimedInstruments[instrument];
-                document.querySelectorAll('.instrument-claim').forEach(cb => {
-                    cb.disabled = false;
-                });
             }
+            checkAllInstrumentsAssigned();
         });
     });
+    checkAllInstrumentsAssigned();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1149,10 +1172,15 @@ document.addEventListener('DOMContentLoaded', () => {
     startButton.textContent = 'Start Audio';
     container.appendChild(startButton);
     startButton.addEventListener('click', async () => {
-        await Tone.start();
-        startButton.textContent = 'Loading...';
-        initPeer();
-        await init();
-        container.style.display = 'none';
+        try {
+            await Tone.start();
+            startButton.textContent = 'Loading...';
+            initPeer();
+            await init();
+            container.style.display = 'none';
+        } catch (e) {
+            console.error('Error during initialization:', e);
+            alert(`An error occurred during startup: ${e.message}`);
+        }
     });
 });
