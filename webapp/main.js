@@ -711,12 +711,21 @@ function initPeer() {
     });
 
     document.getElementById('join-room-button').addEventListener('click', () => {
-        const roomId = document.getElementById('room-id-input').value;
-        if (roomId) {
-            const conn = peer.connect(roomId);
-            hostId = roomId;
-            setupConnection(conn);
+        const roomIdInput = document.getElementById('room-id-input');
+        const roomId = roomIdInput.value;
+        if (!roomId) {
+            alert('Please enter a Room ID.');
+            return;
         }
+
+        const joinButton = document.getElementById('join-room-button');
+        joinButton.textContent = 'Connecting...';
+        joinButton.disabled = true;
+        roomIdInput.disabled = true;
+
+        const conn = peer.connect(roomId);
+        hostId = roomId;
+        setupConnection(conn);
     });
 }
 
@@ -779,9 +788,28 @@ function setupConnection(conn) {
 
     conn.on('open', () => {
         console.log(`Connection to ${conn.peer} opened.`);
+        const joinButton = document.getElementById('join-room-button');
+        if (joinButton) {
+            joinButton.textContent = 'Connected';
+        }
+
         if (myPeerId === hostId) {
             const state = getAppState();
             conn.send({ type: 'state', state });
+        }
+    });
+
+    conn.on('error', err => {
+        console.error('Connection error:', err);
+        alert(`Failed to connect: ${err.type}`);
+        const joinButton = document.getElementById('join-room-button');
+        if (joinButton) {
+            joinButton.textContent = 'Join Room';
+            joinButton.disabled = false;
+        }
+        const roomIdInput = document.getElementById('room-id-input');
+        if (roomIdInput) {
+            roomIdInput.disabled = false;
         }
     });
 }
