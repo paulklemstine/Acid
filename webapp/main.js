@@ -738,6 +738,12 @@ function initPeer() {
             }
         });
 
+        peer.on('disconnected', () => {
+            console.log('Peer disconnected from server. Attempting to reconnect...');
+            alert('Connection to the peer server has been lost. Attempting to reconnect...');
+            peer.reconnect();
+        });
+
         peer.on('connection', conn => {
             console.log(`Incoming connection from ${conn.peer}`);
             setupConnection(conn);
