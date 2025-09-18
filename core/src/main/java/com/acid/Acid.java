@@ -1692,6 +1692,42 @@ public class Acid implements ApplicationListener {
             }
         });
 
+        rightTable.row();
+        TextButton tr808Button = new TextButton("808", skin);
+        rightTable.add(tr808Button);
+        tr808Button.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y,
+                                     int pointer, int button) {
+                if (drumDataArrayList.size() > songPosition) {
+                    drumDataArrayList.get(songPosition).saveCurrentPattern();
+                }
+                Statics.currentDrumMachine = DrumMachine.TR808;
+                drumMatrix.setDrumKit(DrumData.TR808_DRUM_NAMES.length, DrumData.TR808_DRUM_NAMES);
+                if (drumDataArrayList.size() > songPosition) {
+                    drumDataArrayList.get(songPosition).refresh();
+                }
+                return true;
+            }
+        });
+
+        rightTable.row();
+        TextButton tr909Button = new TextButton("909", skin);
+        rightTable.add(tr909Button);
+        tr909Button.addListener(new InputListener() {
+            public boolean touchDown(InputEvent event, float x, float y,
+                                     int pointer, int button) {
+                if (drumDataArrayList.size() > songPosition) {
+                    drumDataArrayList.get(songPosition).saveCurrentPattern();
+                }
+                Statics.currentDrumMachine = DrumMachine.TR909;
+                drumMatrix.setDrumKit(DrumData.TR909_DRUM_NAMES.length, DrumData.TR909_DRUM_NAMES);
+                if (drumDataArrayList.size() > songPosition) {
+                    drumDataArrayList.get(songPosition).refresh();
+                }
+                return true;
+            }
+        });
+
 
         BpmLabel = new
 

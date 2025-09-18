@@ -14,10 +14,16 @@ public class DrumActor extends Actor {
 
     private float y2;
     private float x2;
-    private final int numRows;
-    private final String[] drumNames;
+    private int numRows;
+    private String[] drumNames;
     private final BitmapFont font;
 
+
+    public void setDrumKit(int numRows, String[] drumNames) {
+        this.numRows = numRows;
+        this.drumNames = drumNames;
+        this.setHeight(numRows * 40);
+    }
 
     public DrumActor(int numRows, String[] drumNames, BitmapFont font) {
         this.numRows = numRows;

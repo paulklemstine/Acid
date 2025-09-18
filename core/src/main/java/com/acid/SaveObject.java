@@ -12,6 +12,7 @@ public class SaveObject implements Serializable {
     private static final long serialVersionUID = -1216569043511623845L;
     private ArrayList<ArrayList<SequencerData>> sequencerDataArrayList = new ArrayList<ArrayList<SequencerData>>();
     private ArrayList<DrumData> drumDataArrayList = new ArrayList<DrumData>();
+    private ArrayList<DrumPatterns> drumPatternsArrayList = new ArrayList<>();
     private ArrayList<ArrayList<KnobData>> knobsArrayList = new ArrayList<ArrayList<KnobData>>();
     private int songPosition = 0;
     private int maxSongPosition = 0;
@@ -27,6 +28,9 @@ public class SaveObject implements Serializable {
     SaveObject(Acid acid) {
         this.sequencerDataArrayList = acid.sequencerDataArrayList;
         this.drumDataArrayList = acid.drumDataArrayList;
+        for (DrumData data : acid.drumDataArrayList) {
+            drumPatternsArrayList.add(data.getPatterns());
+        }
         this.knobsArrayList = acid.knobsArrayList;
         for (int i = 0; i < Statics.NUM_SYNTHS; i++) {
             if (SequencerData.sequences[i] != null) {
@@ -73,6 +77,9 @@ public class SaveObject implements Serializable {
         }
         acid.sequencerDataArrayList = sequencerDataArrayList;
         acid.drumDataArrayList = drumDataArrayList;
+        for (int i = 0; i < drumDataArrayList.size(); i++) {
+            acid.drumDataArrayList.get(i).setRhythms(drumPatternsArrayList.get(i));
+        }
         acid.knobsArrayList = knobsArrayList;
         acid.songPosition = songPosition;
         acid.maxSongPosition = maxSongPosition;

@@ -12,16 +12,25 @@ import com.badlogic.gdx.utils.ScreenUtils;
 
 import java.util.Stack;
 
+class DrumPatterns {
+    public int[][] tr808 = new int[9][16];
+    public int[][] tr909 = new int[9][16];
+}
+
 /**
  * Created by Paul on 1/10/2017.
  */
 public class DrumData extends InstrumentData  {
-    private final int[][] rhythm = new int[7][16];
+    public static final String[] TR808_DRUM_NAMES = new String[]{"BD", "SD", "CH", "OH", "CP", "CR", "HC", "MC", "CB"};
+    public static final String[] TR909_DRUM_NAMES = new String[]{"BD", "SD", "CH", "OH", "CL", "CR", "HT", "MT"};
+
+    private final DrumPatterns patterns = new DrumPatterns();
 
     public DrumData() {
-        for (int y1 = 0; y1 < 7; y1++) {
+        for (int y1 = 0; y1 < 9; y1++) {
             for (int x1 = 0; x1 < 16; x1++) {
-                rhythm[y1][x1] = Statics.output.getSequencer().rhythm[y1][x1];
+                patterns.tr909[y1][x1] = 0;
+                patterns.tr808[y1][x1] = 0;
             }
         }
         pixmap = drawPixmap(300, 300);
@@ -30,29 +39,66 @@ public class DrumData extends InstrumentData  {
     }
 
     public void refresh() {
-        for (int y1 = 0; y1 < 7; y1++) {
+        int[][] rhythmToLoad;
+        String[] drumNames;
+        if (Statics.currentDrumMachine == DrumMachine.TR808) {
+            rhythmToLoad = patterns.tr808;
+            drumNames = TR808_DRUM_NAMES;
+        } else {
+            rhythmToLoad = patterns.tr909;
+            drumNames = TR909_DRUM_NAMES;
+        }
+
+        for (int y1 = 0; y1 < drumNames.length; y1++) {
             for (int x1 = 0; x1 < 16; x1++) {
-                Statics.output.getSequencer().rhythm[y1][x1] = rhythm[y1][x1];
+                Statics.output.getSequencer().rhythm[y1][x1] = rhythmToLoad[y1][x1];
             }
         }
     }
 
-    public void setRhythm(int[][] rhythm) {
-        for (int i = 0; i < 7; i++) {
-            for (int j = 0; j < 16; j++) {
-                this.rhythm[i][j] = rhythm[i][j];
+    public void saveCurrentPattern() {
+        int[][] rhythmToSave;
+        String[] drumNames;
+        if (Statics.currentDrumMachine == DrumMachine.TR808) {
+            rhythmToSave = patterns.tr808;
+            drumNames = TR808_DRUM_NAMES;
+        } else {
+            rhythmToSave = patterns.tr909;
+            drumNames = TR909_DRUM_NAMES;
+        }
+
+        for (int y1 = 0; y1 < drumNames.length; y1++) {
+            for (int x1 = 0; x1 < 16; x1++) {
+                rhythmToSave[y1][x1] = Statics.output.getSequencer().rhythm[y1][x1];
             }
         }
+    }
+
+    public void setRhythms(DrumPatterns patterns) {
+        this.patterns.tr808 = patterns.tr808;
+        this.patterns.tr909 = patterns.tr909;
+    }
+
+    public DrumPatterns getPatterns() {
+        return patterns;
     }
 
     @Override
     public String toString() {
         String s = "";
+        s += "808:\n";
         for (int i = 0; i < 16; i++) {
-            for (int j = 0; j < 7; j++) {
-                if (rhythm[j][i] == 0) {
-
-                } else {
+            for (int j = 0; j < TR808_DRUM_NAMES.length; j++) {
+                if (patterns.tr808[j][i] != 0) {
+                    s += j + "";
+                }
+            }
+            s += " ";
+        }
+        s += "\n909:\n";
+        for (int i = 0; i < 16; i++) {
+            for (int j = 0; j < TR909_DRUM_NAMES.length; j++) {
+                if (patterns.tr909[j][i] != 0) {
                     s += j + "";
                 }
             }
