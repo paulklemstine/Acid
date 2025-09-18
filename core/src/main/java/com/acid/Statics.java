@@ -21,7 +21,6 @@ public class Statics {
     public static int currentSynth = 0;
     public static Synthesizer drums;
     public static Output output;
-    public static DrumMachine currentDrumMachine = DrumMachine.TR909;
 
     public static boolean recording = true;
     public static boolean free = true;

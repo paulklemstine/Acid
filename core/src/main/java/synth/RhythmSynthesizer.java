@@ -83,6 +83,8 @@
    private double aux;
    private double aux1Amt;
    private double aux2Amt;
+   private boolean is808BassDrum;
+   private boolean is808SnareDrum;
    double left;
    double right;
  
@@ -195,6 +197,7 @@
      controlChange(38, (int)(Math.random() * 127.0D));
      controlChange(37, (int)(Math.random() * 127.0D));
      this.chaeg.setDecay(5.0D + Math.random() * 5.0D);
+     double max = 0.5D;
  
      this.aux1Amt = (Math.random() * 0.2D);
      this.aux2Amt = (Math.random() * 0.5D);
@@ -202,6 +205,61 @@
      double tmp = Math.random() / 10.0D;
      tmp *= tmp;
      this.bddist.setGain(tmp + 0.05D);
+
+     if (Math.random() > 0.8D)
+       this.is808BassDrum = true;
+     else {
+       this.is808BassDrum = false;
+     }
+     if (Math.random() > 0.66D) {
+       this.is808SnareDrum = true;
+       this.sd808mix1 = Math.random();
+       this.sd808mix2 = (1.0D - this.sd808mix1);
+       this.sdNoise.setSample(sd808sn);
+     }
+     else {
+       this.is808SnareDrum = false;
+       this.sdNoise.setSample(sdsn);
+     }
+
+     if (Math.random() > 0.5D)
+       this.clap.setSample(claps);
+     else {
+       this.clap.setSample(clap808s);
+     }
+     if (Math.random() < 0.33D) {
+       this.ch.setSample(ch808s);
+       this.oh.setSample(oh808s);
+     } else {
+       this.ch.setSample(chs);
+       this.oh.setSample(ohs);
+     }
+
+     if (Math.random() > 0.5D) {
+       this.ht.setSample(hc808s);
+       this.mt.setSample(mc808s);
+     }
+     else {
+       this.ht.setSample(hts);
+       this.mt.setSample(mts);
+     }
+
+     if (Math.random() < 0.2D) {
+       this.ht.setSample(cb808s);
+     }
+
+     double rate = 1.0D - Math.random() * 0.2D;
+     this.ht.setRate(rate);
+     this.mt.setRate(rate);
+
+     if (Math.random() < 0.33D) {
+       this.crash.setSample(crs808);
+       this.crash.setRate(1.0D);
+     } else {
+       this.crash.setSample(crs);
+       double vari = Math.random() * max - max * 0.25D;
+       this.crash.setRate(1.0D + vari);
+     }
    }
  
    public void setBpm(double value)
@@ -224,36 +282,24 @@
    {
      this.aux = (this.left = this.right = 0.0D);
      this.bd.setFrequency(52.0D + this.bdpeg.tick());
-     double bds = 0;
-     double sds = 0;
-     double chs = 0;
-     double ohs = 0;
-     double cps = 0;
-     double crs = 0;
-
-
-     switch (com.acid.Statics.currentDrumMachine) {
-       case TR909:
-         bds = this.bd.tick() * this.bdaeg.tick() + this.bdatk.tick() * this.bd_attack;
-         if (this.isDistorted)
-           bds = this.bddist.distort(bds) * 1.5D;
-         sds = (this.sd.tick() + this.sdNoise.tick() * this.sd_snappy) * this.sdtone.tick() * this.sd_volume;
-         chs = this.ch.tick() * this.chaeg.tick();
-         ohs = this.oh.tick() * this.ohaeg.tick();
-         cps = this.clap.tick() * this.cp_volume;
-         crs = this.crash.tick();
-         break;
-       case TR808:
-         bds = this.bd808.tick() * this.bdaeg.tick();
-         if (this.isDistorted)
-           bds = this.bddist.distort(bds) * 1.5D;
-         sds = (this.sd808.tick() * this.sd808mix1 + this.sd808ot.tick() * this.sd808mix2 + this.sdNoise.tick() * this.sd_snappy) * this.sd_volume;
-         chs = this.ch.tick() * this.chaeg.tick();
-         ohs = this.oh.tick() * this.ohaeg.tick();
-         cps = this.clap.tick() * this.cp_volume;
-         crs = this.crash.tick();
-         break;
+     double bds;
+     if (this.is808BassDrum)
+       bds = this.bd808.tick() * this.bdaeg.tick();
+     else {
+       bds = this.bd.tick() * this.bdaeg.tick() + this.bdatk.tick() * this.bd_attack;
      }
+     if (this.isDistorted)
+       bds = this.bddist.distort(bds) * 1.5D;
+     double sds;
+     if (this.is808SnareDrum)
+       sds = (this.sd808.tick() * this.sd808mix1 + this.sd808ot.tick() * this.sd808mix2 + this.sdNoise.tick() * this.sd_snappy) * this.sd_volume;
+     else {
+       sds = (this.sd.tick() + this.sdNoise.tick() * this.sd_snappy) * this.sdtone.tick() * this.sd_volume;
+     }
+     double chs = this.ch.tick() * this.chaeg.tick();
+     double ohs = this.oh.tick() * this.ohaeg.tick();
+     double cps = this.clap.tick() * this.cp_volume;
+     double crs = this.crash.tick();
  
      double perc1 = this.ht.tick() * this.ht_volume;
      double perc2 = this.mt.tick() * this.mt_volume;
@@ -375,107 +421,45 @@
      double vel = velocity / 255.0D;
      switch (note) {
      case 32:
-        switch (com.acid.Statics.currentDrumMachine) {
-            case TR909:
-                this.bdatk.trigger();
-                this.bd.trigger();
-                break;
-            case TR808:
-                this.bd808.trigger();
-                break;
-        }
+       this.bdatk.trigger();
+       this.bd808.trigger();
        this.bdaeg.attack();
        this.bdaeg.setLevel(vel);
        this.bdpeg.attack();
+       this.bd.trigger();
        break;
      case 33:
-        switch (com.acid.Statics.currentDrumMachine) {
-            case TR909:
-                this.sd.trigger();
-                this.sdNoise.setSample(sdsn);
-                break;
-            case TR808:
-                this.sd808.trigger();
-                this.sd808ot.trigger();
-                this.sdNoise.setSample(sd808sn);
-                break;
-        }
+       this.sd.trigger();
+       this.sd808.trigger();
+       this.sd808ot.trigger();
        this.sdtone.attack();
        this.sd_volume = vel;
        this.sdNoise.trigger();
        break;
      case 34:
-        switch (com.acid.Statics.currentDrumMachine) {
-            case TR909:
-                this.ch.setSample(chs);
-                break;
-            case TR808:
-                this.ch.setSample(ch808s);
-                break;
-        }
        this.ch.trigger();
        this.chaeg.setLevel(vel);
        this.chaeg.attack();
        this.ohaeg.release();
        break;
      case 35:
-        switch (com.acid.Statics.currentDrumMachine) {
-            case TR909:
-                this.oh.setSample(ohs);
-                break;
-            case TR808:
-                this.oh.setSample(oh808s);
-                break;
-        }
        this.oh.trigger();
        this.ohaeg.setLevel(vel);
        this.ohaeg.attack();
        break;
      case 36:
-        switch (com.acid.Statics.currentDrumMachine) {
-            case TR909:
-                this.clap.setSample(claps);
-                break;
-            case TR808:
-                this.clap.setSample(clap808s);
-                break;
-        }
        this.clap.trigger();
        this.cp_volume = vel;
        break;
      case 37:
-        switch (com.acid.Statics.currentDrumMachine) {
-            case TR909:
-                this.ht.setSample(hts);
-                break;
-            case TR808:
-                this.ht.setSample(hc808s);
-                break;
-        }
        this.ht.trigger();
        this.ht_volume = vel;
        break;
      case 38:
-        switch (com.acid.Statics.currentDrumMachine) {
-            case TR909:
-                this.mt.setSample(mts);
-                break;
-            case TR808:
-                this.mt.setSample(mc808s);
-                break;
-        }
        this.mt.trigger();
        this.mt_volume = vel;
        break;
      case 0:
-        switch (com.acid.Statics.currentDrumMachine) {
-            case TR909:
-                this.crash.setSample(crs);
-                break;
-            case TR808:
-                this.crash.setSample(crs808);
-                break;
-        }
        this.crash.trigger();
      }
    }

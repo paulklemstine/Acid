@@ -11,19 +11,24 @@ const samples808 = [
     '808bd.raw', '808sd_base.raw', '808ch.raw', '808oh.raw',
     '808cp.raw', '808cb.raw', '808hc.raw', '808mc.raw', '808crash.raw'
 ];
+const samples909 = [
+    '909bd_base.raw', '909sd_base.raw', '909ch.raw', '909oh.raw',
+    '909clap.raw', '909crash.raw', '909ht.raw', '909mt.raw'
+];
 
-const players = {};
-let drumSequence;
+const players = [{}, {}];
+let drumSequences = [];
 const synths = [];
 const synthVolumes = [];
 const synthDistortions = [];
 const synthDelays = [];
 const synthSequences = [];
 const synthPatterns = [[], [], [], []];
-let activeView = 'drums';
-let drumsVolume;
+let activeView = 'drums1';
+let drumsVolumes = [];
 const muteStates = {
-    drums: false,
+    drums1: false,
+    drums2: false,
     synth0: false,
     synth1: false,
     synth2: false,
@@ -64,39 +69,52 @@ function createAudioBuffer(arrayBuffer) {
 
 // --- Drum Machine ---
 async function loadSamples() {
-    drumsVolume = new Tone.Volume(0).toDestination();
-    const promises = samples808.map(async (sampleName) => {
-        const path = sampleBasePath + sampleName;
-        const response = await fetch(path);
-        if (!response.ok) {
-            throw new Error(`Failed to fetch sample: ${path}`);
-        }
-        const arrayBuffer = await response.arrayBuffer();
-        const audioBuffer = createAudioBuffer(arrayBuffer);
-        players[sampleName] = new Tone.Player(audioBuffer).connect(drumsVolume);
-    });
-    await Promise.all(promises).catch(err => {
+    drumsVolumes[0] = new Tone.Volume(0).toDestination();
+    drumsVolumes[1] = new Tone.Volume(0).toDestination();
+
+    const loadKit = async (sampleNames, playerObj, volume) => {
+        const promises = sampleNames.map(async (sampleName) => {
+            const path = sampleBasePath + sampleName;
+            const response = await fetch(path);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch sample: ${path}`);
+            }
+            const arrayBuffer = await response.arrayBuffer();
+            const audioBuffer = createAudioBuffer(arrayBuffer);
+            playerObj[sampleName] = new Tone.Player(audioBuffer).connect(volume);
+        });
+        await Promise.all(promises);
+    };
+
+    try {
+        await loadKit(samples909, players[0], drumsVolumes[0]);
+        await loadKit(samples808, players[1], drumsVolumes[1]);
+    } catch (err) {
         console.error("Error loading samples:", err);
-        throw err; // Re-throw to be caught by the outer try...catch
-    });
+        throw err;
+    }
 }
 
-function getDrumPattern() {
+function getDrumPattern(drumIndex) {
     const pattern = {};
-    for (const sampleName of samples808) {
+    const samples = drumIndex === 0 ? samples909 : samples808;
+    const containerId = drumIndex === 0 ? '#drum-matrix' : '#drum-matrix-2';
+    for (const sampleName of samples) {
         pattern[sampleName] = [];
         for (let i = 0; i < 16; i++) {
-            const step = document.querySelector(`#drum-matrix .step[data-track='${sampleName}'][data-step='${i}']`);
+            const step = document.querySelector(`${containerId} .step[data-track='${sampleName}'][data-step='${i}']`);
             pattern[sampleName][i] = step.classList.contains('active') ? 1 : 0;
         }
     }
     return pattern;
 }
 
-function applyDrumPattern(pattern) {
-    for (const sampleName of samples808) {
+function applyDrumPattern(drumIndex, pattern) {
+    const samples = drumIndex === 0 ? samples909 : samples808;
+    const containerId = drumIndex === 0 ? '#drum-matrix' : '#drum-matrix-2';
+    for (const sampleName of samples) {
         for (let i = 0; i < 16; i++) {
-            const step = document.querySelector(`#drum-matrix .step[data-track='${sampleName}'][data-step='${i}']`);
+            const step = document.querySelector(`${containerId} .step[data-track='${sampleName}'][data-step='${i}']`);
             if (step) {
                 step.classList.toggle('active', pattern[sampleName]?.[i] === 1);
             }
@@ -104,15 +122,17 @@ function applyDrumPattern(pattern) {
     }
 }
 
-function createDrumSequencerGrid() {
-    const container = document.getElementById('drum-matrix');
+function createDrumSequencerGrid(drumIndex) {
+    const containerId = drumIndex === 0 ? 'drum-matrix' : 'drum-matrix-2';
+    const container = document.getElementById(containerId);
     container.innerHTML = '';
-    for (const sampleName of samples808) {
+    const samples = drumIndex === 0 ? samples909 : samples808;
+    for (const sampleName of samples) {
         const track = document.createElement('div');
         track.classList.add('track');
         const label = document.createElement('div');
         label.classList.add('track-label');
-        label.textContent = sampleName.replace('.raw', '').replace('808', '');
+        label.textContent = sampleName.replace('.raw', '').replace('808', '').replace('909', '');
         track.appendChild(label);
         for (let i = 0; i < 16; i++) {
             const step = document.createElement('div');
@@ -120,9 +140,9 @@ function createDrumSequencerGrid() {
             step.dataset.step = i;
             step.dataset.track = sampleName;
             step.addEventListener('click', () => {
-                if (isInstrumentClaimedByOther('drums')) return;
+                if (isInstrumentClaimedByOther(`drums${drumIndex + 1}`)) return;
                 step.classList.toggle('active');
-                broadcast({ type: 'drum_pattern', pattern: getDrumPattern() });
+                broadcast({ type: 'drum_pattern', drumIndex: drumIndex, pattern: getDrumPattern(drumIndex) });
             });
             track.appendChild(step);
         }
@@ -130,25 +150,35 @@ function createDrumSequencerGrid() {
     }
 }
 
-function randomizeDrumPattern() {
-    if (isInstrumentClaimedByOther('drums')) return;
+function randomizeDrumPattern(drumIndex) {
+    if (isInstrumentClaimedByOther(`drums${drumIndex + 1}`)) return;
     const template = drumTemplates[Math.floor(Math.random() * drumTemplates.length)].pattern;
-    applyDrumPattern(template);
-    broadcast({ type: 'drum_pattern', pattern: getDrumPattern() });
+    applyDrumPattern(drumIndex, template);
+    broadcast({ type: 'drum_pattern', drumIndex: drumIndex, pattern: getDrumPattern(drumIndex) });
 }
 
-function clearDrumPattern() {
-    if (isInstrumentClaimedByOther('drums')) return;
-    document.querySelectorAll('#drum-matrix .step').forEach(step => step.classList.remove('active'));
-    broadcast({ type: 'drum_pattern', pattern: getDrumPattern() });
+function clearDrumPattern(drumIndex) {
+    if (isInstrumentClaimedByOther(`drums${drumIndex + 1}`)) return;
+    const containerId = drumIndex === 0 ? '#drum-matrix' : '#drum-matrix-2';
+    document.querySelectorAll(`${containerId} .step`).forEach(step => step.classList.remove('active'));
+    broadcast({ type: 'drum_pattern', drumIndex: drumIndex, pattern: getDrumPattern(drumIndex) });
 }
 
-function setupDrumSequencer() {
-    drumSequence = new Tone.Sequence((time, col) => {
+function setupDrumSequencers() {
+    drumSequences[0] = new Tone.Sequence((time, col) => {
         document.querySelectorAll(`#drum-matrix .step[data-step='${col}'].active`).forEach(step => {
-            players[step.dataset.track]?.start(time);
+            players[0][step.dataset.track]?.start(time);
         });
         document.querySelectorAll('#drum-matrix .step').forEach(step => {
+            step.classList.toggle('playing', step.dataset.step == col);
+        });
+    }, Array.from(Array(16).keys()), '16n').start(0);
+
+    drumSequences[1] = new Tone.Sequence((time, col) => {
+        document.querySelectorAll(`#drum-matrix-2 .step[data-step='${col}'].active`).forEach(step => {
+            players[1][step.dataset.track]?.start(time);
+        });
+        document.querySelectorAll('#drum-matrix-2 .step').forEach(step => {
             step.classList.toggle('playing', step.dataset.step == col);
         });
     }, Array.from(Array(16).keys()), '16n').start(0);
@@ -462,10 +492,15 @@ function setupKnobs() {
             broadcast({ type: 'knob', id: `synth${i}-vol-knob`, value: e.target.value });
         });
     }
-    document.getElementById('drums-vol-knob').addEventListener('input', e => {
-        if (isInstrumentClaimedByOther('drums')) return;
-        drumsVolume.volume.value = -40 + (parseFloat(e.target.value) / 100) * 40;
-        broadcast({ type: 'knob', id: 'drums-vol-knob', value: e.target.value });
+    document.getElementById('drums1-vol-knob').addEventListener('input', e => {
+        if (isInstrumentClaimedByOther('drums1')) return;
+        drumsVolumes[0].volume.value = -40 + (parseFloat(e.target.value) / 100) * 40;
+        broadcast({ type: 'knob', id: 'drums1-vol-knob', value: e.target.value });
+    });
+    document.getElementById('drums2-vol-knob').addEventListener('input', e => {
+        if (isInstrumentClaimedByOther('drums2')) return;
+        drumsVolumes[1].volume.value = -40 + (parseFloat(e.target.value) / 100) * 40;
+        broadcast({ type: 'knob', id: 'drums2-vol-knob', value: e.target.value });
     });
 
     document.getElementById('knob-tune').addEventListener('input', e => {
@@ -561,9 +596,14 @@ function setupKnobs() {
 // --- View Logic ---
 function updateView() {
     const isSynthView = activeView.startsWith('synth');
-    document.getElementById('drum-matrix').style.display = activeView === 'drums' ? 'flex' : 'none';
+    const isDrums1View = activeView === 'drums1';
+    const isDrums2View = activeView === 'drums2';
+
+    document.getElementById('drum-matrix').style.display = isDrums1View ? 'flex' : 'none';
+    document.getElementById('drum-matrix-2').style.display = isDrums2View ? 'flex' : 'none';
     document.getElementById('synth-sequence-matrix').style.display = isSynthView ? 'flex' : 'none';
     document.querySelector('.knobs-container').style.display = isSynthView ? 'block' : 'none';
+
     if (isSynthView) {
         const synthIndex = parseInt(activeView.replace('synth', ''));
         createSynthSequencerGrid(synthIndex);
@@ -598,7 +638,7 @@ function populateSelects() {
 
 // --- Song Management ---
 function getAppState() {
-    const drumPattern = getDrumPattern();
+    const drumPatterns = [getDrumPattern(0), getDrumPattern(1)];
     const claimedInstruments = {};
     document.querySelectorAll('.instrument-claim').forEach(cb => {
         if (cb.checked) {
@@ -606,14 +646,17 @@ function getAppState() {
         }
     });
     return {
-        drumPattern,
+        drumPatterns,
         synthPatterns,
         claimedInstruments,
     };
 }
 
 function loadAppState(state) {
-    applyDrumPattern(state.drumPattern);
+    if (state.drumPatterns) {
+        applyDrumPattern(0, state.drumPatterns[0]);
+        applyDrumPattern(1, state.drumPatterns[1]);
+    }
     for (let i = 0; i < 4; i++) {
         synthPatterns[i] = state.synthPatterns[i] || [];
         if (activeView === `synth${i}`) {
@@ -700,7 +743,7 @@ function isInstrumentClaimedByOther(instrument) {
 
 function checkAllInstrumentsAssigned() {
     const playPauseButton = document.getElementById('play-pause-button');
-    const allAssigned = Object.keys(claimedInstruments).length === 5;
+    const allAssigned = Object.keys(claimedInstruments).length === 6;
     playPauseButton.disabled = !allAssigned;
 }
 
@@ -795,7 +838,7 @@ function setupConnection(conn) {
         if (data.type === 'state') {
             loadAppState(data.state);
         } else if (data.type === 'drum_pattern') {
-            applyDrumPattern(data.pattern);
+            applyDrumPattern(data.drumIndex, data.pattern);
         } else if (data.type === 'synth_pattern') {
             applySynthPattern(data.synthIndex, data.pattern);
         } else if (data.type === 'knob') {
@@ -885,9 +928,11 @@ function broadcast(data) {
 async function init() {
     populateSelects();
     await loadSamples();
-    createDrumSequencerGrid();
-    randomizeDrumPattern();
-    setupDrumSequencer();
+    createDrumSequencerGrid(0);
+    createDrumSequencerGrid(1);
+    randomizeDrumPattern(0);
+    randomizeDrumPattern(1);
+    setupDrumSequencers();
     createSynths();
     for (let i=0; i<4; i++) {
         randomizeSynthPattern(i);
@@ -898,9 +943,12 @@ async function init() {
     updateSongList();
 
     document.getElementById('randomize-button').addEventListener('click', () => {
-        if (activeView === 'drums') {
-            if (isInstrumentClaimedByOther('drums')) return;
-            randomizeDrumPattern();
+        if (activeView === 'drums1') {
+            if (isInstrumentClaimedByOther('drums1')) return;
+            randomizeDrumPattern(0);
+        } else if (activeView === 'drums2') {
+            if (isInstrumentClaimedByOther('drums2')) return;
+            randomizeDrumPattern(1);
         } else if (activeView.startsWith('synth')) {
             const synthIndex = parseInt(activeView.replace('synth', ''));
             if (isInstrumentClaimedByOther(`synth${synthIndex}`)) return;
@@ -928,8 +976,10 @@ async function init() {
                 // Long press
                 const trackId = button.id;
                 muteStates[trackId] = !muteStates[trackId];
-                if (trackId === 'drums') {
-                    drumsVolume.mute = muteStates[trackId];
+                if (trackId === 'drums1') {
+                    drumsVolumes[0].mute = muteStates[trackId];
+                } else if (trackId === 'drums2') {
+                    drumsVolumes[1].mute = muteStates[trackId];
                 } else if (trackId.startsWith('synth')) {
                     const synthIndex = parseInt(trackId.replace('synth', ''));
                     synthVolumes[synthIndex].mute = muteStates[trackId];
@@ -1048,28 +1098,37 @@ async function init() {
         }
     });
     document.getElementById('clear-drums-button').addEventListener('click', () => {
-        if (isInstrumentClaimedByOther('drums')) return;
-        clearDrumPattern();
+        if (activeView === 'drums1') {
+            if (isInstrumentClaimedByOther('drums1')) return;
+            clearDrumPattern(0);
+        } else if (activeView === 'drums2') {
+            if (isInstrumentClaimedByOther('drums2')) return;
+            clearDrumPattern(1);
+        }
     });
 
     document.getElementById('gen-drums-button').addEventListener('click', () => {
-        if (activeView === 'drums') {
-            if (isInstrumentClaimedByOther('drums')) return;
-            randomizeDrumPattern();
+        if (activeView === 'drums1') {
+            if (isInstrumentClaimedByOther('drums1')) return;
+            randomizeDrumPattern(0);
+        } else if (activeView === 'drums2') {
+            if (isInstrumentClaimedByOther('drums2')) return;
+            randomizeDrumPattern(1);
         }
     });
 
     document.getElementById('gen-euclidean-button').addEventListener('click', () => {
-        if (activeView === 'drums') {
-            if (isInstrumentClaimedByOther('drums')) return;
-            const pattern = {
-                '808bd.raw': generateEuclideanRhythm(16, 4),
-                '808sd_base.raw': generateEuclideanRhythm(16, 4),
-                '808ch.raw': generateEuclideanRhythm(16, 8),
-                '808oh.raw': generateEuclideanRhythm(16, 2),
-            };
-            applyDrumPattern(pattern);
-            broadcast({ type: 'drum_pattern', pattern: pattern });
+        if (activeView.startsWith('drums')) {
+            const drumIndex = parseInt(activeView.replace('drums', '')) - 1;
+            if (isInstrumentClaimedByOther(`drums${drumIndex + 1}`)) return;
+            const samples = drumIndex === 0 ? samples909 : samples808;
+            const pattern = {};
+            pattern[samples[0]] = generateEuclideanRhythm(16, 4);
+            pattern[samples[1]] = generateEuclideanRhythm(16, 4);
+            pattern[samples[2]] = generateEuclideanRhythm(16, 8);
+            pattern[samples[3]] = generateEuclideanRhythm(16, 2);
+            applyDrumPattern(drumIndex, pattern);
+            broadcast({ type: 'drum_pattern', drumIndex: drumIndex, pattern: pattern });
         }
     });
 
